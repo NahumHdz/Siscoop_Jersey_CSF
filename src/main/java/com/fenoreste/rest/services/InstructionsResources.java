@@ -2,19 +2,12 @@ package com.fenoreste.rest.services;
 
 import com.fenoreste.rest.Auth.Security;
 import com.fenoreste.rest.Dao.TransfersDAO;
-import com.fenoreste.rest.ResponseDTO.AccountHoldersDTO;
 import com.fenoreste.rest.ResponseDTO.validateMonetaryInstructionDTO;
 import com.github.cliftonlabs.json_simple.JsonObject;
-import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Calendar;
 import javax.json.Json;
-import javax.json.JsonValue;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -41,9 +34,9 @@ public class InstructionsResources {
         String customerId = "";
         int pageSize = 0, page = 0;
         try {
-            customerId = jrecibido.getString("customerId");
-            page = jrecibido.getInt("page");
-            pageSize = jrecibido.getInt("pageSize");
+            //customerId = jrecibido.getString("customerId");
+            //page = jrecibido.getInt("page");
+            //pageSize = jrecibido.getInt("pageSize");
             ZonedDateTime zonedDateTime = ZonedDateTime.parse("2021-03-23T18:21+01:00");
             javax.json.JsonObject jprincipal = null;
             jprincipal = Json.createObjectBuilder().add("totalRecords", 0)
@@ -51,21 +44,22 @@ public class InstructionsResources {
                             .add("monetaryInstructionId", "094567")
                             .add("originatorTransactionType", "TRANSFER_OWN")
                             .add("debitAccount", Json.createObjectBuilder()
-                                    .add("accountId", "08999")
-                                    .add("accountNumber", "08999")
+                                    .add("accountId","0101010011200005116")
+                                    .add("accountNumber","0101010011200005116")
+                                    .add("displayAccountNumber","***************5116")
                                     .add("accountType", "SAVINGS")
                                     .build())
                             .add("creditDetails", Json.createObjectBuilder()
                                     .add("instructionType", "single")
                                     .add("creditAccount", Json.createObjectBuilder()
                                             .add("accountSchemaType", "internal")
-                                            .add("accountId", "078987654676")
-                                            .add("accountNumber", "053472372372")
+                                            .add("accountId", "0101010011200005116")
+                                            .add("accountNumber", "0101010011200005116")
                                             .build()).build())
                             .add("nextExecution", Json.createObjectBuilder()
-                                    .add("executionDate", "2021-12-03")
+                                    .add("executionDate", "2021-12-24")
                                     .add("executionAmount", Json.createObjectBuilder()
-                                            .add("amount", 8934)
+                                            .add("amount", 13.00)
                                             .add("currencyCode", "MXN")
                                             .build()))
                             .add("frequency", Json.createObjectBuilder()
@@ -97,6 +91,7 @@ public class InstructionsResources {
          String value="";
         boolean bandera1 = false, bandera2 = false;
         try {
+            //Transferencias TIPOS BILLER
             if (request.getString("originatorTransactionType").toUpperCase().contains("BIL")) {
                 System.out.println("entro aqui");
                 customerId = request.getString("customerId");
@@ -115,7 +110,7 @@ public class InstructionsResources {
                 fechaEjecucion = execution.getString("executionDate");
                 tipoEjecucion = execution.getString("executionType");
                 bandera1 = true;
-            } else {
+            } else {//transferencias NOMRALES
                 customerId = request.getString("customerId");
                 tipoTranferencia = request.getString("originatorTransactionType");
                 cuentaOrigen = request.getString("debitAccountId");
@@ -131,33 +126,43 @@ public class InstructionsResources {
                 bandera2 = true;
             }
 
-            System.out.println("montoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo:" + monto);
         } catch (Exception e) {
             JsonObject json = new JsonObject();
             json.put("Error", "Parametros desconocidos:" + e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
         TransfersDAO dao = new TransfersDAO();
+        boolean bandera11=false;
         try {
+            Calendar c1 = Calendar.getInstance();
+            String dia = Integer.toString(c1.get(5));
+            String mes = Integer.toString(c1.get(2) + 1);
+            String annio = Integer.toString(c1.get(1));
+            String BusinessDate = String.format("%04d",Integer.parseInt(annio)) +"-" + String.format("%02d",Integer.parseInt(mes)) + "-" + String.format("%02d",Integer.parseInt(dia));
+            
             validateMonetaryInstructionDTO dto = null;
-            if (bandera1) {
-                System.out.println("siiiii");
+            if (bandera1) {                
                 dto = dao.validateMonetaryInstruction(customerId, tipoTranferencia,
                         cuentaOrigen, cuentaDestino, monto, "Pago de servicios:"+comentario,"Codigo recibo:"+value,fechaEjecucion, tipoEjecucion);
             } else if (bandera2) {
+                javax.json.JsonObject jsonResponse = null;
+                if(!BusinessDate.equals(fechaEjecucion)){
+                    System.out.println("aqui");
+                     jsonResponse = Json.createObjectBuilder().add("validationId","45KLF09612FGHCVXX")
+                        .add("fees", Json.createArrayBuilder())
+                        .add("executionDate",fechaEjecucion)
+                        .build();
+                return Response.status(Response.Status.OK).entity(jsonResponse).build();
+                }
                 dto = dao.validateMonetaryInstruction(customerId, tipoTranferencia,
                         cuentaOrigen, cuentaDestino, monto, comentario,"",fechaEjecucion, tipoEjecucion);
-            }
-            javax.json.JsonObject jsonResponse = null;
-
-            JsonObject jsi = new JsonObject();
-            if (dto != null) {
-                jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
+                 jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
                         .add("fees", Json.createArrayBuilder())
-                        .add("executionDate", dto.getExecutionDate())
+                        .add("executionDate",dto.getExecutionDate())
                         .build();
                 return Response.status(Response.Status.OK).entity(jsonResponse).build();
             }
+                        
         } catch (Exception e) {
             System.out.println("error:" + e.getMessage());
         } finally {
@@ -185,15 +190,18 @@ public class InstructionsResources {
         }
         System.out.println("validationId:" + validationId);
         TransfersDAO dao = new TransfersDAO();
+        
         String msj = "";
+        String validationProgramadas="45KLF09612FGHCVXX";//Se puso esa cadena porque para programadas no almaceno datos en la base responde dummy y esa cadena se usa
         try {
             msj = dao.executeMonetaryInstruction(validationId);
             if (msj.equalsIgnoreCase("completed")) {
-                jsonb.put("status", msj);
-                return Response.status(Response.Status.OK).entity(jsonb).build();
+                
+            }else if(validationProgramadas.equals("45KLF09612FGHCVXX")){
+                msj="completed";
             }
-            jsonb.put("status", msj.toUpperCase());
-            return Response.status(Response.Status.BAD_GATEWAY).entity(jsonb).build();
+            jsonb.put("status", msj);
+            return Response.status(Response.Status.OK).entity(jsonb).build();
         } catch (Exception e) {
             dao.cerrar();
             System.out.println("Error en response:" + e.getMessage());
@@ -207,50 +215,67 @@ public class InstructionsResources {
     @Path("/monetary/details")
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response MonetaryDetails(String cadena, @HeaderParam("authorization") String authString) throws JSONException {
+    public Response MonetaryDetails(@HeaderParam("authorization") String authString) throws JSONException {
         Security scr = new Security();
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
-        JSONObject jrecibido = new JSONObject(cadena);
+        
         try {
-            String monetaryInstructionId = jrecibido.getString("monetaryInstructionId");
             javax.json.JsonObject jsonResponse = null;
-            jsonResponse = Json.createObjectBuilder().add("details", Json.createObjectBuilder()
-                    .add("monetaryInstructionId", "B67454MJ")
+            jsonResponse = Json.createObjectBuilder()
+                    .add("property1",Json.createObjectBuilder()
+                                        .add("value","Value")
+                                        .add("valueType","string")
+                                        .add("description","Description").build())
+                    
+                    .add("details", Json.createObjectBuilder()
+                    .add("property1",Json.createObjectBuilder()
+                                        .add("value","Value")
+                                        .add("valueType","string")
+                                        .add("description","Description").build())
+                    .add("monetaryInstructionId", "094567")
+                    .add("customerId","01010110021543")
                     .add("originatorTransactionType", "TRANSFER_OWN")
                     .add("debitAccount", Json.createObjectBuilder()
-                            .add("accountId:", "65HMNV78")
-                            .add("accountNumber", "345VBHG7")
-                            .add("accountSchemaType", "SAVINGS")
+                            .add("accountId:", "0101010011000017228")                                                       
+                            .add("accountNumber", "0101010011000017228")
+                            .add("displayAccountNumber","****************7228")
+                            .add("accountType", "SAVINGS")
+                            .add("property1",Json.createObjectBuilder()
+                                        .add("value","Value")
+                                        .add("valueType","string")
+                                        .add("description","Description").build())
                             .build())
                     .add("creditAccount", Json.createObjectBuilder()
-                            .add("accountId:", "65HMNV78")
-                            .add("accountNumber", "345VBHG7")
-                            .add("accountType", "SAVINGS")
+                            .add("accountSchemaType", "internal")
+                            .add("accountNumber", "0101010011200005116")    
+                            .add("accountType","SAVINGS")                            
+                            .add("accountId:","0101010011200005116")
                             .build())
                     .add("monetary", Json.createObjectBuilder()
                             .add("amount", Json.createObjectBuilder()
-                                    .add("amount", 1150.56)
+                                    .add("amount", 13.00)
                                     .add("currencycode", "MXN")
                                     .build())
                             .add("execution", Json.createObjectBuilder()
                                     .add("executionType", "specific")
-                                    .add("executionDate", "12-05-2021")
+                                    .add("executionDate", "2021-07-20")
                                     .build())
-                            .add("frecuency", Json.createObjectBuilder()
-                                    .add("frecuencyType", "none")
+                            .add("frequency", Json.createObjectBuilder()
+                                    .add("frequencyType", "none")
                                     .build())
                             .add("fees", Json.createArrayBuilder())
                             .add("nextExecution", Json.createObjectBuilder()
-                                    .add("executionDate", "04-05-2021")
+                                    .add("executionDate", "2021-07-20")
                                     .add("executionAmount", Json.createObjectBuilder()
-                                            .add("amount", 45000.00)
+                                            .add("amount",13.00)
                                             .add("currencyCode", "MXN")
                                             .build())
                                     .build())
                             .build())
-                    .build())
+                    .build()
+                    )
                     .build();
 
             return Response.status(Response.Status.OK).entity(jsonResponse).build();
@@ -264,7 +289,11 @@ public class InstructionsResources {
     @Path("/monetary/instruction/history")
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response MonetaryHistory(String cadena) {
+    public Response MonetaryHistory(@HeaderParam("authorization")String auth, String cadena) {
+        Security scr = new Security();
+        if (!scr.isUserAuthenticated(auth)) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
         try {
             JSONObject jsonR = new JSONObject(cadena);
             String monetaryInstructionId = "";
@@ -297,7 +326,11 @@ public class InstructionsResources {
     @Path("/instructions/monetary/cancel/validate")
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response MonetaryCancellation(String cadena) {
+    public Response MonetaryCancellation(@HeaderParam("authorization")String authString,String cadena) {
+        Security scr = new Security();
+        if (!scr.isUserAuthenticated(authString)) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
         try {
             JSONObject jsonR = new JSONObject(cadena);
             String monetaryInstructionId = "";
@@ -320,7 +353,11 @@ public class InstructionsResources {
     @Path("/monetary/cancel/execute")
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response MonetaryCancellationE(String cadena) {
+    public Response MonetaryCancellationE(@HeaderParam("Authorization")String authString,String cadena) {
+        Security scr = new Security();
+        if (!scr.isUserAuthenticated(authString)) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
         try {
             JSONObject jsonR = new JSONObject(cadena);
             String monetaryInstructionId = "";

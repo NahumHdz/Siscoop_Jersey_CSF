@@ -7,8 +7,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 
 @ApplicationPath("gateway")
-public class Application extends ResourceConfig {
-    public Application() {
+public class Banca extends ResourceConfig {
+    public Banca() {
         packages("com.fenoreste.rest.services");
         register(JacksonFeature.class);
         register(RolesAllowedDynamicFeature.class);

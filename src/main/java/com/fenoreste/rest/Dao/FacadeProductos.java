@@ -18,24 +18,32 @@ public abstract class FacadeProductos<T> {
   }
   
   public List<ProductsDTO> getProductos(String accountType) {
+      System.out.println("siiiiiiiiiiiiii");
     List<ProductsDTO> ListagetP = new ArrayList<>();
     EntityManager em = emf.createEntityManager();
     try {
       String consulta = "";
       if (!accountType.equals("")) {
-        consulta = "SELECT * FROM tipos_cuenta_siscoop WHERE UPPER(producttypename)='" + accountType.toUpperCase() + "'";
+        consulta = "SELECT * FROM tipos_cuenta_siscoop WHERE UPPER(producttypename) LIKE '%" + accountType.toUpperCase() + "%'";
       } else {
         consulta = "SELECT * FROM tipos_cuenta_siscoop";
       } 
+        System.out.println("consulta:"+consulta);
       Query query = em.createNativeQuery(consulta, CuentasSiscoop.class);
       List<CuentasSiscoop> Lista = query.getResultList();
       for (int i = 0; i < Lista.size(); i++) {
         CuentasSiscoop model = Lista.get(i);
         String c = "";
         c = model.getProducttypename();
-        if (model.getProducttypename().toUpperCase().contains("TIME"))
-          c = "TIME"; 
-        ProductsDTO dto = new ProductsDTO(String.valueOf(model.getIdproducto()), model.getProducttypeid(), c, model.getDescripcion().toUpperCase());
+        if (model.getProducttypename().toUpperCase().contains("TIME")){
+            c = "TIME"; 
+        }
+               
+        ProductsDTO dto = new ProductsDTO(
+                              String.valueOf(model.getIdproducto()),
+                              model.getProducttypeid(),
+                              c,
+                              model.getDescripcion().toUpperCase());
         ListagetP.add(dto);
       } 
       System.out.println("ListaProd:" + ListagetP.size());
@@ -44,6 +52,27 @@ public abstract class FacadeProductos<T> {
     } 
     em.close();
     return ListagetP;
+  }
+  
+  
+  public boolean productRates(String accountType, String productCode) {
+    EntityManager em = emf.createEntityManager();
+      System.out.println("AccountType:"+accountType+",ProductCode:"+productCode);
+    try {
+      String consulta = "SELECT count(*) FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tps USING(idproducto) WHERE upper(tps.producttypename) LIKE '%" + accountType.toUpperCase() + "%' AND tps.idproducto=" + productCode;
+      System.out.println("Consulta:" + consulta);
+      Query query = em.createNativeQuery(consulta);
+      int c=Integer.parseInt(String.valueOf(query.getSingleResult()));
+      if(c>0){
+          return true;
+      }
+      else{
+          return false;
+      }
+    } catch (Exception e) {
+      System.out.println("Error al buscar tasa de productos:" + e.getMessage());
+    } 
+    return false;
   }
   
   public List<String> Rates(String accountType, int amount, String customerId, String productCode) {

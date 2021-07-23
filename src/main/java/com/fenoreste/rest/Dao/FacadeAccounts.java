@@ -16,7 +16,6 @@ import com.fenoreste.rest.Entidades.AuxiliaresPK;
 import com.fenoreste.rest.Entidades.Persona;
 import com.fenoreste.rest.Entidades.PersonasPK;
 import com.fenoreste.rest.Entidades.Productos;
-import com.fenoreste.rest.Entidades.ReferenciasP;
 import com.fenoreste.rest.Entidades.V_auxiliares;
 import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
 import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;

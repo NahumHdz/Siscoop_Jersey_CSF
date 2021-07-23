@@ -33,7 +33,6 @@ public class ExchangeResources  {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response convertAmount(String cadena,@HeaderParam("authorization") String authString){
-        System.out.println("llegoooooooooooooooooooooooooooooooooooooooooooo");
     Security scr=new Security();
      if(!scr.isUserAuthenticated(authString)){
             return Response.status(Response.Status.UNAUTHORIZED).build();
