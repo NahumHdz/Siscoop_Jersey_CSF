@@ -81,14 +81,13 @@ public abstract class FacadeCustomer<T> {
     public CustomerDetailsDTO details(String ogs) {
         EntityManager em = emf.createEntityManager();
         List<CustomerDetailsDTO> listaC = new ArrayList<CustomerDetailsDTO>();
-        CustomerDetailsDTO client = null;
+        CustomerDetailsDTO client = new CustomerDetailsDTO();
         try {
             int o = Integer.parseInt(ogs.substring(0, 6));
             int g = Integer.parseInt(ogs.substring(6, 8));
             int s = Integer.parseInt(ogs.substring(8, 14));
             PersonasPK pk = new PersonasPK(o, g, s);
             Persona p = em.find(Persona.class, pk);
-            String customerId = ogs;
             String name = "", customerType = "";
             name = p.getNombre() + " " + p.getAppaterno() + " " + p.getApmaterno();
             if (p.getRazonSocial() == null) {
@@ -96,10 +95,12 @@ public abstract class FacadeCustomer<T> {
             } else {
                 customerType = "grupal";
             }
-            client = new CustomerDetailsDTO(
-                    customerId,
-                    name,
-                    "individual");
+            client.setNationalId(p.getCurp());
+            client.setBirthDate(p.getFechanacimiento().toString().replace("/","-"));
+            client.setCustomerId(ogs);
+            client.setName(name);
+            client.setCustomerType("individual");
+            client.setTaxId(p.getCurp());
             return client;
         } catch (Exception e) {
             System.out.println("Error al buscar cliente:" + e.getMessage());

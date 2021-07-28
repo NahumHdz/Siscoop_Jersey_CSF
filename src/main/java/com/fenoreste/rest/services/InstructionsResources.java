@@ -4,6 +4,7 @@ import com.fenoreste.rest.Auth.Security;
 import com.fenoreste.rest.Dao.TransfersDAO;
 import com.fenoreste.rest.ResponseDTO.validateMonetaryInstructionDTO;
 import com.github.cliftonlabs.json_simple.JsonObject;
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import javax.json.Json;
@@ -53,8 +54,8 @@ public class InstructionsResources {
                                     .add("instructionType", "single")
                                     .add("creditAccount", Json.createObjectBuilder()
                                             .add("accountSchemaType", "internal")
-                                            .add("accountId", "0101010011200005116")
-                                            .add("accountNumber", "0101010011200005116")
+                                            .add("accountId", "0101010011000017228")
+                                            .add("accountNumber", "0101010011000017228")
                                             .build()).build())
                             .add("nextExecution", Json.createObjectBuilder()
                                     .add("executionDate", "2021-12-24")
@@ -224,16 +225,16 @@ public class InstructionsResources {
         try {
             javax.json.JsonObject jsonResponse = null;
             jsonResponse = Json.createObjectBuilder()
-                    .add("property1",Json.createObjectBuilder()
+                    /*.add("property1",Json.createObjectBuilder()
                                         .add("value","Value")
                                         .add("valueType","string")
-                                        .add("description","Description").build())
+                                        .add("description","Description").build())*/
                     
                     .add("details", Json.createObjectBuilder()
-                    .add("property1",Json.createObjectBuilder()
+                     /*.add("property1",Json.createObjectBuilder()
                                         .add("value","Value")
                                         .add("valueType","string")
-                                        .add("description","Description").build())
+                                        .add("description","Description").build())*/
                     .add("monetaryInstructionId", "094567")
                     .add("customerId","01010110021543")
                     .add("originatorTransactionType", "TRANSFER_OWN")
@@ -242,16 +243,18 @@ public class InstructionsResources {
                             .add("accountNumber", "0101010011000017228")
                             .add("displayAccountNumber","****************7228")
                             .add("accountType", "SAVINGS")
-                            .add("property1",Json.createObjectBuilder()
+                            .add("valueType","string")
+                            /*.add("property1",Json.createObjectBuilder()
                                         .add("value","Value")
                                         .add("valueType","string")
-                                        .add("description","Description").build())
+                                        .add("description","Description").build())*/
                             .build())
                     .add("creditAccount", Json.createObjectBuilder()
                             .add("accountSchemaType", "internal")
                             .add("accountNumber", "0101010011200005116")    
                             .add("accountType","SAVINGS")                            
                             .add("accountId:","0101010011200005116")
+                            .add("valueType","string")
                             .build())
                     .add("monetary", Json.createObjectBuilder()
                             .add("amount", Json.createObjectBuilder()
@@ -273,7 +276,7 @@ public class InstructionsResources {
                                             .add("currencyCode", "MXN")
                                             .build())
                                     .build())
-                            .build())
+                            .add("valueType","string").build())
                     .build()
                     )
                     .build();

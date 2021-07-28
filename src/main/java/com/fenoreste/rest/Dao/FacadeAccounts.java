@@ -286,8 +286,8 @@ public abstract class FacadeAccounts<T> {
             String cade = "******" + cadenaa;
             dto = new DetailsAccountDTO(
                     accountId,
-                    String.valueOf(a.getAuxiliaresPK().getIdorigenp()) + "" + String.valueOf(a.getAuxiliaresPK().getIdproducto()) + "" + String.valueOf(a.getAuxiliaresPK().getIdauxiliar()),
-                    String.valueOf(a.getAuxiliaresPK().getIdorigenp()) + "" + String.valueOf(a.getAuxiliaresPK().getIdproducto()) + "" + String.valueOf(a.getAuxiliaresPK().getIdauxiliar()),
+                    accountId,//String.valueOf(a.getAuxiliaresPK().getIdorigenp()) + "" + String.valueOf(a.getAuxiliaresPK().getIdproducto()) + "" + String.valueOf(a.getAuxiliaresPK().getIdauxiliar()),
+                    accountId,//String.valueOf(a.getAuxiliaresPK().getIdorigenp()) + "" + String.valueOf(a.getAuxiliaresPK().getIdproducto()) + "" + String.valueOf(a.getAuxiliaresPK().getIdauxiliar()),
                     tps.getProducttypename().toUpperCase(),
                     "MXN",
                     String.valueOf(a.getAuxiliaresPK().getIdproducto()),

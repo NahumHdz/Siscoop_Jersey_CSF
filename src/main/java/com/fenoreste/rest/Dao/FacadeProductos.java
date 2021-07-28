@@ -18,7 +18,6 @@ public abstract class FacadeProductos<T> {
   }
   
   public List<ProductsDTO> getProductos(String accountType) {
-      System.out.println("siiiiiiiiiiiiii");
     List<ProductsDTO> ListagetP = new ArrayList<>();
     EntityManager em = emf.createEntityManager();
     try {

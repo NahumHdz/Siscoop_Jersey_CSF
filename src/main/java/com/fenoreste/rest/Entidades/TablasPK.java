@@ -9,8 +9,7 @@
  @Embeddable
  public class TablasPK implements Serializable {
    @Column(name = "idtabla")
-   private String idtabla;
-   
+   private String idtabla;   
    @Column(name = "idelemento")
    private String idelemento;
    
