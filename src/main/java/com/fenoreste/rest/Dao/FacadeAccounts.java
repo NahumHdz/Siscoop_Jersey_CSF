@@ -111,8 +111,6 @@ public abstract class FacadeAccounts<T> {
 
     public String statements(String accountId, String initialDate, String finalDate, int pageSize, int pageStartIndex) {
         EntityManager em = emf.createEntityManager();
-        List<StatementsDTO> lista = new ArrayList<StatementsDTO>();
-        List<AuxiliaresD> listaa = null;
         File file = null;
         try {
             file = crear_llenar_txt(accountId, initialDate, finalDate);
@@ -221,7 +219,7 @@ public abstract class FacadeAccounts<T> {
         return listaDTO;
     }
 
-    public Date stringToDate1(String cadena) {
+    public Date stringToDate(String cadena) {
         SimpleDateFormat formato = new SimpleDateFormat("yyyy/MM/dd");
         Date fechaDate = null;
 
@@ -274,7 +272,7 @@ public abstract class FacadeAccounts<T> {
             } else if (a.getEstatus() == 1) {
                 e = "DORMANT";
             } else if (a.getEstatus() == 2) {
-                e = "ACTIVE";
+                e = "OPEN";
             } else if (a.getEstatus() == 3) {
                 e = "CLOSED";
             }
@@ -317,18 +315,7 @@ public abstract class FacadeAccounts<T> {
         return nombre;
     }
 
-    public Date stringToDate(String cadena) {
-        SimpleDateFormat formato = new SimpleDateFormat("yyyy/MM/dd");
-        Date fechaDate = null;
-
-        try {
-            fechaDate = formato.parse(cadena);
-        } catch (Exception ex) {
-            System.out.println("Error fecha:" + ex.getMessage());
-        }
-        System.out.println("fechaDate:" + fechaDate);
-        return fechaDate;
-    }
+  
 
     public String accountType(int idproducto) {
         EntityManager em = emf.createEntityManager();

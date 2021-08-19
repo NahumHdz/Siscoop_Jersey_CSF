@@ -9,8 +9,10 @@ import com.fenoreste.rest.ResponseDTO.AccountHoldersDTO;
 import com.fenoreste.rest.ResponseDTO.validateMonetaryInstructionDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Entidades.Auxiliares;
+import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
 import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;
 import com.fenoreste.rest.Entidades.validaciones_transferencias_siscoop;
+import com.fenoreste.rest.ResponseDTO.MonetaryInstructionDTO;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
@@ -35,6 +37,40 @@ public abstract class FacadeTransfers<T> {
         emf = AbstractFacade.conexion();//Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);    
     }
 
+    public List<MonetaryInstructionDTO> monetaryInistruction(String customerId, String fechaInicio, String fechaFinal) {
+        EntityManager em = emf.createEntityManager();
+        List<MonetaryInstructionDTO> listaMonetary = new ArrayList<>();
+
+        try {
+            String consulta = "SELECT * FROM e_transferenciassiscoop WHERE customerId='" + customerId + "' AND fechaejecucion BETWEEN '" + fechaInicio + "' AND '" + fechaFinal + "' AND UPPER(comentario1) LIKE '%PROGRAMA%'";
+            System.out.println("consulta:" + consulta);
+            Query query = em.createNativeQuery(consulta, transferencias_completadas_siscoop.class);
+
+            List<transferencias_completadas_siscoop> ListaTransferencias = query.getResultList();//new ArrayList<transferencias_completadas_siscoop>();
+            //ListaTransferencias = query.getResultList();
+                        
+            for (int i = 0; i < ListaTransferencias.size(); i++) {
+                MonetaryInstructionDTO dtoMonetary = new MonetaryInstructionDTO();
+                dtoMonetary.setDebitAccount(ListaTransferencias.get(i).getCuentaorigen());
+                dtoMonetary.setCreditAccount(ListaTransferencias.get(i).getCuentadestino());
+                dtoMonetary.setExecutionDate(dateToString(ListaTransferencias.get(i).getFechaejecucion()));
+                dtoMonetary.setMonto(ListaTransferencias.get(i).getMonto());
+                int idproducto = Integer.parseInt(ListaTransferencias.get(i).getCuentaorigen().substring(6, 11));
+                tipos_cuenta_siscoop tps = em.find(tipos_cuenta_siscoop.class, idproducto);
+                dtoMonetary.setTypeNameId(tps.getProducttypename().toUpperCase());
+                dtoMonetary.setOriginatorTransactionType(ListaTransferencias.get(i).getTipotransferencia());
+                dtoMonetary.setMonetaryId(ListaTransferencias.get(i).getId());
+                listaMonetary.add(dtoMonetary);
+            }
+            System.out.println("ListaMonetary:" + listaMonetary);
+        } catch (Exception e) {
+            em.close();
+        }
+        em.close();
+        return listaMonetary;
+
+    }
+
     public validateMonetaryInstructionDTO validateMonetaryInstruction(String customerId,
             String tipotransferencia,
             String cuentaorigen,
@@ -44,12 +80,15 @@ public abstract class FacadeTransfers<T> {
             String propcuentadestino,
             String fechaejecucion,
             String tipoejecucion) {
-        System.out.println("montoooooooooooooooooooooooooooooooooooooooo en facade:" + montoTransferencia);
+        System.out.println("FechaEjecucion:" + fechaejecucion);
+        System.out.println("monto de la transferencia:" + montoTransferencia);
         boolean bandera = false;
         Calendar c1 = Calendar.getInstance();
-        String dia = Integer.toString(c1.get(Calendar.DATE));
-        String mes = Integer.toString(c1.get(Calendar.MONTH) + 1);
-        String annio = Integer.toString(c1.get(Calendar.YEAR));
+        String dia = Integer.toString(c1.get(5));
+        String mes = Integer.toString(c1.get(2) + 1);
+        String annio = Integer.toString(c1.get(1));
+        String FechaTiempoReal = String.format("%04d", Integer.parseInt(annio)) + "-" + String.format("%02d", Integer.parseInt(mes)) + "-" + String.format("%02d", Integer.parseInt(dia));
+
         validateMonetaryInstructionDTO dto = null;
         EntityManager em = emf.createEntityManager();
         String[] fees = new String[0];
@@ -57,12 +96,12 @@ public abstract class FacadeTransfers<T> {
         Query queryf = em.createNativeQuery("SELECT date(now())");
         String fe = String.valueOf(queryf.getSingleResult());
         Date hoy = new Date();
+
         try {
-            System.out.println("aqui");
+            //Busca la cuenta y busca si tiene saldo
             if (findAccount(cuentaorigen, customerId) && findBalance(cuentaorigen, montoTransferencia)) {
                 validationId = RandomAlfa().toUpperCase();
-                System.out.println("aqui1");
-                System.out.println("aqui2");
+                //si es una pago de servicio Nomas la guarda porque no se esta habilitado el servicio pero si debe validar que exista la cuenta origen y que tenga saldo
                 if (tipotransferencia.toUpperCase().contains("BIL")) {
                     EntityTransaction tr = em.getTransaction();
                     tr.begin();
@@ -73,36 +112,78 @@ public abstract class FacadeTransfers<T> {
                     vl.setComentario1(comentario);
                     vl.setComentario2(propcuentadestino);
                     vl.setCustomerId(customerId);
-                    vl.setFechaejecucion(hoy);
                     vl.setMonto(montoTransferencia);
+                    vl.setFechaejecucion(hoy);
                     vl.setTipoejecucion(tipoejecucion);
                     vl.setEstatus(false);
                     vl.setValidationId(validationId);
-
                     em.persist(vl);
                     tr.commit();
                     bandera = true;
                 } else {
-                    if (findAccount(cuentadestino, customerId)) {
+                    //Si es una programada
+                    if (!FechaTiempoReal.equals(fechaejecucion)) {
+                        System.out.println("aquiiiiiiiiiiiiiii");
                         EntityTransaction tr = em.getTransaction();
                         tr.begin();
                         validaciones_transferencias_siscoop vl = new validaciones_transferencias_siscoop();
                         vl.setCuentaorigen(cuentaorigen);
                         vl.setCuentadestino(cuentadestino);
                         vl.setTipotransferencia(tipotransferencia);
-                        vl.setComentario1(comentario);
+                        vl.setComentario1("Programada no en uso");
                         vl.setComentario2(propcuentadestino);
                         vl.setCustomerId(customerId);
-                        vl.setFechaejecucion(hoy);
                         vl.setMonto(montoTransferencia);
+                        vl.setFechaejecucion(stringToDate(fechaejecucion.replace("-", "/")));
                         vl.setTipoejecucion(tipoejecucion);
                         vl.setEstatus(false);
                         vl.setValidationId(validationId);
-
                         em.persist(vl);
                         tr.commit();
                         bandera = true;
+                    } else {
+                        //Busca que la cuenta destino pertenezca al mismo socio
+                        if (tipotransferencia.toUpperCase().contains("OWN")) {
+                            if (findAccount(cuentadestino, customerId)) {
+                                EntityTransaction tr = em.getTransaction();
+                                tr.begin();
+                                validaciones_transferencias_siscoop vl = new validaciones_transferencias_siscoop();
+                                vl.setCuentaorigen(cuentaorigen);
+                                vl.setCuentadestino(cuentadestino);
+                                vl.setTipotransferencia(tipotransferencia);
+                                vl.setComentario1(comentario);
+                                vl.setComentario2(propcuentadestino);
+                                vl.setCustomerId(customerId);
+                                vl.setFechaejecucion(hoy);
+                                vl.setMonto(montoTransferencia);
+                                vl.setTipoejecucion(tipoejecucion);
+                                vl.setEstatus(false);
+                                vl.setValidationId(validationId);
+                                em.persist(vl);
+                                tr.commit();
+                                bandera = true;
+                            }
+                        } else if (tipotransferencia.toUpperCase().contains("INTRABANK")) {//Si la cuenta destino es un tercero ya solo la manda
+                            EntityTransaction tr = em.getTransaction();
+                            tr.begin();
+                            validaciones_transferencias_siscoop vl = new validaciones_transferencias_siscoop();
+                            vl.setCuentaorigen(cuentaorigen);
+                            vl.setCuentadestino(cuentadestino);
+                            vl.setTipotransferencia(tipotransferencia);
+                            vl.setComentario1(comentario);
+                            vl.setComentario2(propcuentadestino);
+                            vl.setCustomerId(customerId);
+                            vl.setFechaejecucion(hoy);
+                            vl.setMonto(montoTransferencia);
+                            vl.setTipoejecucion(tipoejecucion);
+                            vl.setEstatus(false);
+                            vl.setValidationId(validationId);
+                            em.persist(vl);
+                            tr.commit();
+                            bandera = true;
+                        }
                     }
+
                 }
             }
             if (bandera) {
@@ -110,9 +191,10 @@ public abstract class FacadeTransfers<T> {
             }
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());
-            cerrar();
+            em.close();
+        } finally {
+            em.close();
         }
-        System.out.println("DTO:" + dto);
         return dto;
     }
 
@@ -137,7 +219,7 @@ public abstract class FacadeTransfers<T> {
             System.out.println("fe:" + fe);
             Date hoy = stringToDate(fe);
             System.out.println("vali:" + vlt.getCuentaorigen());
-            String c2 = "SELECT saldo -"+vlt.getMonto()+" FROM auxiliares a where replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(idauxiliar,'09999999'),' ','')='" + vlt.getCuentaorigen() + "'";
+            String c2 = "SELECT saldo -" + vlt.getMonto() + " FROM auxiliares a where replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(idauxiliar,'09999999'),' ','')='" + vlt.getCuentaorigen() + "'";
             System.out.println("c2:" + c2);
             Query query1 = em.createNativeQuery(c2);
             Double saldo = Double.parseDouble(String.valueOf(query1.getSingleResult()));
@@ -151,7 +233,7 @@ public abstract class FacadeTransfers<T> {
                 vl.setComentario1(vlt.getComentario1());
                 vl.setComentario2(vlt.getComentario2());
                 vl.setCustomerId(vlt.getCustomerId());
-                vl.setFechaejecucion(hoy);
+                vl.setFechaejecucion(vlt.getFechaejecucion());
                 vl.setMonto(vlt.getMonto());
                 vl.setTipoejecucion(vlt.getTipoejecucion());
                 vl.setEstatus(true);
@@ -172,6 +254,23 @@ public abstract class FacadeTransfers<T> {
             em.close();
         }
         return mensaje;
+    }
+
+    public transferencias_completadas_siscoop detailsMonetary(String validationId) {
+        EntityManager em = emf.createEntityManager();
+        transferencias_completadas_siscoop transferencia = null;
+        try {
+            String consulta = "SELECT * FROM e_transferenciassiscoop WHERE id='" + validationId + "'";
+            Query query = em.createNativeQuery(consulta, transferencias_completadas_siscoop.class);
+            transferencia = (transferencias_completadas_siscoop) query.getSingleResult();
+        } catch (Exception e) {
+            System.out.println("Error en buscar detalles una tranferencia programada:" + e.getMessage());
+            em.close();
+            return null;
+        } finally {
+            em.close();
+        }
+        return transferencia;
     }
 
     public List<AccountHoldersDTO> accountHolders(String accountId) {

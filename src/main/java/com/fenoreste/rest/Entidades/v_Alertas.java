@@ -29,28 +29,43 @@ public class v_Alertas implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sec_validaciones_tsiscoop")
     @SequenceGenerator(name = "sec_validaciones_tsiscoop", sequenceName = "sec_validaciones_tsiscoop")
     private Integer id;
-    @Column(name="code")
-    private String code;
+    @Column(name="alertcode")
+    private String alertCode;
     @Column(name="enabled")
     private boolean enabled;
+    @Column(name="accountid")
+    private String accountId;
     @Column(name="customerid")
     private String customerid;
+    @Column(name="property")
+    private String property;
+    @Column(name="monto")
+    private Double monto;
+    @Column(name="operator")
+    private String operator;
+    @Column(name="ruletype")
+    private String ruleType;
     @Column(name="fechaejecucion")
     private Date fechaejecucion;
     @Column(name="validationid")
-    private String validationid;
+    private String validationid_generado;
     
     public v_Alertas() {
         
     }
 
-    public v_Alertas(Integer id, String code, boolean enabled, String customerid, Date fechaejecucion, String validattionid) {
+    public v_Alertas(Integer id, String alertCode, boolean enabled, String accountId, String customerid, String property, Double monto, String operator, String ruleType, Date fechaejecucion, String validationid_generado) {
         this.id = id;
-        this.code = code;
+        this.alertCode = alertCode;
         this.enabled = enabled;
+        this.accountId = accountId;
         this.customerid = customerid;
+        this.property = property;
+        this.monto = monto;
+        this.operator = operator;
+        this.ruleType = ruleType;
         this.fechaejecucion = fechaejecucion;
-        this.validationid = validattionid;
+        this.validationid_generado = validationid_generado;
     }
 
     public Integer getId() {
@@ -61,12 +76,12 @@ public class v_Alertas implements Serializable {
         this.id = id;
     }
 
-    public String getCode() {
-        return code;
+    public String getAlertCode() {
+        return alertCode;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setAlertCode(String alertCode) {
+        this.alertCode = alertCode;
     }
 
     public boolean isEnabled() {
@@ -77,12 +92,52 @@ public class v_Alertas implements Serializable {
         this.enabled = enabled;
     }
 
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
+    }
+
     public String getCustomerid() {
         return customerid;
     }
 
     public void setCustomerid(String customerid) {
         this.customerid = customerid;
+    }
+
+    public String getProperty() {
+        return property;
+    }
+
+    public void setProperty(String property) {
+        this.property = property;
+    }
+
+    public Double getMonto() {
+        return monto;
+    }
+
+    public void setMonto(Double monto) {
+        this.monto = monto;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public void setOperator(String operator) {
+        this.operator = operator;
+    }
+
+    public String getRuleType() {
+        return ruleType;
+    }
+
+    public void setRuleType(String ruleType) {
+        this.ruleType = ruleType;
     }
 
     public Date getFechaejecucion() {
@@ -93,18 +148,20 @@ public class v_Alertas implements Serializable {
         this.fechaejecucion = fechaejecucion;
     }
 
-    public String getValidattionid() {
-        return validationid;
+    public String getValidationid_generado() {
+        return validationid_generado;
     }
 
-    public void setValidattionid(String validattionid) {
-        this.validationid = validattionid;
+    public void setValidationid_generado(String validationid_generado) {
+        this.validationid_generado = validationid_generado;
     }
 
     @Override
     public String toString() {
-        return "v_Alertas{" + "id=" + id + ", text=" + code + ", enabled=" + enabled + ", customerid=" + customerid + ", fechaejecucion=" + fechaejecucion + ", validattionid=" + validationid + '}';
+        return "v_Alertas{" + "id=" + id + ", alertCode=" + alertCode + ", enabled=" + enabled + ", accountId=" + accountId + ", customerid=" + customerid + ", property=" + property + ", monto=" + monto + ", operator=" + operator + ", ruleType=" + ruleType + ", fechaejecucion=" + fechaejecucion + ", validationid_generado=" + validationid_generado + '}';
     }
-     
     
+    
+
+  
 }

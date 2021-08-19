@@ -29,7 +29,7 @@ public abstract class FacadeAlerts<T> {
         emf = AbstractFacade.conexion();
     }
 
-    public String validateAlert(String customerId, String alertCode, boolean enabled) {
+    public String validateAlert(String customerId, String alertCode, boolean enabled,String accountId,String property,Double monto,String operator,String ruleType) {
         EntityManager em = emf.createEntityManager();
         boolean bandera=false;
         try {
@@ -41,17 +41,16 @@ public abstract class FacadeAlerts<T> {
         Query queryf = em.createNativeQuery("SELECT date(now())");
         String fe = String.valueOf(queryf.getSingleResult());
         Date hoy = stringToDate(fe.replace("-","/"));
-        System.out.println("aqui");       
                 validationId = RandomAlfa().toUpperCase();
                        if (findPersona(customerId)) {
                         EntityTransaction tr = em.getTransaction();
                         tr.begin();
                         v_Alertas vl = new v_Alertas();
-                        vl.setCode(alertCode);
+                        vl.setAlertCode(alertCode);
                         vl.setCustomerid(customerId);
                         vl.setEnabled(true);
                         vl.setFechaejecucion(hoy);  
-                        vl.setValidattionid(validationId);
+                       // vl.setValidattionid(validationId);
                         em.persist(vl);
                         tr.commit();
                         bandera = true;
@@ -80,7 +79,7 @@ public abstract class FacadeAlerts<T> {
                         EntityTransaction tr = em.getTransaction();
                         tr.begin();
                         e_Alerts vl = new e_Alerts();
-                        vl.setCode(va.getCode());
+                        //vl.setCode(va.getCode());
                         vl.setCustomerid(va.getCustomerid());
                         vl.setEnabled(true);
                         vl.setFechaejecucion(hoy);  

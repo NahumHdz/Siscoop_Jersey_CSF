@@ -1,5 +1,6 @@
 package com.fenoreste.rest.Entidades;
 
+import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -7,7 +8,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "tipos_cuenta_siscoop")
-public class tipos_cuenta_siscoop {
+public class tipos_cuenta_siscoop implements  Serializable{
   @Id
   @Column(name = "idproducto")
   private Integer idproducto;

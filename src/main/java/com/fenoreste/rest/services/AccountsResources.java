@@ -51,7 +51,7 @@ public class AccountsResources {
         TransfersDAO dao = new TransfersDAO();
         String msj = "";
         try {
-            
+
             listaHolders = dao.accountHolders(accountId);
             jsonb.put("holders", listaHolders);
             return Response.status(Response.Status.OK).entity(jsonb).build();
@@ -70,8 +70,8 @@ public class AccountsResources {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response validateInternalAccount(String cadena, @HeaderParam("authorization") String authString) {
         Security scr = new Security();
-        
-        System.out.println("Request cadenaaaaaaaaaaaaaaaa internal validate:"+cadena);
+
+        System.out.println("Request cadenaaaaaaaaaaaaaaaa internal validate:" + cadena);
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
@@ -82,20 +82,18 @@ public class AccountsResources {
             JSONObject jsonRecibido = new JSONObject(cadena);
             System.out.println("JsonRecibido:" + jsonRecibido);
             accountId = jsonRecibido.getString("accountNumber");
-            if(accountId.equals("053472372372")){
-                
-            }else{
-            int p = Integer.parseInt(accountId.substring(6, 11));
-            List<AccountHoldersDTO> listaHolder = acDao.validateInternalAccount(accountId);
-            AccountHoldersDTO holder = listaHolder.get(0);
-            javax.json.JsonObject create = null;
-            create = Json.createObjectBuilder().add("accountId", accountId).add("accountType", acDao.accountType(p).toUpperCase()).add("holders", Json.createArrayBuilder().add((JsonValue) Json.createObjectBuilder().add("customerId","01010110021543").add("name", holder.getName()).add("relationCode", holder.getRelationCode()).build())).add("displayAccountNumber","*******510").build();
-            return Response.status(Response.Status.OK).entity(create).build();
-             
+            if (accountId.equals("053472372372")) {
+
+            } else {
+                int p = Integer.parseInt(accountId.substring(6, 11));
+                List<AccountHoldersDTO> listaHolder = acDao.validateInternalAccount(accountId);
+                AccountHoldersDTO holder = listaHolder.get(0);
+                javax.json.JsonObject create = null;
+                create = Json.createObjectBuilder().add("accountId", accountId).add("accountType", acDao.accountType(p).toUpperCase()).add("holders", Json.createArrayBuilder().add((JsonValue) Json.createObjectBuilder().add("customerId", "01010110021543").add("name", holder.getName()).add("relationCode", holder.getRelationCode()).build())).add("displayAccountNumber", "*******510").build();
+                return Response.status(Response.Status.OK).entity(create).build();
+
             }
-            
-        
-         
+
         } catch (Exception e) {
             System.out.println("Error al obtener objetos Json:" + e.getMessage());
         } finally {
@@ -109,9 +107,9 @@ public class AccountsResources {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response statements(String cadena, @HeaderParam("authorization") String authString) {
-        
+
         Security scr = new Security();
-        System.out.println("cadena:"+cadena);
+        System.out.println("cadena:" + cadena);
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
@@ -123,7 +121,7 @@ public class AccountsResources {
             JSONObject jsonRecibido = new JSONObject(cadena);
             JSONArray listaFil = jsonRecibido.getJSONArray("filters");
             System.out.println("ListaFil:" + listaFil);
-            System.out.println("Cadenaaaaa:"+cadena);
+            System.out.println("Cadenaaaaa:" + cadena);
             String id = "";
             String fd = "";
             for (int i = 0; i < listaFil.length(); i++) {
@@ -176,7 +174,7 @@ public class AccountsResources {
                 String ff = String.valueOf(dto.getEntryDate()) + " 00:00:00";
                 Timestamp tss = Timestamp.valueOf(ff);
                 System.out.println("tss:" + tss);
-                ZonedDateTime zonedDateTime = ZonedDateTime.parse(dto.getEntryDate()+"T00:00:00.000-07:00");
+                ZonedDateTime zonedDateTime = ZonedDateTime.parse(dto.getEntryDate() + "T00:00:00.000-07:00");
                 String feR = String.valueOf(zonedDateTime);
                 System.out.println("feR:" + feR);
                 javax.json.JsonObject jsi = Json.createObjectBuilder().add("holdId", dto.getHoldId()).add("amount", Json.createObjectBuilder().add("amount", dto.getAmount().doubleValue()).add("currencyCode", "MXN").build()).add("entryDate", feR).add("description", dto.getDescritpion()).build();
@@ -225,26 +223,26 @@ public class AccountsResources {
             String fe = "";
             for (int j = 0; j < lista.size(); j++) {
                 transferencias_completadas_siscoop dto = lista.get(j);
-                System.out.println("dto:"+dto);
-                fe = sdf.format(dto.getFechaejecucion()).replace("/","-");
-                ZonedDateTime zonedDateTime = ZonedDateTime.parse(fe+"T00:00:00.000-07:00");
+                System.out.println("dto:" + dto);
+                fe = sdf.format(dto.getFechaejecucion()).replace("/", "-");
+                ZonedDateTime zonedDateTime = ZonedDateTime.parse(fe + "T00:00:00.000-07:00");
                 String feR = String.valueOf(zonedDateTime);
-                System.out.println("DTOCtaOrigen:"+dto.getCuentaorigen());
-                int o=Integer.parseInt(dto.getCuentaorigen().substring(0,6));
-                int p=Integer.parseInt(dto.getCuentaorigen().substring(6,11));
-                int a=Integer.parseInt(dto.getCuentaorigen().substring(11,19));
-                
-                int o1=Integer.parseInt(accountId.substring(0,6));
-                int p1=Integer.parseInt(accountId.substring(6,11));
-                int a1=Integer.parseInt(accountId.substring(11,19));
-                int co=o+p+a;
-                int co1=o1+p1+a1;             
-                if(co==co1){
+                System.out.println("DTOCtaOrigen:" + dto.getCuentaorigen());
+                int o = Integer.parseInt(dto.getCuentaorigen().substring(0, 6));
+                int p = Integer.parseInt(dto.getCuentaorigen().substring(6, 11));
+                int a = Integer.parseInt(dto.getCuentaorigen().substring(11, 19));
+
+                int o1 = Integer.parseInt(accountId.substring(0, 6));
+                int p1 = Integer.parseInt(accountId.substring(6, 11));
+                int a1 = Integer.parseInt(accountId.substring(11, 19));
+                int co = o + p + a;
+                int co1 = o1 + p1 + a1;
+                if (co == co1) {
                     dto.setMonto(-dto.getMonto());
-                }else{
+                } else {
                     dto.setMonto(dto.getMonto());
                 }
-                javax.json.JsonObject jsi = Json.createObjectBuilder().add("transactionId", String.valueOf(dto.getId())).add("amount",Json.createObjectBuilder().add("amount", dto.getMonto()).add("currencyCode", "MXN").build()).add("postingDate",feR).add("valueDate", fe.replace("/","-")).add("runningBalance",Json.createObjectBuilder().add("amount", dto.getRunningBalance()).add("currencyCode", "MXN").build()).add("description", dto.getComentario1()).add("originatorReferenceId", String.valueOf(dto.getId())).add("originatorCode", String.valueOf(dto.getId())).add("description2",Json.createObjectBuilder().add("value",String.valueOf(dto.getId())).add("valueType", "string").add("isSensitive",false).build()).build();
+                javax.json.JsonObject jsi = Json.createObjectBuilder().add("transactionId", String.valueOf(dto.getId())).add("amount", Json.createObjectBuilder().add("amount", dto.getMonto()).add("currencyCode", "MXN").build()).add("postingDate", feR).add("valueDate", fe.replace("/", "-")).add("runningBalance", Json.createObjectBuilder().add("amount", dto.getRunningBalance()).add("currencyCode", "MXN").build()).add("description", dto.getComentario1()).add("originatorReferenceId", String.valueOf(dto.getId())).add("originatorCode", String.valueOf(dto.getId())).add("description2", Json.createObjectBuilder().add("value", String.valueOf(dto.getId())).add("valueType", "string").add("isSensitive", false).build()).build();
                 listaJson.add((JsonValue) jsi);
             }
             javax.json.JsonObject Found = Json.createObjectBuilder().add("totalRecords", lista.size()).add("queryId", "").add("transactions", listaJson).build();
@@ -398,5 +396,5 @@ public class AccountsResources {
         return Response.status(Response.Status.OK).entity(json).build();
     }
 
-   
+
 }

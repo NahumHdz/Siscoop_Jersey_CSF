@@ -96,7 +96,7 @@ public class TimeResources {
     }
     
       @POST
-    @Path("/reedem/validate")
+    @Path("/redeem/validate")
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response TimeDepositReedemValidate(String cadena, @HeaderParam("authorization") String authString) {
@@ -111,13 +111,10 @@ public class TimeResources {
         String dia = Integer.toString(c1.get(5));
         String mes = Integer.toString(c1.get(2) + 1);
         String annio = Integer.toString(c1.get(1));
-        String diaa = dia + "/" + mes + "/" + annio;
+        String diaa = String.format("%04d",Integer.parseInt(annio)) + "/" + String.format("%02d",Integer.parseInt(mes)) + "/" + String.format("%02d",Integer.parseInt(dia));
         try {
             String dt = null;
-            String customerId = "", timeAccountId = "", creditAccountId = "";
-            customerId = jsonRecibido.getString("customerId");
-            timeAccountId = jsonRecibido.getString("timeAccountId");
-            creditAccountId = jsonRecibido.getString("creditAccountId");
+            
             javax.json.JsonObject found = Json.createObjectBuilder()
                     .add("validationId", "76GHJAWERT6V")
                     .add("fees", Json.createArrayBuilder())
@@ -139,17 +136,19 @@ public class TimeResources {
                             .add("currencyCode", "MXN")
                             .build())
                     .build();
+            System.out.println("Found:"+found);
             return Response.status(Response.Status.OK).entity(found).build();
         } catch (Exception e) {
-            System.out.println("Error:" + e.getMessage());
+            System.out.println("ErrorReemValidate:" + e.getMessage());
         } finally {
             dao.cerrar();
         }
+          System.out.println("aquiiii");
         return null;
     }
 
     @POST
-    @Path("/reedem/execute")
+    @Path("/redeem/execute")
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response TimeDepositReedemExecute(String cadena, @HeaderParam("authorization") String authString) {
@@ -168,7 +167,6 @@ public class TimeResources {
         try {
             String dt = null;
             String validationId = "";
-            validationId = jsonRecibido.getString("validationId");
             javax.json.JsonObject found = Json.createObjectBuilder()
                     .add("status", "completed")
                     .build();
