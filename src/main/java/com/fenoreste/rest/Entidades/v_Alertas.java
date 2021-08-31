@@ -47,7 +47,7 @@ public class v_Alertas implements Serializable {
     private String ruleType;
     @Column(name="fechaejecucion")
     private Date fechaejecucion;
-    @Column(name="validationid")
+    @Column(name="validationid_generado")
     private String validationid_generado;
     
     public v_Alertas() {

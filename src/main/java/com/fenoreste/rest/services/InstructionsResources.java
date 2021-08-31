@@ -163,6 +163,27 @@ public class InstructionsResources {
                 fechaEjecucion = execution.getString("executionDate");
                 tipoEjecucion = execution.getString("executionType");
                 bandera1 = true;
+            } //Transferencias SPEI 
+            else if (request.getString("originatorTransactionType").toUpperCase().contains("DOMESTIC_PAYMENT")) {
+                customerId = request.getString("customerId");
+                cuentaOrigen = request.getString("debitAccountId");
+                JSONObject credit = request.getJSONObject("creditAccount");
+                cuentaDestino = credit.getString("billerCode");
+                comentario = credit.getString("agreementCode");
+                JSONObject billerFields = credit.getJSONObject("billerFields");
+                JSONObject fieldTxt = billerFields.getJSONObject("01");
+                value = fieldTxt.getString("value");
+                JSONObject montoOP = request.getJSONObject("monetaryOptions");
+                JSONObject montoR = montoOP.getJSONObject("amount");
+                monto = montoR.getDouble("amount");
+                JSONObject execution = montoOP.getJSONObject("execution");
+                fechaEjecucion = execution.getString("executionDate");
+                tipoEjecucion = execution.getString("executionType");
+                JSONObject customer_RFC = request.getJSONObject("customerRFC");
+                JSONObject valor = customer_RFC.getJSONObject("valor");
+                JSONObject descripción = customer_RFC.getJSONObject("descripción");
+                JSONObject valueType = customer_RFC.getJSONObject("valueType");
+                JSONObject isSensitive = customer_RFC.getJSONObject("isSensitive");
             } else {//transferencias NORMALES     
                 customerId = request.getString("customerId");
                 tipoTranferencia = request.getString("originatorTransactionType");

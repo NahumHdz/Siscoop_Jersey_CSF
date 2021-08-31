@@ -294,6 +294,8 @@ public abstract class FacadeTransfers<T> {
         } catch (Exception e) {
             em.close();
             System.out.println("Error:" + e.getMessage());
+        } finally {
+            em.close();
         }
         return listaDTO;
     }
@@ -327,6 +329,8 @@ public abstract class FacadeTransfers<T> {
         } catch (Exception e) {
             System.out.println("Error en find opa:" + e.getMessage());
             return bandera;
+        } finally {
+            em.close();
         }
         return bandera;
     }

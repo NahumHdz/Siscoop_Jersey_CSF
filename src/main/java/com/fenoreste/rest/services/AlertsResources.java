@@ -60,10 +60,10 @@ public class AlertsResources {
             return Response.status(Response.Status.OK).entity(json).build();
         } catch (Exception e) {
             System.out.println("Error al convertir json:" + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         } finally {
             dao.cerrar();
         }
-        return null;
     }
 
     @POST

@@ -30,17 +30,26 @@ import javax.persistence.Table;
 public class e_Alerts implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sec_validaciones_tsiscoop")
     @SequenceGenerator(name = "sec_validaciones_tsiscoop", sequenceName = "sec_validaciones_tsiscoop")
     private Integer id;
-    @Column(name="code")
-    private String code;
+    @Column(name="alertcode")
+    private String alertCode;
     @Column(name="enabled")
     private boolean enabled;
+    @Column(name="accountid")
+    private String accountId;
     @Column(name="customerid")
     private String customerid;
+    @Column(name="property")
+    private String property;
+    @Column(name="monto")
+    private Double monto;
+    @Column(name="operator")
+    private String operator;
+    @Column(name="ruletype")
+    private String ruleType;
     @Column(name="fechaejecucion")
     private Date fechaejecucion;
     
@@ -48,11 +57,16 @@ public class e_Alerts implements Serializable {
         
     }
 
-    public e_Alerts(Integer id, String code, boolean enabled, String customerid, Date fechaejecucion) {
+    public e_Alerts(Integer id, String alertCode, boolean enabled, String accountId, String customerid, String property, Double monto, String operator, String ruleType, Date fechaejecucion) {
         this.id = id;
-        this.code = code;
+        this.alertCode = alertCode;
         this.enabled = enabled;
+        this.accountId = accountId;
         this.customerid = customerid;
+        this.property = property;
+        this.monto = monto;
+        this.operator = operator;
+        this.ruleType = ruleType;
         this.fechaejecucion = fechaejecucion;
     }
 
@@ -64,12 +78,12 @@ public class e_Alerts implements Serializable {
         this.id = id;
     }
 
-    public String getCode() {
-        return code;
+    public String getAlertCode() {
+        return alertCode;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setAlertCode(String alertCode) {
+        this.alertCode = alertCode;
     }
 
     public boolean isEnabled() {
@@ -80,12 +94,52 @@ public class e_Alerts implements Serializable {
         this.enabled = enabled;
     }
 
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
+    }
+
     public String getCustomerid() {
         return customerid;
     }
 
     public void setCustomerid(String customerid) {
         this.customerid = customerid;
+    }
+
+    public String getProperty() {
+        return property;
+    }
+
+    public void setProperty(String property) {
+        this.property = property;
+    }
+
+    public Double getMonto() {
+        return monto;
+    }
+
+    public void setMonto(Double monto) {
+        this.monto = monto;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public void setOperator(String operator) {
+        this.operator = operator;
+    }
+
+    public String getRuleType() {
+        return ruleType;
+    }
+
+    public void setRuleType(String ruleType) {
+        this.ruleType = ruleType;
     }
 
     public Date getFechaejecucion() {
@@ -98,8 +152,11 @@ public class e_Alerts implements Serializable {
 
     @Override
     public String toString() {
-        return "e_Alerts{" + "id=" + id + ", code=" + code + ", enabled=" + enabled + ", customerid=" + customerid + ", fechaejecucion=" + fechaejecucion + '}';
+        return "e_Alerts{" + "id=" + id + ", alertCode=" + alertCode + ", enabled=" + enabled + ", accountId=" + accountId + ", customerid=" + customerid + ", property=" + property + ", monto=" + monto + ", operator=" + operator + ", ruleType=" + ruleType + ", fechaejecucion=" + fechaejecucion + '}';
     }
+
     
+
+        
     
 }

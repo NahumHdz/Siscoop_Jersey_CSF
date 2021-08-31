@@ -61,10 +61,10 @@ import javax.ws.rs.HeaderParam;
        return Response.status(Response.Status.NO_CONTENT).entity(Not_Found.toString()).build();
      } catch (Exception e) {
          System.out.println("Error general:"+e.getMessage());
-       datos.cerrar();
+         datos.cerrar();
        return null;
      } finally {
-       datos.cerrar();
+         datos.cerrar();
      } 
    }
    

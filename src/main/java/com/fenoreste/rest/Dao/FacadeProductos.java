@@ -4,6 +4,8 @@ import com.fenoreste.rest.Entidades.CuentasSiscoop;
 import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
 import com.fenoreste.rest.ResponseDTO.ProductsDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
+import com.fenoreste.rest.Util.TimerBeepClock;
+import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -103,6 +105,12 @@ public abstract class FacadeProductos<T> {
     return listaString;
   }
   
+  //Para eliminar PDF
+  public void eliminarArchivosTemporaralesEstadosCuenta(){
+      TimerBeepClock time=new TimerBeepClock();
+      Toolkit.getDefaultToolkit().beep();
+       
+  }
   public void cerrar() {
     emf.close();
   }

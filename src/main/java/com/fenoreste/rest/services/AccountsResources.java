@@ -95,6 +95,7 @@ public class AccountsResources {
             }
 
         } catch (Exception e) {
+            acDao.cerrar();
             System.out.println("Error al obtener objetos Json:" + e.getMessage());
         } finally {
             acDao.cerrar();
@@ -134,7 +135,7 @@ public class AccountsResources {
             accountId = jsonRecibido.getString("accountId");
             System.out.println("AccountId:" + accountId);
             String nombrePDF = acDao.statements(accountId, id, fd, pageStartIndex, pageSize);
-
+            System.out.println("nombrePDF:"+nombrePDF);
             JsonObject create = null;
             JsonArrayBuilder listaJson = Json.createArrayBuilder();
 

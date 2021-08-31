@@ -47,7 +47,6 @@ public abstract class FacadeAccounts<T> {
 
     private static EntityManagerFactory emf;
 
-    List<Object[]> lista = null;
 
     public FacadeAccounts(Class<T> entityClass) {
         emf = AbstractFacade.conexion();
@@ -76,7 +75,10 @@ public abstract class FacadeAccounts<T> {
             AccountHoldersDTO dto = new AccountHoldersDTO(persona, "SOW");
             holders.add(dto);
         } catch (Exception e) {
+            em.close();
             System.out.println("Error al crear lista:" + e.getMessage());
+        } finally {
+            em.close();
         }
         System.out.println("Holders:" + holders);
         return holders;
@@ -120,6 +122,7 @@ public abstract class FacadeAccounts<T> {
             if (fileTxt.exists()) {
                 File fileHTML = crear_llenar_html(fileTxt, fileTxt.getName().replace(".txt", ".html"));
                 if (crearPDF(ruta(), fileHTML.getName())) {
+                    System.out.println("si");
                     String pdf = ruta() + fileHTML.getName().replace(".html", "pdf");
                     fileTxt.delete();
                     fileHTML.delete();
@@ -154,7 +157,6 @@ public abstract class FacadeAccounts<T> {
         System.out.println("Error:"+e.getMessage());
                 
     }*/
-        System.out.println("count:" + lista.size());
         return file.getName().replace(".txt", ".pdf");
 
     }

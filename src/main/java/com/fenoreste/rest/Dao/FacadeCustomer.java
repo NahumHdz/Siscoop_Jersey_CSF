@@ -73,8 +73,10 @@ public abstract class FacadeCustomer<T> {
             em.close();
             System.out.println("Error al buscar cliente:" + e.getMessage());
            
+        }finally{
+            em.close();
         }
-         em.close();
+        
         return null;
     }
 
@@ -223,8 +225,10 @@ public abstract class FacadeCustomer<T> {
         } catch (Exception e) {
             em.close();
             System.out.println("Error al obtener cuentas:" + e.getMessage());
+        } finally {
+            em.close();
         }
-        em.close();
+        
         return null;
     }
 
@@ -304,6 +308,8 @@ public abstract class FacadeCustomer<T> {
             }
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());
+        } finally {
+            em.close();
         }
 
         return estatus;
@@ -383,6 +389,8 @@ public abstract class FacadeCustomer<T> {
            } catch (Exception e) {
              e.getStackTrace();
             System.out.println("Error:" + e.getMessage());
+        } finally{
+            em.close();
         }
         Double saldos[]=new Double[2];
         saldos[0]=saldo_congelado_ahorros;
@@ -454,9 +462,11 @@ public abstract class FacadeCustomer<T> {
             }          
            
            } catch (Exception e) {
-             e.getStackTrace();
-            System.out.println("Error:" + e.getMessage());
-        }
+               e.getStackTrace();
+               System.out.println("Error:" + e.getMessage());
+           } finally {
+                em.close();
+            }
         Double saldos[]=new Double[2];
         saldos[0]=ledGer;
         saldos[1]=avalaible;
