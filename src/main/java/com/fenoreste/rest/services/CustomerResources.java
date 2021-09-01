@@ -1,10 +1,10 @@
  package com.fenoreste.rest.services;
  
 import com.fenoreste.rest.Auth.Security;
- import com.fenoreste.rest.ResponseDTO.CustomerAccountDTO;
- import com.fenoreste.rest.ResponseDTO.CustomerContactDetailsDTO;
- import com.fenoreste.rest.ResponseDTO.CustomerDetailsDTO;
- import com.fenoreste.rest.ResponseDTO.CustomerSearchDTO;
+ import DTO.CustomerAccountDTO;
+ import DTO.CustomerContactDetailsDTO;
+ import DTO.CustomerDetailsDTO;
+ import DTO.CustomerSearchDTO;
  import com.fenoreste.rest.Dao.CustomerDAO;
  import com.github.cliftonlabs.json_simple.JsonArray;
  import com.github.cliftonlabs.json_simple.JsonObject;

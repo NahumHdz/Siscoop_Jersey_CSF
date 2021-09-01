@@ -3,15 +3,15 @@ package com.fenoreste.rest.services;
 import com.fenoreste.rest.Auth.Security;
 import com.fenoreste.rest.Dao.TransfersDAO;
 import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;
-import com.fenoreste.rest.ResponseDTO.MonetaryInstructionDTO;
-import com.fenoreste.rest.ResponseDTO.validateMonetaryInstructionDTO;
+import DTO.MonetaryInstructionDTO;
+import DTO.OrderWsSPEI;
+import DTO.validateMonetaryInstructionDTO;
 import com.github.cliftonlabs.json_simple.JsonObject;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import javax.json.Json;
-import javax.json.JsonArrayBuilder;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -39,85 +39,83 @@ public class InstructionsResources {
         JSONObject jrecibido = new JSONObject(cadena);
         String customerId = "";
         System.out.println("siiiiiiiiiiiiiiiiii");
-        JSONArray filters=jrecibido.getJSONArray("filters");
-        System.out.println("JSONFilters:"+filters);
-               
+        JSONArray filters = jrecibido.getJSONArray("filters");
+        System.out.println("JSONFilters:" + filters);
+
         //Leyendo request 
-        String FInicio="",FFinal="";
+        String FInicio = "", FFinal = "";
         try {
-            customerId=jrecibido.getString("customerId");
-            for(int i=0;i<filters.length();i++){                
-                if(i==2){
-                    JSONObject jsonFilter=filters.getJSONObject(i);
-                    System.out.println("fecha:"+jsonFilter.getString("value"));
-                    FInicio=jsonFilter.getString("value");
+            customerId = jrecibido.getString("customerId");
+            for (int i = 0; i < filters.length(); i++) {
+                if (i == 2) {
+                    JSONObject jsonFilter = filters.getJSONObject(i);
+                    System.out.println("fecha:" + jsonFilter.getString("value"));
+                    FInicio = jsonFilter.getString("value");
                 }
-                if(i==3){
-                    JSONObject jsonFilter=filters.getJSONObject(i);
-                    System.out.println("fecha:"+jsonFilter.getString("value"));
-                    FFinal=jsonFilter.getString("value");
+                if (i == 3) {
+                    JSONObject jsonFilter = filters.getJSONObject(i);
+                    System.out.println("fecha:" + jsonFilter.getString("value"));
+                    FFinal = jsonFilter.getString("value");
                 }
                 //System.out.println("JSONFilter:"+jsonFilters);
             }
-            System.out.println("CustomerId:"+customerId);
-            System.out.println("FechaInicio:"+FInicio);
-            System.out.println("FechaFinal:"+FFinal);
-            
+            System.out.println("CustomerId:" + customerId);
+            System.out.println("FechaInicio:" + FInicio);
+            System.out.println("FechaFinal:" + FFinal);
+
         } catch (Exception e) {
-            System.out.println("Error en tranformar json:"+e.getMessage());
+            System.out.println("Error en tranformar json:" + e.getMessage());
             return Response.status(Response.Status.BAD_GATEWAY).entity(e.getMessage()).build();
         }
-        TransfersDAO dao=new TransfersDAO();
+        TransfersDAO dao = new TransfersDAO();
         try {
             //customerId = jrecibido.getString("customerId");
             //page = jrecibido.getInt("page");
             //pageSize = jrecibido.getInt("pageSize");
-            List<MonetaryInstructionDTO>ListaTranferencias=dao.monetaryInistruction(customerId, FInicio, FFinal);
-            JSONArray json=new JSONArray();
-            javax.json.JsonArrayBuilder ArrayInstruction=Json.createArrayBuilder();
-            for(int i=0;i<ListaTranferencias.size();i++){
+            List<MonetaryInstructionDTO> ListaTranferencias = dao.monetaryInistruction(customerId, FInicio, FFinal);
+            JSONArray json = new JSONArray();
+            javax.json.JsonArrayBuilder ArrayInstruction = Json.createArrayBuilder();
+            for (int i = 0; i < ListaTranferencias.size(); i++) {
                 javax.json.JsonObject jprincipal = null;
                 String numbers = ListaTranferencias.get(i).getDebitAccount().substring(Math.max(0, ListaTranferencias.get(i).getDebitAccount().length() - 4));
-                System.out.println("Numbers:"+numbers);
-                jprincipal=Json.createObjectBuilder()
-                            .add("monetaryInstructionId",String.valueOf(ListaTranferencias.get(i).getMonetaryId()))
-                            .add("originatorTransactionType", ListaTranferencias.get(i).getOriginatorTransactionType())
-                            .add("debitAccount", Json.createObjectBuilder()
-                                    .add("accountId", ListaTranferencias.get(i).getDebitAccount())
-                                    .add("accountNumber", ListaTranferencias.get(i).getDebitAccount())
-                                    .add("displayAccountNumber", "***************"+numbers)
-                                    .add("accountType", ListaTranferencias.get(i).getTypeNameId())
-                                    .build())
-                            .add("creditDetails", Json.createObjectBuilder()
-                                    .add("instructionType", "single")
-                                    .add("creditAccount", Json.createObjectBuilder()
-                                            .add("accountSchemaType", "internal")
-                                            .add("accountId", ListaTranferencias.get(i).getCreditAccount())
-                                            .add("accountNumber", ListaTranferencias.get(i).getCreditAccount())
-                                            .build()).build())
-                            .add("nextExecution", Json.createObjectBuilder()
-                                    .add("executionDate", ListaTranferencias.get(i).getExecutionDate().replace("/","-"))
-                                    .add("executionAmount", Json.createObjectBuilder()
-                                            .add("amount", ListaTranferencias.get(i).getMonto())
-                                            .add("currencyCode", "MXN")
-                                            .build()))
-                            .add("frequency", Json.createObjectBuilder()
-                                    .add("frequencyType", "none").build())
-                            .build();
+                System.out.println("Numbers:" + numbers);
+                jprincipal = Json.createObjectBuilder()
+                        .add("monetaryInstructionId", String.valueOf(ListaTranferencias.get(i).getMonetaryId()))
+                        .add("originatorTransactionType", ListaTranferencias.get(i).getOriginatorTransactionType())
+                        .add("debitAccount", Json.createObjectBuilder()
+                                .add("accountId", ListaTranferencias.get(i).getDebitAccount())
+                                .add("accountNumber", ListaTranferencias.get(i).getDebitAccount())
+                                .add("displayAccountNumber", "***************" + numbers)
+                                .add("accountType", ListaTranferencias.get(i).getTypeNameId())
+                                .build())
+                        .add("creditDetails", Json.createObjectBuilder()
+                                .add("instructionType", "single")
+                                .add("creditAccount", Json.createObjectBuilder()
+                                        .add("accountSchemaType", "internal")
+                                        .add("accountId", ListaTranferencias.get(i).getCreditAccount())
+                                        .add("accountNumber", ListaTranferencias.get(i).getCreditAccount())
+                                        .build()).build())
+                        .add("nextExecution", Json.createObjectBuilder()
+                                .add("executionDate", ListaTranferencias.get(i).getExecutionDate().replace("/", "-"))
+                                .add("executionAmount", Json.createObjectBuilder()
+                                        .add("amount", ListaTranferencias.get(i).getMonto())
+                                        .add("currencyCode", "MXN")
+                                        .build()))
+                        .add("frequency", Json.createObjectBuilder()
+                                .add("frequencyType", "none").build())
+                        .build();
                 ArrayInstruction.add(jprincipal);
-            }   
-            System.out.println("Json:"+json);
+            }
+            System.out.println("Json:" + json);
             ZonedDateTime zonedDateTime = ZonedDateTime.parse("2021-03-23T18:21+01:00");
-            
-          javax.json.JsonObject jprincipal = Json.createObjectBuilder().add("totalRecords", ListaTranferencias.size())
-                                 .add("instructions",ArrayInstruction).build();
-                    
-                   
-          
+
+            javax.json.JsonObject jprincipal = Json.createObjectBuilder().add("totalRecords", ListaTranferencias.size())
+                    .add("instructions", ArrayInstruction).build();
+
             return Response.status(Response.Status.OK).entity(jprincipal).build();
         } catch (Exception e) {
             System.out.println("Error en metodo:" + e.getMessage());
-        }finally{
+        } finally {
             dao.cerrar();
         }
         return null;
@@ -129,10 +127,10 @@ public class InstructionsResources {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response validateMonetaryInstruction(String cadena, @HeaderParam("authorization") String authString) throws JSONException {
         Security scr = new Security();
+        System.out.println("cadena:" + cadena);
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
-        System.out.println("Cadena de monetary validate:" + cadena);
         JSONObject request = new JSONObject(cadena);
         String customerId = "", tipoTranferencia = "", cuentaOrigen = "", cuentaDestino = "", comentario = "", propCuenta = "", fechaEjecucion = "", tipoEjecucion = "";
         Double monto = 0.0;
@@ -165,25 +163,39 @@ public class InstructionsResources {
                 bandera1 = true;
             } //Transferencias SPEI 
             else if (request.getString("originatorTransactionType").toUpperCase().contains("DOMESTIC_PAYMENT")) {
-                customerId = request.getString("customerId");
-                cuentaOrigen = request.getString("debitAccountId");
-                JSONObject credit = request.getJSONObject("creditAccount");
-                cuentaDestino = credit.getString("billerCode");
-                comentario = credit.getString("agreementCode");
-                JSONObject billerFields = credit.getJSONObject("billerFields");
-                JSONObject fieldTxt = billerFields.getJSONObject("01");
-                value = fieldTxt.getString("value");
-                JSONObject montoOP = request.getJSONObject("monetaryOptions");
-                JSONObject montoR = montoOP.getJSONObject("amount");
-                monto = montoR.getDouble("amount");
-                JSONObject execution = montoOP.getJSONObject("execution");
-                fechaEjecucion = execution.getString("executionDate");
-                tipoEjecucion = execution.getString("executionType");
-                JSONObject customer_RFC = request.getJSONObject("customerRFC");
-                JSONObject valor = customer_RFC.getJSONObject("valor");
-                JSONObject descripción = customer_RFC.getJSONObject("descripción");
-                JSONObject valueType = customer_RFC.getJSONObject("valueType");
-                JSONObject isSensitive = customer_RFC.getJSONObject("isSensitive");
+                OrderWsSPEI orden = new OrderWsSPEI();
+                orden.setCIF(request.getString("customerId"));
+                orden.setClabeSolicitante(request.getString("debitAccountId"));
+                JSONObject customer = request.getJSONObject("customerName");
+                orden.setNombreSolicitante(customer.getString("value"));
+                JSONObject customerRFC = request.getJSONObject("customerRFC");
+                JSONObject customerEmail = request.getJSONObject("customerEmail");
+                orden.setCorreoElectronicoSolicitante(customerEmail.getString("value"));
+                //AHORA LLENO BENEFICIARIO
+                JSONObject nombreBeneficiario = request.getJSONObject("creditor");
+                orden.setNombreBeneficiario(nombreBeneficiario.getString("name"));
+                JSONObject tipoCuentaBeneficiario = request.getJSONObject("benefAccountType");
+                orden.setTipoCuentaBeneficiario(tipoCuentaBeneficiario.getInt("value"));
+                JSONObject creditAccount = request.getJSONObject("creditAccount");
+                orden.setCuentaTarjetaBeneficiario(creditAccount.getString("accountNumber"));
+                JSONObject rfcBeneficiario = request.getJSONObject("customerRFC");
+                orden.setRfcCurpBeneficario(rfcBeneficiario.getString("value"));
+                orden.setInstitucionContraparte(Integer.parseInt(creditAccount.getString("bic")));
+                JSONObject beneficiaryEmail = request.getJSONObject("beneficiaryEmail");
+                orden.setCorreoElectronicoBeneficiario(beneficiaryEmail.getString("value"));
+                JSONObject amount = request.getJSONObject("amount");
+                orden.setMonto(Double.parseDouble(amount.getString("amount")));
+                JSONObject iva=request.getJSONObject("iva");
+                orden.setIVA(iva.getDouble("iva"));
+                JSONObject comision=request.getJSONObject("comision");
+                orden.setComision(comision.getDouble("value"));
+                JSONObject conceptoPago=request.getJSONObject("description");
+                orden.setConceptoPago(conceptoPago.getString("value"));
+                JSONObject numeroReferencia=request.getJSONObject("referenceNumber");
+                orden.setNumeroReferencia(numeroReferencia.getInt("value"));
+                
+                
+                
             } else {//transferencias NORMALES     
                 customerId = request.getString("customerId");
                 tipoTranferencia = request.getString("originatorTransactionType");
@@ -205,7 +217,7 @@ public class InstructionsResources {
             json.put("Error", "Parametros desconocidos:" + e.getMessage());
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
-        
+
         TransfersDAO dao = new TransfersDAO();
         try {
 
@@ -217,22 +229,22 @@ public class InstructionsResources {
             if (bandera1) {
                 //Guardamos el pago de servicio
                 dto = dao.validateMonetaryInstruction(customerId, tipoTranferencia, cuentaOrigen, cuentaDestino, monto, "Pago de servicios:" + comentario, "Codigo recibo:" + value, fechaEjecucion, tipoEjecucion);
-                jsonResponse = Json.createObjectBuilder().add("validationId",dto.getValidationId())
+                jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
                         .add("fees", Json.createArrayBuilder().build())
                         .add("executionDate", fechaEjecucion)
                         .build();
                 return Response.status(Response.Status.OK).entity(jsonResponse).build();
-            
+
 //Si es una transferencia normal
             } else if (bandera2) {
                 System.out.println("Entro a transferencias");
                 //Si es una programada
-                System.out.println("FechaActual:"+FechaTiempoReal+",FechaEjecucion:"+fechaEjecucion);
+                System.out.println("FechaActual:" + FechaTiempoReal + ",FechaEjecucion:" + fechaEjecucion);
                 if (!FechaTiempoReal.equals(fechaEjecucion)) {
-                    System.out.println("Entro a programadas:"+customerId);                    
+                    System.out.println("Entro a programadas:" + customerId);
                     //Guardamos la validacion
                     dto = dao.validateMonetaryInstruction(customerId, tipoTranferencia, cuentaOrigen, cuentaDestino, monto, comentario, "", fechaEjecucion, tipoEjecucion);
-                    jsonResponse = Json.createObjectBuilder().add("validationId",dto.getValidationId())
+                    jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
                             .add("fees", Json.createArrayBuilder().build())
                             .add("executionDate", fechaEjecucion)
                             .build();
@@ -301,23 +313,23 @@ public class InstructionsResources {
     @Path("/monetary/details")
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response MonetaryDetails(@HeaderParam("authorization") String authString,String cadena) throws JSONException {
+    public Response MonetaryDetails(@HeaderParam("authorization") String authString, String cadena) throws JSONException {
         Security scr = new Security();
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
-        JSONObject request=new JSONObject(cadena);
-        TransfersDAO dao=new TransfersDAO();
+        JSONObject request = new JSONObject(cadena);
+        TransfersDAO dao = new TransfersDAO();
         try {
-            String validationId=request.getString("monetaryInstructionId");
-            transferencias_completadas_siscoop transferencia=dao.detailsMonetary(validationId);
+            String validationId = request.getString("monetaryInstructionId");
+            transferencias_completadas_siscoop transferencia = dao.detailsMonetary(validationId);
             javax.json.JsonObject jsonResponse = null;
             String numbers = transferencia.getCuentaorigen().substring(Math.max(0, transferencia.getCuentaorigen().length() - 4));
-            System.out.println("Numbers:"+numbers);
-            System.out.println("IDProduc"+transferencia.getCuentaorigen().substring(6,11).contains("110"));
-            String accountType="";
-            if(transferencia.getCuentaorigen().substring(6,11).contains("110")){
-                accountType="SAVINGS";
+            System.out.println("Numbers:" + numbers);
+            System.out.println("IDProduc" + transferencia.getCuentaorigen().substring(6, 11).contains("110"));
+            String accountType = "";
+            if (transferencia.getCuentaorigen().substring(6, 11).contains("110")) {
+                accountType = "SAVINGS";
             }
             jsonResponse = Json.createObjectBuilder()
                     /*.add("property1",Json.createObjectBuilder()
@@ -335,8 +347,8 @@ public class InstructionsResources {
                             .add("debitAccount", Json.createObjectBuilder()
                                     .add("accountId:", transferencia.getCuentaorigen())
                                     .add("accountNumber", transferencia.getCuentaorigen())
-                                    .add("displayAccountNumber", "**************"+numbers)
-                                    .add("accountType",accountType)
+                                    .add("displayAccountNumber", "**************" + numbers)
+                                    .add("accountType", accountType)
                                     //.add("valueType","string")
                                     /*.add("property1",Json.createObjectBuilder()
                                         .add("value","Value")
@@ -357,14 +369,14 @@ public class InstructionsResources {
                                             .build())
                                     .add("execution", Json.createObjectBuilder()
                                             .add("executionType", "specific")
-                                            .add("executionDate", dao.dateToString(transferencia.getFechaejecucion()).replace("/","-"))
+                                            .add("executionDate", dao.dateToString(transferencia.getFechaejecucion()).replace("/", "-"))
                                             .build())
                                     .add("frequency", Json.createObjectBuilder()
                                             .add("frequencyType", "none")
                                             .build())
                                     .add("fees", Json.createArrayBuilder())
                                     .add("nextExecution", Json.createObjectBuilder()
-                                            .add("executionDate", dao.dateToString(transferencia.getFechaejecucion()).replace("/","-"))
+                                            .add("executionDate", dao.dateToString(transferencia.getFechaejecucion()).replace("/", "-"))
                                             .add("executionAmount", Json.createObjectBuilder()
                                                     .add("amount", transferencia.getMonto())
                                                     .add("currencyCode", "MXN")
@@ -378,7 +390,7 @@ public class InstructionsResources {
             return Response.status(Response.Status.OK).entity(jsonResponse).build();
         } catch (Exception e) {
             System.out.println("Error al obtener atributo json:" + e.getMessage());
-        }finally{
+        } finally {
             dao.cerrar();
         }
         return null;
@@ -414,7 +426,7 @@ public class InstructionsResources {
 
             return Response.status(Response.Status.OK).entity(json).build();
 
-        } catch (JSONException ex) {
+        } catch (Exception ex) {
             System.out.println("Error al crear json:" + ex.getMessage());
         }
         return null;
@@ -441,7 +453,7 @@ public class InstructionsResources {
 
             return Response.status(Response.Status.OK).entity(json).build();
 
-        } catch (JSONException ex) {
+        } catch (Exception ex) {
             System.out.println("Error al crear json:" + ex.getMessage());
         }
         return null;
@@ -468,13 +480,11 @@ public class InstructionsResources {
 
             return Response.status(Response.Status.OK).entity(json).build();
 
-        } catch (JSONException ex) {
+        } catch (Exception ex) {
             System.out.println("Error al crear json:" + ex.getMessage());
         }
         return null;
 
     }
-    
-    
-    
+
 }

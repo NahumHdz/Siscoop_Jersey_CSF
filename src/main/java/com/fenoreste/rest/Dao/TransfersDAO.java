@@ -11,7 +11,7 @@ import com.fenoreste.rest.Entidades.Auxiliares;
  *
  * @author Elliot
  */
-public class TransfersDAO extends FacadeTransfers<Auxiliares>{
+public class TransfersDAO extends FacadeInstructions<Auxiliares>{
     
     public TransfersDAO() {
         super(Auxiliares.class);

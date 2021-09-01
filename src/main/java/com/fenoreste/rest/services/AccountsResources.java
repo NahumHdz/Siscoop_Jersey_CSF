@@ -1,9 +1,9 @@
 package com.fenoreste.rest.services;
 
 import com.fenoreste.rest.Auth.Security;
-import com.fenoreste.rest.ResponseDTO.AccountHoldersDTO;
-import com.fenoreste.rest.ResponseDTO.DetailsAccountDTO;
-import com.fenoreste.rest.ResponseDTO.HoldsDTO;
+import DTO.AccountHoldersDTO;
+import DTO.DetailsAccountDTO;
+import DTO.HoldsDTO;
 import com.fenoreste.rest.Dao.AccountsDAO;
 import com.fenoreste.rest.Dao.TransfersDAO;
 import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;

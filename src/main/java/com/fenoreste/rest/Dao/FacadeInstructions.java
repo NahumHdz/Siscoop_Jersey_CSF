@@ -5,14 +5,17 @@
  */
 package com.fenoreste.rest.Dao;
 
-import com.fenoreste.rest.ResponseDTO.AccountHoldersDTO;
-import com.fenoreste.rest.ResponseDTO.validateMonetaryInstructionDTO;
+import DTO.AccountHoldersDTO;
+import DTO.validateMonetaryInstructionDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Entidades.Auxiliares;
 import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
 import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;
 import com.fenoreste.rest.Entidades.validaciones_transferencias_siscoop;
-import com.fenoreste.rest.ResponseDTO.MonetaryInstructionDTO;
+import DTO.MonetaryInstructionDTO;
+import DTO.OrderWsSPEI;
+import com.fenoreste.rest.Entidades.Persona;
+import com.fenoreste.rest.Entidades.Productos;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
@@ -29,11 +32,11 @@ import javax.persistence.Query;
  *
  * @author Elliot
  */
-public abstract class FacadeTransfers<T> {
+public abstract class FacadeInstructions<T> {
 
     private static EntityManagerFactory emf;
 
-    public FacadeTransfers(Class<T> entityClass) {
+    public FacadeInstructions(Class<T> entityClass) {
         emf = AbstractFacade.conexion();//Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);    
     }
 
@@ -48,7 +51,7 @@ public abstract class FacadeTransfers<T> {
 
             List<transferencias_completadas_siscoop> ListaTransferencias = query.getResultList();//new ArrayList<transferencias_completadas_siscoop>();
             //ListaTransferencias = query.getResultList();
-                        
+
             for (int i = 0; i < ListaTransferencias.size(); i++) {
                 MonetaryInstructionDTO dtoMonetary = new MonetaryInstructionDTO();
                 dtoMonetary.setDebitAccount(ListaTransferencias.get(i).getCuentaorigen());
@@ -120,10 +123,12 @@ public abstract class FacadeTransfers<T> {
                     em.persist(vl);
                     tr.commit();
                     bandera = true;
+                } else if (tipotransferencia.toUpperCase().contains("DOMESTIC_P")) {
+                    //Es un pago SPEI
+
                 } else {
                     //Si es una programada
                     if (!FechaTiempoReal.equals(fechaejecucion)) {
-                        System.out.println("aquiiiiiiiiiiiiiii");
                         EntityTransaction tr = em.getTransaction();
                         tr.begin();
                         validaciones_transferencias_siscoop vl = new validaciones_transferencias_siscoop();
@@ -196,6 +201,24 @@ public abstract class FacadeTransfers<T> {
             em.close();
         }
         return dto;
+    }
+
+    public validateMonetaryInstructionDTO validacionesOrdenSPEI(OrderWsSPEI orden) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            String validationId="";
+            //Validamos que exista el solicitante
+            if(validarTransferenciaSPEI(orden).toUpperCase().contains("EXITO")){
+              validationId=RandomAlfa().toUpperCase();
+            }else{
+                validationId=validarTransferenciaSPEI(orden);
+            }
+        }catch (Exception e) {
+            
+        }
+        
+        return null;
+        
     }
 
     public String executeMonetaryInstruction(String validationId) {
@@ -414,7 +437,60 @@ public abstract class FacadeTransfers<T> {
         System.out.println("Cadena:" + cadena);
         return cadena;
     }
-
+    
+    public String validarTransferenciaSPEI(OrderWsSPEI orden){
+        EntityManager em=emf.createEntityManager();
+        String mensaje="";
+        try {
+           String busquedaSolicitante="SELECT * FROM personas WHERE replace(to_char(idorigen,'099999')||to_char(idgrupo,'09')||to_char(idsocio,'099999'),' ','')='"+orden.getCIF()+"'";
+           Query queryBusquedaSolicitante=em.createNativeQuery(busquedaSolicitante,Persona.class);
+           Persona p=(Persona) queryBusquedaSolicitante.getSingleResult();
+           String cuentaOrigen="SELECT * FROM auxiliares a WHERE replace(to_char(idorigenp,'099999')||to_char(idproducto,'09999')||to_char(idauxiliar,'09999999'),' ','')='"+orden.getClabeSolicitante()+"'";
+           if(p!=null){
+               Query queryOrigen=em.createNativeQuery(cuentaOrigen,Auxiliares.class);
+               Auxiliares a=(Auxiliares)queryOrigen.getSingleResult();
+               if(a!=null){
+                   //Validamos que pertenezca al socio
+                   String opa=String.format("%06d",a.getIdorigen())+String.format("%02d",a.getIdgrupo())+String.format("%06d",a.getIdsocio());
+                   if(opa.equals(orden.getClabeSolicitante())){
+                       //Validamos el estatus
+                       if(a.getEstatus()==2){
+                           //Validar el tipo de producto
+                           Productos pr=em.find(Productos.class,a.getAuxiliaresPK().getIdproducto());
+                           if(pr.getTipoproducto()!=2){
+                               //Solo validado para ahorro solo faltaria para inversion
+                               if(pr.getTipoproducto()==1){
+                                   
+                               }else if(pr.getTipoproducto()==0){
+                                   if(Double.parseDouble(a.getSaldo().toString())>=orden.getMonto()){
+                                       //Validare el maximo para banca movil
+                                       mensaje="EXITOSO";
+                                   }else{
+                                       mensaje="Fondos insuficientes";
+                                   }
+                               }
+                           }else{
+                               mensaje="No se puede transferir de un prestamo";
+                           }     
+                       }else{
+                           mensaje="La cuenta esta inactiva";
+                       }
+                   }else{
+                       mensaje="La cuenta no pertenece al socio";
+                   }
+               }else{
+                   mensaje="Cuenta no existe";
+               }
+           }else{
+               mensaje="Socio no existe";
+           }
+        } catch (Exception e) {
+            mensaje=e.getMessage();
+            System.out.println("Error en procesar la validacion:"+e.getMessage());
+            return mensaje;
+        }
+        return mensaje;
+    }
     public void cerrar() {
         emf.close();
     }

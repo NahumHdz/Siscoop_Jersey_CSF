@@ -2,7 +2,7 @@
  
 import com.fenoreste.rest.Auth.Security;
 import com.fenoreste.rest.Dao.ProductsDAO;
- import com.fenoreste.rest.ResponseDTO.ProductsDTO;
+ import DTO.ProductsDTO;
  import com.github.cliftonlabs.json_simple.JsonObject;
 import java.util.Calendar;
  import java.util.List;

@@ -5,10 +5,10 @@
  */
 package com.fenoreste.rest.Dao;
 
-import com.fenoreste.rest.ResponseDTO.AccountHoldersDTO;
-import com.fenoreste.rest.ResponseDTO.DetailsAccountDTO;
-import com.fenoreste.rest.ResponseDTO.HoldsDTO;
-import com.fenoreste.rest.ResponseDTO.StatementsDTO;
+import DTO.AccountHoldersDTO;
+import DTO.DetailsAccountDTO;
+import DTO.HoldsDTO;
+import DTO.StatementsDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Entidades.Auxiliares;
 import com.fenoreste.rest.Entidades.AuxiliaresD;

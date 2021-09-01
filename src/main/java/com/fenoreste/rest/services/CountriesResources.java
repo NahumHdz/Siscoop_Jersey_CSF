@@ -1,8 +1,8 @@
 package com.fenoreste.rest.services;
 
 import com.fenoreste.rest.Auth.Security;
-import com.fenoreste.rest.ResponseDTO.ClearingCodeRulesDTO;
-import com.fenoreste.rest.ResponseDTO.CountriesDTO;
+import DTO.ClearingCodeRulesDTO;
+import DTO.CountriesDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.github.cliftonlabs.json_simple.JsonObject;
 import java.util.ArrayList;

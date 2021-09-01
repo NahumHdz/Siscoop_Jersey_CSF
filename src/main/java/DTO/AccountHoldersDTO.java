@@ -3,31 +3,23 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.fenoreste.rest.ResponseDTO;
+package DTO;
 
 /**
  *
  * @author Elliot
  */
-public class CountriesDTO {
+public class AccountHoldersDTO {
     
-    private String code;
     private String name;
+    private String relationCode;
 
-    public CountriesDTO() {
+    public AccountHoldersDTO() {
     }
 
-    public CountriesDTO(String code, String name) {
-        this.code = code;
+    public AccountHoldersDTO(String name, String relationCode) {
         this.name = name;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
+        this.relationCode = relationCode;
     }
 
     public String getName() {
@@ -38,11 +30,20 @@ public class CountriesDTO {
         this.name = name;
     }
 
+    public String getRelationCode() {
+        return relationCode;
+    }
+
+    public void setRelationCode(String relationCode) {
+        this.relationCode = relationCode;
+    }
+
     @Override
     public String toString() {
-        return "CountriesDTO{" + "code=" + code + ", name=" + name + '}';
+        return "AccountHoldersDTO{" + "name=" + name + ", relationCode=" + relationCode + '}';
     }
     
     
+   
     
 }

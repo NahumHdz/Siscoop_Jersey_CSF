@@ -50,6 +50,7 @@ public class ResourcesSPEI {
             @HeaderParam("ClaveRastreo") String claveRastreo,
             @HeaderParam("MedioEntrega") String medioEntrega,
             @HeaderParam("Firma") String firma, String request) {
+
         EnviarOrdenSPEIDTO ResponseO = new EnviarOrdenSPEIDTO();
         InformacionDTO informacion = new InformacionDTO();
         JSONObject jsonRequest = new JSONObject(request);
@@ -87,7 +88,8 @@ public class ResourcesSPEI {
             transaccion.setComision(0.0);
             transaccion.setCausaDevolucion(0);
             transaccion.setClaveRastreoDevolucion("2021061090650115477856789ABDE");
-
+            
+            //Respuesta para enviar orden
             SPEISolicitanteResponse solicitanteRes = new SPEISolicitanteResponse();
             solicitanteRes.setCIF(solicitante.getCIF());
             solicitanteRes.setCorreoElectronico(solicitante.getCorreoElectronico());
@@ -313,116 +315,113 @@ public class ResourcesSPEI {
         EnviarOrdenSPEIDTO responseDTO = new EnviarOrdenSPEIDTO();
         InformacionDTO informacion = new InformacionDTO();
         JsonObject jsonResponse = new JsonObject();
-        JsonArray jsonArr=new JsonArray();
-        
-            JsonArray informacionJson=new JsonArray();
-            JsonObject DatosInformacion = new JsonObject();
+        JsonArray jsonArr = new JsonArray();
+
+        JsonArray informacionJson = new JsonArray();
+        JsonObject DatosInformacion = new JsonObject();
         try {
-            List<Object>lista=new LinkedList<>();
-            for(int i=0;i<2;i++){
-            JsonObject jsoni=new JsonObject();
-            SPEISolicitanteResponse solicitante = new SPEISolicitanteResponse();
-            solicitante.setCIF(123456);
-            solicitante.setCuentaTarjeta("856040902522300450");
-            solicitante.setCorreoElectronico("ANAMARIA@HOTMAIL.COM");
-            solicitante.setNombre("ANA MARIA LOPEZ CASTRO");
-            solicitante.setRfcCurp("CALA931128MZ9");
-            solicitante.setTipoCuenta(40);
+            List<Object> lista = new LinkedList<>();
+            for (int i = 0; i < 2; i++) {
+                JsonObject jsoni = new JsonObject();
+                SPEISolicitanteResponse solicitante = new SPEISolicitanteResponse();
+                solicitante.setCIF(123456);
+                solicitante.setCuentaTarjeta("856040902522300450");
+                solicitante.setCorreoElectronico("ANAMARIA@HOTMAIL.COM");
+                solicitante.setNombre("ANA MARIA LOPEZ CASTRO");
+                solicitante.setRfcCurp("CALA931128MZ9");
+                solicitante.setTipoCuenta(40);
 
-            SPEIBeneficiario beneficiario = new SPEIBeneficiario();
-            beneficiario.setNombre("Juan Jose Torres");
-            beneficiario.setCorreoElectronico("");
-            beneficiario.setCuentaTarjeta("8800001235");
-            beneficiario.setInstitucionContraparte(510041);
-            beneficiario.setRfcCurp("TOJ010203BB1");
-            beneficiario.setTipoCuenta(10);
+                SPEIBeneficiario beneficiario = new SPEIBeneficiario();
+                beneficiario.setNombre("Juan Jose Torres");
+                beneficiario.setCorreoElectronico("");
+                beneficiario.setCuentaTarjeta("8800001235");
+                beneficiario.setInstitucionContraparte(510041);
+                beneficiario.setRfcCurp("TOJ010203BB1");
+                beneficiario.setTipoCuenta(10);
 
-            SPEITransaccion transaccion = new SPEITransaccion();
-            transaccion.setIdentificadorUnicoSPEI("01154778");
-            transaccion.setClaveRastreo("2021061090650115477856789ABCD");
-            transaccion.setConceptoPago("PRUEBA SPEI");
-            transaccion.setEstado("008");
-            transaccion.setFechaHoraOperacion("2019-10-30T22:44:24.845Z");
-            transaccion.setMonto(0.01);
-            transaccion.setIVA(0.00);
-            transaccion.setNumeroReferencia(1234567);
-            transaccion.setFechaHoraCaptura("2021-07-14T12:04:23.000-06:00");
-            transaccion.setComision(0.0);
-            transaccion.setCausaDevolucion(0);
-            transaccion.setClaveRastreoDevolucion("2021061090650115477856789ABDE");
+                SPEITransaccion transaccion = new SPEITransaccion();
+                transaccion.setIdentificadorUnicoSPEI("01154778");
+                transaccion.setClaveRastreo("2021061090650115477856789ABCD");
+                transaccion.setConceptoPago("PRUEBA SPEI");
+                transaccion.setEstado("008");
+                transaccion.setFechaHoraOperacion("2019-10-30T22:44:24.845Z");
+                transaccion.setMonto(0.01);
+                transaccion.setIVA(0.00);
+                transaccion.setNumeroReferencia(1234567);
+                transaccion.setFechaHoraCaptura("2021-07-14T12:04:23.000-06:00");
+                transaccion.setComision(0.0);
+                transaccion.setCausaDevolucion(0);
+                transaccion.setClaveRastreoDevolucion("2021061090650115477856789ABDE");
 
-            informacion.setSolicitante(solicitante);
-            informacion.setBeneficiario(beneficiario);
-            informacion.setTransaccion(transaccion);
-            informacion.setURLConsultaCEP("string");
+                informacion.setSolicitante(solicitante);
+                informacion.setBeneficiario(beneficiario);
+                informacion.setTransaccion(transaccion);
+                informacion.setURLConsultaCEP("string");
 
-            responseDTO.setObjetoInformacion(informacion);
-            responseDTO.setIdTransaccion("25AEA00451CA23P1204PT89754P4126L8");
-            responseDTO.setEstatusProceso(0);
-            responseDTO.setMensaje("OK");
-            
-            JsonObject jsonSolicitante = new JsonObject();
-            jsonSolicitante.put("CIF", String.valueOf(123456));
-            jsonSolicitante.put("CuentaTarjeta", solicitante.getCuentaTarjeta());
-            jsonSolicitante.put("Nombre", solicitante.getNombre());
-            jsonSolicitante.put("RfcCurp", solicitante.getRfcCurp());
-            jsonSolicitante.put("TipoCuenta", solicitante.getTipoCuenta());
-            jsonSolicitante.put("CorreoElectronico", solicitante.getCorreoElectronico());
+                responseDTO.setObjetoInformacion(informacion);
+                responseDTO.setIdTransaccion("25AEA00451CA23P1204PT89754P4126L8");
+                responseDTO.setEstatusProceso(0);
+                responseDTO.setMensaje("OK");
 
-            JsonObject jsonBeneficiario = new JsonObject();
-            jsonBeneficiario.put("CuentaTarjeta", beneficiario.getCuentaTarjeta());
-            jsonBeneficiario.put("Nombre", beneficiario.getNombre());
-            jsonBeneficiario.put("RfcCurp", beneficiario.getRfcCurp());
-            jsonBeneficiario.put("InstitucionContraparte", beneficiario.getInstitucionContraparte());
-            jsonBeneficiario.put("TipoCuenta", beneficiario.getTipoCuenta());
-            jsonBeneficiario.put("CorreoElectronico", beneficiario.getCorreoElectronico());
+                JsonObject jsonSolicitante = new JsonObject();
+                jsonSolicitante.put("CIF", String.valueOf(123456));
+                jsonSolicitante.put("CuentaTarjeta", solicitante.getCuentaTarjeta());
+                jsonSolicitante.put("Nombre", solicitante.getNombre());
+                jsonSolicitante.put("RfcCurp", solicitante.getRfcCurp());
+                jsonSolicitante.put("TipoCuenta", solicitante.getTipoCuenta());
+                jsonSolicitante.put("CorreoElectronico", solicitante.getCorreoElectronico());
 
-            JsonObject DatosTransaccion = new JsonObject();
-            DatosTransaccion.put("IdentificadorUnicoSPEI", String.valueOf(transaccion.getNumeroReferencia()));
-            DatosTransaccion.put("ClaveRastreo", transaccion.getClaveRastreo());
-            DatosTransaccion.put("ConceptoPago", transaccion.getConceptoPago());
-            DatosTransaccion.put("Estado", transaccion.getEstado());
-            DatosTransaccion.put("FechaHoraOperacion", transaccion.getFechaHoraOperacion());
-            DatosTransaccion.put("Monto", transaccion.getMonto());
-            DatosTransaccion.put("IVA", transaccion.getIVA());
-            DatosTransaccion.put("NumeroReferencia", transaccion.getNumeroReferencia());
-            DatosTransaccion.put("FechaHoraTransferencia", "2019-10-30T22:44:24.845Z");
-            DatosTransaccion.put("FechaHoraCaptura", transaccion.getFechaHoraCaptura());
-            DatosTransaccion.put("FechaHoraAcuse", "2019-10-30T22:44:24.845Z");
-            //DatosTransaccion.put("FechaHoraDevolucion", "2019-10-30T22:44:24.845Z");
-            DatosTransaccion.put("FechaHoraEntrega", "2019-10-30T22:44:24.845Z");
-            DatosTransaccion.put("FechaHoraLiquidacion", "2019-10-30T22:44:24.845Z");
-            DatosTransaccion.put("Comision", transaccion.getComision());
-            DatosTransaccion.put("CausaDevolucion", transaccion.getCausaDevolucion());
-            DatosTransaccion.put("ClaveRastreoDevolucion", transaccion.getClaveRastreoDevolucion());
-            
-            /*informacionJson.add(jsonSolicitante);
+                JsonObject jsonBeneficiario = new JsonObject();
+                jsonBeneficiario.put("CuentaTarjeta", beneficiario.getCuentaTarjeta());
+                jsonBeneficiario.put("Nombre", beneficiario.getNombre());
+                jsonBeneficiario.put("RfcCurp", beneficiario.getRfcCurp());
+                jsonBeneficiario.put("InstitucionContraparte", beneficiario.getInstitucionContraparte());
+                jsonBeneficiario.put("TipoCuenta", beneficiario.getTipoCuenta());
+                jsonBeneficiario.put("CorreoElectronico", beneficiario.getCorreoElectronico());
+
+                JsonObject DatosTransaccion = new JsonObject();
+                DatosTransaccion.put("IdentificadorUnicoSPEI", String.valueOf(transaccion.getNumeroReferencia()));
+                DatosTransaccion.put("ClaveRastreo", transaccion.getClaveRastreo());
+                DatosTransaccion.put("ConceptoPago", transaccion.getConceptoPago());
+                DatosTransaccion.put("Estado", transaccion.getEstado());
+                DatosTransaccion.put("FechaHoraOperacion", transaccion.getFechaHoraOperacion());
+                DatosTransaccion.put("Monto", transaccion.getMonto());
+                DatosTransaccion.put("IVA", transaccion.getIVA());
+                DatosTransaccion.put("NumeroReferencia", transaccion.getNumeroReferencia());
+                DatosTransaccion.put("FechaHoraTransferencia", "2019-10-30T22:44:24.845Z");
+                DatosTransaccion.put("FechaHoraCaptura", transaccion.getFechaHoraCaptura());
+                DatosTransaccion.put("FechaHoraAcuse", "2019-10-30T22:44:24.845Z");
+                //DatosTransaccion.put("FechaHoraDevolucion", "2019-10-30T22:44:24.845Z");
+                DatosTransaccion.put("FechaHoraEntrega", "2019-10-30T22:44:24.845Z");
+                DatosTransaccion.put("FechaHoraLiquidacion", "2019-10-30T22:44:24.845Z");
+                DatosTransaccion.put("Comision", transaccion.getComision());
+                DatosTransaccion.put("CausaDevolucion", transaccion.getCausaDevolucion());
+                DatosTransaccion.put("ClaveRastreoDevolucion", transaccion.getClaveRastreoDevolucion());
+
+                /*informacionJson.add(jsonSolicitante);
             informacionJson.add(jsonBeneficiario);
             informacionJson.add(DatosTransaccion);
             informacionJson.add(informacion.getURLConsultaCEP());
-            */
-            
-            
-            
-            DatosInformacion.put("Solicitante", jsonSolicitante);
-            DatosInformacion.put("Beneficiario", jsonBeneficiario);
-            DatosInformacion.put("DatosTransaccion", DatosTransaccion);
-            DatosInformacion.put("URLConsultaCEP", informacion.getURLConsultaCEP());
-            
-            informacionJson.add(DatosInformacion);
-            /*
+                 */
+                DatosInformacion.put("Solicitante", jsonSolicitante);
+                DatosInformacion.put("Beneficiario", jsonBeneficiario);
+                DatosInformacion.put("DatosTransaccion", DatosTransaccion);
+                DatosInformacion.put("URLConsultaCEP", informacion.getURLConsultaCEP());
+
+                informacionJson.add(DatosInformacion);
+                /*
             jsonResponse.put("ObjetoInformacion", DatosInformacion);
             jsonResponse.put("EstatusProceso", 0);
             jsonResponse.put("IdTransaccion", "25AEA00451CA23P1204PT89754P4126L8");
             jsonResponse.put("Mensaje", "OK");*/
-            
+
             }
-            jsonResponse.put("ObjetoInformacion",informacionJson);
+            jsonResponse.put("ObjetoInformacion", informacionJson);
             //jsonResponse.put("ObjetoInformacion", DatosInformacion);
             jsonResponse.put("EstatusProceso", 0);
             jsonResponse.put("IdTransaccion", "25AEA00451CA23P1204PT89754P4126L8");
             jsonResponse.put("Mensaje", "OK");
-            
+
         } catch (Exception e) {
             System.out.println("Error al formar response:" + e.getMessage());
         }

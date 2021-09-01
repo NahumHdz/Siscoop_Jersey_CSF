@@ -2,7 +2,7 @@ package com.fenoreste.rest.Dao;
 import com.fenoreste.rest.Entidades.Auxiliares;
 import com.fenoreste.rest.Entidades.CuentasSiscoop;
 import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
-import com.fenoreste.rest.ResponseDTO.ProductsDTO;
+import DTO.ProductsDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Util.TimerBeepClock;
 import java.awt.Toolkit;

@@ -2,7 +2,7 @@ package com.fenoreste.rest.services;
 
 import com.fenoreste.rest.Auth.Security;
 import com.fenoreste.rest.Dao.BalanceDAO;
-import com.fenoreste.rest.ResponseDTO.BalancesDTO;
+import DTO.BalancesDTO;
 import com.github.cliftonlabs.json_simple.JsonObject;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;

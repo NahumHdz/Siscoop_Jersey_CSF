@@ -8,7 +8,7 @@ package com.fenoreste.rest.Dao;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Entidades.Auxiliares;
 import com.fenoreste.rest.Entidades.Productos;
-import com.fenoreste.rest.ResponseDTO.BalancesDTO;
+import DTO.BalancesDTO;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;

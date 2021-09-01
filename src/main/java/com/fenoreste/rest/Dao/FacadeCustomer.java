@@ -1,9 +1,9 @@
 package com.fenoreste.rest.Dao;
 
-import com.fenoreste.rest.ResponseDTO.CustomerAccountDTO;
-import com.fenoreste.rest.ResponseDTO.CustomerContactDetailsDTO;
-import com.fenoreste.rest.ResponseDTO.CustomerDetailsDTO;
-import com.fenoreste.rest.ResponseDTO.CustomerSearchDTO;
+import DTO.CustomerAccountDTO;
+import DTO.CustomerContactDetailsDTO;
+import DTO.CustomerDetailsDTO;
+import DTO.CustomerSearchDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Entidades.Auxiliares;
 import com.fenoreste.rest.Entidades.AuxiliaresD;

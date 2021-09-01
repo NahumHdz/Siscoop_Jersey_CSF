@@ -1,16 +1,45 @@
 package com.fenoreste.rest.Application;
 
-import javax.ws.rs.ApplicationPath;
+import java.util.Set;
+import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
+@javax.ws.rs.ApplicationPath("gateway")
+public class Banca extends Application {
 
-@ApplicationPath("gateway")
-public class Banca extends ResourceConfig {
-    public Banca() {
-        packages("com.fenoreste.rest.services");
-        register(JacksonFeature.class);
-        register(RolesAllowedDynamicFeature.class);
+    @Override
+    public Set<Class<?>> getClasses() {
+        Set<Class<?>> resources = new java.util.HashSet<>();
+        addRestResourceClasses(resources);
+        //hora();
+        return resources;
+    }
+
+/*    public void horaEjecutaAlerta() {
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        Runnable task = new TimerBeepClock();
+        int initialDelay = 1;
+        int periodicDelay = 1;
+        scheduler.scheduleAtFixedRate(task, initialDelay, periodicDelay, TimeUnit.SECONDS);
+
+    }*/
+
+    private void addRestResourceClasses(Set<Class<?>> resources) {
+        resources.add(com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.class);
+        resources.add(com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider.class);
+        resources.add(com.fenoreste.rest.services.AccountsResources.class);
+        resources.add(com.fenoreste.rest.services.AlertsResources.class);
+        resources.add(com.fenoreste.rest.services.BalancesResources.class);
+        resources.add(com.fenoreste.rest.services.CardsResources.class);
+        resources.add(com.fenoreste.rest.services.CountriesResources.class);
+        resources.add(com.fenoreste.rest.services.CurrentBusinessDate.class);
+        resources.add(com.fenoreste.rest.services.CustomerResources.class);
+        resources.add(com.fenoreste.rest.services.ExchangeResources.class);
+        resources.add(com.fenoreste.rest.services.FileResources.class);
+        resources.add(com.fenoreste.rest.services.InstructionsResources.class);
+        resources.add(com.fenoreste.rest.services.ProductsResources.class);
+        resources.add(com.fenoreste.rest.services.SPEI.ResourcesSPEI.class);
+        resources.add(com.fenoreste.rest.services.TimeResources.class);
+        resources.add(com.fenoreste.rest.services.ValidateBeneficiary.class);
+        resources.add(org.glassfish.jersey.server.wadl.internal.WadlResource.class);
     }
 }
