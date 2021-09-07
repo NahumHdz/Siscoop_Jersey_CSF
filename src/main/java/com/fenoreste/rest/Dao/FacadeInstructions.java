@@ -105,7 +105,7 @@ public abstract class FacadeInstructions<T> {
             if (findAccount(cuentaorigen, customerId) && findBalance(cuentaorigen, montoTransferencia)) {
                 validationId = RandomAlfa().toUpperCase();
                 //si es una pago de servicio Nomas la guarda porque no se esta habilitado el servicio pero si debe validar que exista la cuenta origen y que tenga saldo
-                if (tipotransferencia.toUpperCase().contains("BIL")) {
+                if (tipotransferencia.toUpperCase().contains("BILL_PAYMENT")) {
                     EntityTransaction tr = em.getTransaction();
                     tr.begin();
                     validaciones_transferencias_siscoop vl = new validaciones_transferencias_siscoop();
@@ -123,7 +123,7 @@ public abstract class FacadeInstructions<T> {
                     em.persist(vl);
                     tr.commit();
                     bandera = true;
-                } else if (tipotransferencia.toUpperCase().contains("DOMESTIC_P")) {
+                } else if (tipotransferencia.toUpperCase().contains("DOMESTIC_PAYMENT")) {
                     //Es un pago SPEI
 
                 } else {
@@ -147,9 +147,9 @@ public abstract class FacadeInstructions<T> {
                         tr.commit();
                         bandera = true;
                     } else {
-                        //Busca que la cuenta destino pertenezca al mismo socio
-                        if (tipotransferencia.toUpperCase().contains("OWN")) {
-                            if (findAccount(cuentadestino, customerId)) {
+                        //Tranferencias entre cuentas propias
+                        if (tipotransferencia.toUpperCase().contains("TRANSFER_OWN")) {
+                            if (validarTransferenciaEntreMisCuentas(customerId, cuentaorigen, montoTransferencia, cuentadestino)) {
                                 EntityTransaction tr = em.getTransaction();
                                 tr.begin();
                                 validaciones_transferencias_siscoop vl = new validaciones_transferencias_siscoop();
@@ -355,6 +355,97 @@ public abstract class FacadeInstructions<T> {
         } finally {
             em.close();
         }
+        return bandera;
+    }
+    
+    private boolean validarTransferenciaEntreMisCuentas(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
+        EntityManager em = emf.createEntityManager();
+        String cuentaOrigen = "SELECT * FROM auxiliares a "
+                            + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaOrigen + "'"
+                            + " AND replace(to_char(a.idorigen,'099999')||to_char(a.idgrupo,'09')||to_char(a.idsocio,'099999'),' ','') = '" + socio + "' AND estatus = 2";
+        String cuentaDestino = "SELECT * FROM auxiliares a "
+                            + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaDestino + "'"
+                            + " AND replace(to_char(a.idorigen,'099999')||to_char(a.idgrupo,'09')||to_char(a.idsocio,'099999'),' ','') = '" + socio + "' AND estatus = 2";
+        boolean bandera = false;
+        
+        try {
+            Auxiliares ctaOrigen = null;
+            boolean bOrigen = false;
+            
+            try {
+                Query query = em.createNativeQuery(cuentaOrigen, Auxiliares.class);
+                ctaOrigen = (Auxiliares) query.getSingleResult();
+                bOrigen = true;
+            } catch (Exception e) {
+                System.out.println("No Existe Cuenta Origen");
+                bOrigen = false;
+            }
+            
+            if (bOrigen) {
+                Double saldo = Double.parseDouble(ctaOrigen.getSaldo().toString());
+                Productos prOrigen = em.find(Productos.class, ctaOrigen.getAuxiliaresPK().getIdproducto());
+                    //si el producto no es un prestamo
+                    if (prOrigen.getTipoproducto() == 0) {
+                        //Verifico el estatus de la cuenta origen
+                        if (ctaOrigen.getEstatus() == 2) {
+                            //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
+                            if (saldo >= montoTransferencia) {
+                                Auxiliares ctaDestino = null;
+                                boolean bDestino = false;
+                                //Busco la cuenta destino
+                                System.out.println("CuentaDestino:" + cuentaDestino);
+                                try {
+                                    Query queryDestino = em.createNativeQuery(cuentaDestino, Auxiliares.class);
+                                    ctaDestino = (Auxiliares) queryDestino.getSingleResult();
+                                    bDestino = true;
+                                } catch (Exception e) {
+                                    System.out.println("Error al encontrar productoDestino:" + e.getMessage());
+                                    bDestino = false;
+                                }
+                                if (bDestino) {
+                                    //Busco el producto destino
+                                    Productos productoDestino = em.find(Productos.class, ctaDestino.getAuxiliaresPK().getIdproducto());
+                                    //Valido que la cuenta destino este activa
+                                    if (ctaDestino.getEstatus() == 2) {
+                                            //Valido que el producto destino no sea un prestamo
+                                            if (productoDestino.getTipoproducto() == 0) {
+                                                //Valido que realmente el producto destino pertenezca al mismo socio 
+                                                if (ctaOrigen.getIdorigen() == ctaDestino.getIdorigen() && ctaOrigen.getIdgrupo() == ctaDestino.getIdgrupo() && ctaOrigen.getIdsocio() == ctaDestino.getIdsocio()) {
+                                                    //Si se puede realizar la transferencia
+                                                    bandera = true;
+                                                } else {
+                                                    System.out.println("PRODUCTO DESTINO NO PERTENECE AL MISMO SOCIO");
+                                                }
+                                            } else {
+                                                System.out.println("PRODUCTO DESTINO NO ACEPTA SOBRECARGOS");
+                                            }
+                                    } else {
+                                        System.out.println("PRODUCTO DESTINO ESTA INACTIVA");
+                                    }
+                                } else {
+                                    System.out.println("NO SE ENCONTRO PRODUCTO DESTINO");
+                                }
+                            } else {
+                                System.out.println("FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION");
+                            }
+                        } else {
+                            System.out.println("PRODUCTO ORIGEN INACTIVO");
+                        }
+                    } else {
+                        System.out.println("PRODUCTO ORIGEN NO PERMITE SOBRECARGOS");
+                    }
+            } else {
+                System.out.println("Producto origen no pertenece al socio");
+            }
+            
+        } catch (Exception e) {
+            em.close();
+            System.out.println("Error al realizar tranferencia entre mis cuentas");
+            return bandera;
+        } finally {
+            em.close();
+        }
+
         return bandera;
     }
 

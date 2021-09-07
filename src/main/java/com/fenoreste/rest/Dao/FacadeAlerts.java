@@ -78,6 +78,8 @@ public abstract class FacadeAlerts<T> {
             }
         } catch (Exception e) {
             System.out.println("Error al generar codigo de validacion:" + e.getMessage());
+        } finally {
+            em.close();
         }
         return null;
     }
@@ -114,6 +116,8 @@ public abstract class FacadeAlerts<T> {
             }
         } catch (Exception e) {
             System.out.println("Error al ejecutar:" + e.getMessage());
+        } finally {
+            em.close();
         }
         return "Fail";
     }
@@ -163,6 +167,8 @@ public abstract class FacadeAlerts<T> {
             }
         } catch (Exception e) {
             System.out.println("Error al buscar persona:" + e.getMessage());
+        } finally {
+            em.close();
         }
         return bandera;
     }

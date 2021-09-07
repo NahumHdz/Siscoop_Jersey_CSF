@@ -157,6 +157,8 @@ import org.json.JSONObject;
            
        } catch (Exception e) {
            System.out.println("Error al construir objeto:"+e.getMessage());
+       } finally {
+           dao.cerrar();
        }
        return null;
    }

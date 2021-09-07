@@ -186,6 +186,8 @@ public class AccountsResources {
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());
             return null;
+        } finally {
+            dao.cerrar();
         }
     }
 

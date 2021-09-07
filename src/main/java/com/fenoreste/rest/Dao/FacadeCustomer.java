@@ -36,47 +36,66 @@ public abstract class FacadeCustomer<T> {
         emf = AbstractFacade.conexion();
     }
 
-    public List<CustomerSearchDTO> search(String ogs) {
+    public List<CustomerSearchDTO> search(String ogs, String nombre, String appaterno) {
         EntityManager em = emf.createEntityManager();
         List<CustomerSearchDTO> listaC = new ArrayList<CustomerSearchDTO>();
         CustomerSearchDTO client = null;
         try {
-            int o = Integer.parseInt(ogs.substring(0, 6));
-            int g = Integer.parseInt(ogs.substring(6, 8));
-            int s = Integer.parseInt(ogs.substring(8, 14));
-            System.out.println("ogs:" + o + "" + g + "" + s);
-            PersonasPK pk = new PersonasPK(o, g, s);
-            Persona p = em.find(Persona.class, pk);
+            int o = 0, g = 0, s = 0;
+            List<Persona> listaPersonas = new ArrayList<>();
+            PersonasPK pk = null;
+            Persona p = null;
+            String customerId = "";
 
-            String customerId = ogs;
             String name = "", curp = "", taxId = "", customerType = "";
             Date birthDate = null;
-            name = p.getNombre() + " " + p.getAppaterno() + " " + p.getApmaterno();
-            taxId = p.getCurp();
-            birthDate = p.getFechanacimiento();
-            if (p.getRazonSocial() == null) {
-                customerType = "individual";
-            } else {
-                customerType = "grupal";
-            }
+            String sql = "";
+            if (!ogs.equals("")) {
+                sql = "SELECT * FROM personas WHERE replace(to_char(idorigen,'099999')||to_char(idgrupo,'09')||to_char(idsocio,'099999'),' ','')='" + ogs + "' AND idgrupo=10";
+                /*o = Integer.parseInt(ogs.substring(0, 6));
+                g = Integer.parseInt(ogs.substring(6, 8));
+                s = Integer.parseInt(ogs.substring(8, 14));
+                pk = new PersonasPK(o, g, s);*/
 
-           client = new CustomerSearchDTO(
-                    customerId,
-                    name,
-                    taxId,
-                    dateToString(birthDate).replace("/","-"),
-                    "individual");
-            listaC.add(client);
+            } else {
+                sql = "SELECT * FROM personas WHERE UPPER(replace(nombre,' ','')) LIKE '%" + nombre + "%' AND UPPER(appaterno||apmaterno) LIKE '%" + appaterno + "%' AND idgrupo=10";
+
+            }
+            System.out.println("SQL:"+sql);
+            Query queryPersonas = em.createNativeQuery(sql, Persona.class);
+            listaPersonas = queryPersonas.getResultList();
+            System.out.println("lista:"+listaPersonas);
+
+            for (int i = 0; i < listaPersonas.size(); i++) {
+                p= listaPersonas.get(i);
+                customerId=String.format("%06d",p.getPersonasPK().getIdorigen())+String.format("%02d", p.getPersonasPK().getIdgrupo())+String.format("%06d",p.getPersonasPK().getIdsocio());
+                name = p.getNombre() + " " + p.getAppaterno() + " " + p.getApmaterno();
+                taxId = p.getCurp();
+                birthDate = p.getFechanacimiento();
+                if (p.getRazonSocial() == null) {
+                    customerType = "individual";
+                } else {
+                    customerType = "grupal";
+                }
+
+                client = new CustomerSearchDTO(
+                        customerId,
+                        name,
+                        taxId,
+                        dateToString(birthDate).replace("/", "-"),
+                        "individual");
+                listaC.add(client);
+            }
 
             return listaC;
         } catch (Exception e) {
             em.close();
             System.out.println("Error al buscar cliente:" + e.getMessage());
-           
-        }finally{
+
+        } finally {
             em.close();
         }
-        
+
         return null;
     }
 
@@ -114,11 +133,11 @@ public abstract class FacadeCustomer<T> {
     }
 
     public List<CustomerContactDetailsDTO> ContactDetails(String ogs) {
-        EntityManager em = emf.createEntityManager();
+     EntityManager em = emf.createEntityManager();
         Query query = null;
         List<Object[]> ListaObjetos = null;
         String consulta = "SELECT CASE WHEN p.telefono != '' THEN p.telefono ELSE '0' END as phone,"
-                + " CASE WHEN p.celular != '' THEN p.celular ELSE '0' END as cellphone,"
+                + " CASE WHEN p.celular != '' THEN p.celular ELSE '0000000000' END as cellphone,"
                 + " CASE WHEN p.email != '' THEN  p.email ELSE '0' END as email FROM personas p WHERE replace(to_char(p.idorigen,'099999')||to_char(p.idgrupo,'09')||to_char(p.idsocio,'099999'),' ','')='" + ogs + "'";
         CustomerContactDetailsDTO contactsPhone = new CustomerContactDetailsDTO();
         CustomerContactDetailsDTO contactsCellphone = new CustomerContactDetailsDTO();
@@ -134,27 +153,26 @@ public abstract class FacadeCustomer<T> {
             if (p.getTelefono() != null) {
                 contactsPhone.setCustomerContactId(ogs);
                 contactsPhone.setCustomerContactType("phone");
-                contactsPhone.setPhoneNumber("521"+p.getTelefono());
+                contactsPhone.setPhoneNumber("521" + p.getTelefono());
                 ListaContactos.add(contactsPhone);
 
             }
             if (p.getCelular() != null) {
                 contactsCellphone.setCustomerContactId(ogs);
                 contactsCellphone.setCustomerContactType("phone");
-                contactsCellphone.setCellphoneNumber(p.getCelular());
+                contactsCellphone.setCellphoneNumber("521"+p.getCelular());
                 ListaContactos.add(contactsCellphone);
             }
             if (p.getEmail() != null) {
                 contactsEmail.setCustomerContactId(ogs);
                 contactsEmail.setCustomerContactType("email");
                 contactsEmail.setEmail(p.getEmail());
-
                 ListaContactos.add(contactsEmail);
             }
         } catch (Exception e) {
             em.close();
             System.out.println("Error al obtener detalles del socio:" + e.getMessage());
-           
+
         }
         em.close();
 

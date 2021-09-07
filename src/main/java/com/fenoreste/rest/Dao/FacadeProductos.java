@@ -72,7 +72,9 @@ public abstract class FacadeProductos<T> {
       }
     } catch (Exception e) {
       System.out.println("Error al buscar tasa de productos:" + e.getMessage());
-    } 
+    } finally {
+        em.close();
+    }
     return false;
   }
   

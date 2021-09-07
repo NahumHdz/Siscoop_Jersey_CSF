@@ -78,7 +78,7 @@ public abstract class FacadeAccounts<T> {
             em.close();
             System.out.println("Error al crear lista:" + e.getMessage());
         } finally {
-            em.close();
+            em.close(); 
         }
         System.out.println("Holders:" + holders);
         return holders;
@@ -107,6 +107,8 @@ public abstract class FacadeAccounts<T> {
 
         } catch (Exception e) {
             System.out.println("Error al crear lista:" + e.getMessage());
+        } finally {
+            em.close();
         }
         return lista;
     }
@@ -217,6 +219,8 @@ public abstract class FacadeAccounts<T> {
             }
         } catch (Exception e) {
             System.out.println("Error en holds:" + e.getMessage());
+        } finally {
+            em.close();
         }
         return listaDTO;
     }
@@ -252,6 +256,8 @@ public abstract class FacadeAccounts<T> {
 
         } catch (Exception e) {
             System.out.println("Error al leer transacciones:" + e.getMessage());
+        } finally {
+            em.close();
         }
         return trs;
 
@@ -296,6 +302,8 @@ public abstract class FacadeAccounts<T> {
                     String.valueOf(a.getFechaactivacion()));
         } catch (Exception e) {
             System.out.println("Error en buscar detalles de cuenta:" + e.getMessage());
+        } finally {
+            em.close();
         }
         return dto;
     }

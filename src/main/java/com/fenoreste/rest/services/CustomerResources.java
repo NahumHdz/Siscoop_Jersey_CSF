@@ -33,39 +33,57 @@ import javax.ws.rs.HeaderParam;
    @Produces({MediaType.APPLICATION_JSON})
    @Consumes({MediaType.APPLICATION_JSON})
    public Response search(String cadena,@HeaderParam("authorization") String authString){
-       System.out.println("Request customer:"+cadena);
-       Security scr=new Security();
-     if(!scr.isUserAuthenticated(authString)){
+ System.out.println("Request customer:" + cadena);
+        Security scr = new Security();
+        if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
-     }
-     CustomerDAO datos = new CustomerDAO();
-     JsonObject JsonSocios = new JsonObject();
-     JsonObject Not_Found = new JsonObject();
-     JSONObject mainObject = new JSONObject(cadena);
-     String cif = "";
-     for (int i = 0; i < mainObject.length(); i++) {
-       JSONArray fi = mainObject.getJSONArray("filters");
-       for (int x = 0; x < fi.length(); x++) {
-         JSONObject jsonO = (JSONObject)fi.get(x);
-         cif = jsonO.getString("value");
-       } 
-     } 
-     try {
-       List<CustomerSearchDTO> lista = datos.search(cif);
-       CustomerSearchDTO cliente = null;
-       if (lista.size() > 0) {
-         JsonSocios.put("customers", lista);
-         return Response.status(Response.Status.OK).entity(JsonSocios).build();
-       }
-       Not_Found.put("title", "socios no encontrados");
-       return Response.status(Response.Status.NO_CONTENT).entity(Not_Found.toString()).build();
-     } catch (Exception e) {
-         System.out.println("Error general:"+e.getMessage());
-         datos.cerrar();
-       return null;
-     } finally {
-         datos.cerrar();
-     } 
+        }
+        CustomerDAO datos = new CustomerDAO();
+        JsonObject JsonSocios = new JsonObject();
+        JsonObject Not_Found = new JsonObject();
+        JSONObject mainObject = new JSONObject(cadena);
+        String cif = "";
+        String valueFirstName="",valueLastName="";
+        if (cadena.contains("firstName")) {
+            for (int i = 0; i < mainObject.length(); i++) {
+                JSONArray fi = mainObject.getJSONArray("filters");
+                //for (int x = 0; x < fi.length(); x++) {
+                    JSONObject jsonO = (JSONObject) fi.get(0);
+                    JSONObject jsonOO = (JSONObject) fi.get(1);
+                    valueFirstName=jsonO.getString("value");
+                    valueLastName=jsonOO.getString("value");
+                //}
+            }
+        } else {
+            for (int i = 0; i < mainObject.length(); i++) {
+                JSONArray fi = mainObject.getJSONArray("filters");
+                for (int x = 0; x < fi.length(); x++) {
+                    JSONObject jsonO = (JSONObject) fi.get(x);
+                    cif = jsonO.getString("value");
+                }
+            }
+        }
+        
+        System.out.println("Cif:"+cif);
+        System.out.println("firstName:"+valueFirstName);
+        System.out.println("lastName:"+valueLastName);
+        
+        try {
+            List<CustomerSearchDTO> lista = datos.search(cif,valueFirstName.replace(" ",""),valueLastName.replace(" ","").trim());
+            CustomerSearchDTO cliente = null;
+            if (lista.size() > 0) {
+                JsonSocios.put("customers", lista);
+                return Response.status(Response.Status.OK).entity(JsonSocios).build();
+            }
+            Not_Found.put("title", "socios no encontrados");
+            return Response.status(Response.Status.NO_CONTENT).entity(Not_Found.toString()).build();
+        } catch (Exception e) {
+            System.out.println("Error general:" + e.getMessage());
+            datos.cerrar();
+            return null;
+        } finally {
+            datos.cerrar();
+        }
    }
    
    @POST
@@ -104,47 +122,47 @@ import javax.ws.rs.HeaderParam;
    @Produces({MediaType.APPLICATION_JSON})
    @Consumes({MediaType.APPLICATION_JSON})
    public Response contactDetails(String cadena,@HeaderParam("authorization") String authString){
-    Security scr=new Security();
-    System.out.println("Request_cDetails:"+cadena);
-     if(!scr.isUserAuthenticated(authString)){
+    Security scr = new Security();
+        System.out.println("Request_cDetails:" + cadena);
+        if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
-     }
-     JsonObject Error = new JsonObject();
-     CustomerDAO datos = new CustomerDAO();
-     JsonObject MiddleContacts = new JsonObject();
-     JSONObject datosEntrada = new JSONObject(cadena);
-     String ogs = datosEntrada.getString("customerId");
-     try {
-       List<CustomerContactDetailsDTO> listaContacto = datos.ContactDetails(ogs);
-       JsonArray json = new JsonArray();
-       if (listaContacto.size() > 0) {
-         for (int i = 0; i < listaContacto.size(); i++) {
-           CustomerContactDetailsDTO dto = listaContacto.get(i);
-           JsonObject jsonT = new JsonObject();
-           if (dto.getPhoneNumber() != null) {
-             jsonT.put("customerContactId", ogs);
-             jsonT.put("customerContactType", dto.getCustomerContactType());
-             jsonT.put("phoneNumber", dto.getPhoneNumber());
-             json.add(jsonT);
-           } 
-           if (dto.getEmail() != null) {
-             jsonT.put("customerContactId", ogs);
-             jsonT.put("customerContactType", dto.getCustomerContactType());
-             jsonT.put("email", dto.getEmail());
-             json.add(jsonT);
-           } 
-         } 
-         MiddleContacts.put("contactDetails", json);
-         return Response.status(Response.Status.OK).entity(MiddleContacts).build();
-       } 
-       Error.put("Error", "Datos no encontrados");
-       return Response.status(Response.Status.NO_CONTENT).entity(Error).build();
-     } catch (Exception e) {
-       datos.cerrar();
-       return null;
-     } finally{
-         datos.cerrar();
-     }
+        }
+        JsonObject Error = new JsonObject();
+        CustomerDAO datos = new CustomerDAO();
+        JsonObject MiddleContacts = new JsonObject();
+        JSONObject datosEntrada = new JSONObject(cadena);
+        String ogs = datosEntrada.getString("customerId");
+        try {
+            List<CustomerContactDetailsDTO> listaContacto = datos.ContactDetails(ogs);
+            JsonArray json = new JsonArray();
+            if (listaContacto.size() > 0) {
+                for (int i = 0; i < listaContacto.size(); i++) {
+                    CustomerContactDetailsDTO dto = listaContacto.get(i);
+                    JsonObject jsonT = new JsonObject();
+                    if (dto.getCellphoneNumber() != null) {
+                        jsonT.put("customerContactId", ogs);
+                        jsonT.put("customerContactType", dto.getCustomerContactType());
+                        jsonT.put("phoneNumber", dto.getCellphoneNumber());
+                        json.add(jsonT);
+                    }
+                    if (dto.getEmail() != null) {
+                        jsonT.put("customerContactId", ogs);
+                        jsonT.put("customerContactType", dto.getCustomerContactType());
+                        jsonT.put("email", dto.getEmail());
+                        json.add(jsonT);
+                    }
+                }
+                MiddleContacts.put("contactDetails", json);
+                return Response.status(Response.Status.OK).entity(MiddleContacts).build();
+            }
+            Error.put("Error", "Datos no encontrados");
+            return Response.status(Response.Status.NO_CONTENT).entity(Error).build();
+        } catch (Exception e) {
+            datos.cerrar();
+            return null;
+        } finally {
+            datos.cerrar();
+        }
    }
    
    @POST
