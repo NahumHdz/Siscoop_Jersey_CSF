@@ -14,8 +14,11 @@ import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;
 import com.fenoreste.rest.Entidades.validaciones_transferencias_siscoop;
 import DTO.MonetaryInstructionDTO;
 import DTO.OrderWsSPEI;
+import com.fenoreste.rest.Entidades.AuxiliaresPK;
 import com.fenoreste.rest.Entidades.Persona;
 import com.fenoreste.rest.Entidades.Productos;
+import com.fenoreste.rest.Entidades.Tablas;
+import com.fenoreste.rest.Entidades.TablasPK;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
@@ -75,36 +78,101 @@ public abstract class FacadeInstructions<T> {
     }
 
     public validateMonetaryInstructionDTO validateMonetaryInstruction(String customerId,
-            String tipotransferencia,
             String cuentaorigen,
             String cuentadestino,
             Double montoTransferencia,
             String comentario,
             String propcuentadestino,
             String fechaejecucion,
-            String tipoejecucion) {
-        System.out.println("FechaEjecucion:" + fechaejecucion);
-        System.out.println("monto de la transferencia:" + montoTransferencia);
-        boolean bandera = false;
-        Calendar c1 = Calendar.getInstance();
-        String dia = Integer.toString(c1.get(5));
-        String mes = Integer.toString(c1.get(2) + 1);
-        String annio = Integer.toString(c1.get(1));
-        String FechaTiempoReal = String.format("%04d", Integer.parseInt(annio)) + "-" + String.format("%02d", Integer.parseInt(mes)) + "-" + String.format("%02d", Integer.parseInt(dia));
+            String tipoEjecucion,
+            String tipoTransferencia, int identificadorTransferencia) {
 
-        validateMonetaryInstructionDTO dto = null;
+        String mensageDinamico = "";
+
+        validateMonetaryInstructionDTO validateMonetary = new validateMonetaryInstructionDTO();
         EntityManager em = emf.createEntityManager();
-        String[] fees = new String[0];
+        //String[] fees = new String[0];
         String validationId = "";
-        Query queryf = em.createNativeQuery("SELECT date(now())");
-        String fe = String.valueOf(queryf.getSingleResult());
-        Date hoy = new Date();
 
+        //String fxxe = String.valueOf(queryf.getSingleResult());
+        Date hoy = new Date();
+        validationId = RandomAlfa().toUpperCase();
+        //si es una pago de servicio Nomas la guarda porque no se esta habilitado el servicio pero si debe validar que exista la cuenta origen y que tenga saldo
+        if (identificadorTransferencia == 1) {//Transferencia entre mis cuentas
+            mensageDinamico = validarTransferenciaEntreMisCuentas(customerId, cuentaorigen, montoTransferencia, cuentadestino);
+        } else if (identificadorTransferencia == 2) {//Transferencia a terceros dentro de la entidad
+            mensageDinamico = validarTransferenciasATercerosDE(customerId, cuentaorigen, montoTransferencia, cuentadestino);
+        } else if (identificadorTransferencia == 3) {//Pago a prestamos dentro de la entidad
+            mensageDinamico = validarPagoPrestamo(customerId, cuentaorigen, montoTransferencia, cuentadestino);
+        } else if (identificadorTransferencia == 4) {//pago de servicios
+            mensageDinamico = validarPagoServicio(customerId, cuentaorigen, montoTransferencia);
+        } else if (identificadorTransferencia == 5) {//transferencias SPEI
+            //mensageDinamico=validarTransferenciaSPEI(orden);
+        } else if (identificadorTransferencia == 6) {
+            mensageDinamico = validarTransferenciaEntreMisCuentas(customerId, cuentaorigen, montoTransferencia, cuentadestino);
+        } else if (identificadorTransferencia == 7) {
+            mensageDinamico = validarTransferenciasATercerosDE(customerId, cuentaorigen, montoTransferencia, cuentadestino);
+        } else if (identificadorTransferencia == 8) {
+            mensageDinamico = validarPagoPrestamo(customerId, cuentaorigen, montoTransferencia, cuentadestino);
+        }
+
+        System.out.println("Mensaje de validacion:" + mensageDinamico);
         try {
+            if (mensageDinamico.toUpperCase().contains("EXITO")) {
+                validaciones_transferencias_siscoop validacionesTransferencias = new validaciones_transferencias_siscoop();
+                validacionesTransferencias.setValidationId(validationId);
+                validacionesTransferencias.setTipotransferencia(tipoTransferencia);
+                validacionesTransferencias.setTipoejecucion(tipoEjecucion);
+                validacionesTransferencias.setMonto(montoTransferencia);
+                validacionesTransferencias.setFechaejecucion(hoy);
+                validacionesTransferencias.setEstatus(true);
+                validacionesTransferencias.setCustomerId(customerId);
+                validacionesTransferencias.setCuentaorigen(cuentaorigen);
+                validacionesTransferencias.setCuentadestino(cuentadestino);
+                validacionesTransferencias.setComentario1(comentario);
+
+                validacionesTransferencias.setComentario2(comentario);
+
+                validateMonetary.setValidationId(validacionesTransferencias.getValidationId());
+                validateMonetary.setExecutionDate(fechaejecucion);
+
+                em.getTransaction().begin();
+                em.persist(validacionesTransferencias);
+                em.getTransaction().commit();
+
+                //transacction.setTipotransferencia(tipoejecucion);
+            } else {
+                validateMonetary.setValidationId(mensageDinamico);
+                String fee[] = new String[2];
+                validateMonetary.setFees(fee);
+                validateMonetary.setExecutionDate("");
+            }
+        } catch (Exception e) {
+            em.close();
+            System.out.println("Error al generar validacion:" + e.getMessage());
+            validateMonetary.setValidationId(e.getMessage());
+            return validateMonetary;
+        } finally {
+            em.close();
+        }
+
+        /*try {
             //Busca la cuenta y busca si tiene saldo
             if (findAccount(cuentaorigen, customerId) && findBalance(cuentaorigen, montoTransferencia)) {
                 validationId = RandomAlfa().toUpperCase();
                 //si es una pago de servicio Nomas la guarda porque no se esta habilitado el servicio pero si debe validar que exista la cuenta origen y que tenga saldo
+                if (identificadorTransferencia == 1) {//Transferencia entre mis cuentas
+                    mensageDinamico= validarTransferenciaEntreMisCuentas("", cuentaorigen, montoTransferencia, cuentadestino);
+                } else if (identificadorTransferencia == 2) {//Trasnsferencia a terceros dentro de la entidad
+
+                } else if (identificadorTransferencia == 3) {//Pago a prestamos dentro de la entidad
+
+                } else if (identificadorTransferencia == 4) {//pago de servicios
+
+                } else if (identificadorTransferencia == 5) {//transferencias SPEI
+
+                }
+
                 if (tipotransferencia.toUpperCase().contains("BILL_PAYMENT")) {
                     EntityTransaction tr = em.getTransaction();
                     tr.begin();
@@ -199,82 +267,43 @@ public abstract class FacadeInstructions<T> {
             em.close();
         } finally {
             em.close();
-        }
-        return dto;
-    }
-
-    public validateMonetaryInstructionDTO validacionesOrdenSPEI(OrderWsSPEI orden) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            String validationId="";
-            //Validamos que exista el solicitante
-            if(validarTransferenciaSPEI(orden).toUpperCase().contains("EXITO")){
-              validationId=RandomAlfa().toUpperCase();
-            }else{
-                validationId=validarTransferenciaSPEI(orden);
-            }
-        }catch (Exception e) {
-            
-        }
-        
-        return null;
-        
+        }*/
+        return validateMonetary;
     }
 
     public String executeMonetaryInstruction(String validationId) {
-
-        boolean bandera = false;
-        Calendar c1 = Calendar.getInstance();
-        String dia = Integer.toString(c1.get(Calendar.DATE));
-        String mes = Integer.toString(c1.get(Calendar.MONTH) + 1);
-        String annio = Integer.toString(c1.get(Calendar.YEAR));
         EntityManager em = emf.createEntityManager();
         String mensaje = "";
         try {
+            //Buscamos la validacion guardada no ejecutada con el id que se nos proporciona
             String consulta = "SELECT * FROM v_transferenciassiscoop WHERE validationid='" + validationId + "' ORDER BY fechaejecucion DESC LIMIT 1";
-            System.out.println("Siscoop");
             Query query = em.createNativeQuery(consulta, validaciones_transferencias_siscoop.class);
-            validaciones_transferencias_siscoop vlt = (validaciones_transferencias_siscoop) query.getSingleResult();
-            System.out.println("dfdsf");
-
-            Query queryf = em.createNativeQuery("SELECT date(now())");
-            String fe = String.valueOf(queryf.getSingleResult()).replace("-", "/");
-            System.out.println("fe:" + fe);
-            Date hoy = stringToDate(fe);
-            System.out.println("vali:" + vlt.getCuentaorigen());
-            String c2 = "SELECT saldo -" + vlt.getMonto() + " FROM auxiliares a where replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(idauxiliar,'09999999'),' ','')='" + vlt.getCuentaorigen() + "'";
-            System.out.println("c2:" + c2);
-            Query query1 = em.createNativeQuery(c2);
+            validaciones_transferencias_siscoop validacion_guardada = (validaciones_transferencias_siscoop) query.getSingleResult();
+            String running_balance = "SELECT saldo -" + validacion_guardada.getMonto() + " FROM auxiliares a where replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(idauxiliar,'09999999'),' ','')='" + validacion_guardada.getCuentaorigen() + "'";
+            Query query1 = em.createNativeQuery(running_balance);
             Double saldo = Double.parseDouble(String.valueOf(query1.getSingleResult()));
-            if (findBalance(vlt.getCuentaorigen(), vlt.getMonto())) {
-                EntityTransaction tr = em.getTransaction();
-                tr.begin();
-                transferencias_completadas_siscoop vl = new transferencias_completadas_siscoop();
-                vl.setCuentaorigen(vlt.getCuentaorigen());
-                vl.setCuentadestino(vlt.getCuentadestino());
-                vl.setTipotransferencia(vlt.getTipotransferencia());
-                vl.setComentario1(vlt.getComentario1());
-                vl.setComentario2(vlt.getComentario2());
-                vl.setCustomerId(vlt.getCustomerId());
-                vl.setFechaejecucion(vlt.getFechaejecucion());
-                vl.setMonto(vlt.getMonto());
-                vl.setTipoejecucion(vlt.getTipoejecucion());
-                vl.setEstatus(true);
-                vl.setRunningBalance(saldo);
-                bandera = true;
-                if (bandera && aplicarCargos(vlt.getCuentaorigen(), vlt.getMonto(), 0)) {
-                    em.persist(vl);
-                    tr.commit();
-
-                    mensaje = "completed";
-                }
-
-            }
-
-        } catch (Exception e) {
+            
+            transferencias_completadas_siscoop ejecutar_transferencia = new transferencias_completadas_siscoop();
+            ejecutar_transferencia.setCuentaorigen(validacion_guardada.getCuentaorigen());
+            ejecutar_transferencia.setCuentadestino(validacion_guardada.getCuentadestino());
+            ejecutar_transferencia.setTipotransferencia(validacion_guardada.getTipotransferencia());
+            ejecutar_transferencia.setComentario1(validacion_guardada.getComentario1());
+            ejecutar_transferencia.setComentario2(validacion_guardada.getComentario2());
+            ejecutar_transferencia.setCustomerId(validacion_guardada.getCustomerId());
+            ejecutar_transferencia.setFechaejecucion(validacion_guardada.getFechaejecucion());
+            ejecutar_transferencia.setMonto(validacion_guardada.getMonto());
+            ejecutar_transferencia.setTipoejecucion(validacion_guardada.getTipoejecucion());
+            ejecutar_transferencia.setEstatus(true);
+            ejecutar_transferencia.setRunningBalance(saldo);
+            em.getTransaction().begin();
+            em.persist(ejecutar_transferencia);
+            mensaje = "completed";
+            em.getTransaction().commit();
+            } catch (Exception e) {
             System.out.println("Error en execute:" + e.getMessage());
-            e.printStackTrace();
             em.close();
+            em.getTransaction().rollback();
+            return "rejected";
         }
         return mensaje;
     }
@@ -323,6 +352,7 @@ public abstract class FacadeInstructions<T> {
         return listaDTO;
     }
 
+    /*=============================== Validaciones =======================================*/
     public Date stringToDate(String cadena) {
         SimpleDateFormat formato = new SimpleDateFormat("yyyy/MM/dd");
         Date fechaDate = null;
@@ -336,56 +366,37 @@ public abstract class FacadeInstructions<T> {
         return fechaDate;
     }
 
-    private boolean findAccount(String accountId, String customerId) {
-        EntityManager em = emf.createEntityManager();
-        boolean bandera = false;
-        try {
-            String consulta = "SELECT * FROM auxiliares a "
-                    + "WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId + "'"
-                    + " AND  replace(to_char(a.idorigen,'099999')||to_char(a.idgrupo,'09')||to_char(a.idsocio,'099999'),' ','')='" + customerId + "' AND estatus=2";
-            Query query = em.createNativeQuery(consulta, Auxiliares.class);
-            System.out.println("consulta:" + consulta);
-            Auxiliares a = (Auxiliares) query.getSingleResult();
-            if (a != null) {
-                bandera = true;
-            }
-        } catch (Exception e) {
-            System.out.println("Error en find opa:" + e.getMessage());
-            return bandera;
-        } finally {
-            em.close();
-        }
-        return bandera;
-    }
-    
-    private boolean validarTransferenciaEntreMisCuentas(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
+    //Validar Trasnferencia entre mis cuentas
+    private String validarTransferenciaEntreMisCuentas(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
         EntityManager em = emf.createEntityManager();
         String cuentaOrigen = "SELECT * FROM auxiliares a "
-                            + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaOrigen + "'"
-                            + " AND replace(to_char(a.idorigen,'099999')||to_char(a.idgrupo,'09')||to_char(a.idsocio,'099999'),' ','') = '" + socio + "' AND estatus = 2";
+                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaOrigen + "'";
+
         String cuentaDestino = "SELECT * FROM auxiliares a "
-                            + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaDestino + "'"
-                            + " AND replace(to_char(a.idorigen,'099999')||to_char(a.idgrupo,'09')||to_char(a.idsocio,'099999'),' ','') = '" + socio + "' AND estatus = 2";
-        boolean bandera = false;
-        
+                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaDestino + "'";
+        String mensage = "";
+
         try {
             Auxiliares ctaOrigen = null;
             boolean bOrigen = false;
-            
+
             try {
                 Query query = em.createNativeQuery(cuentaOrigen, Auxiliares.class);
                 ctaOrigen = (Auxiliares) query.getSingleResult();
                 bOrigen = true;
             } catch (Exception e) {
                 System.out.println("No Existe Cuenta Origen");
+                mensage = "NO EXISTE CUENTA ORIGEN";
                 bOrigen = false;
             }
-            
+            String ogsCtaOrigen = String.format("%06d", ctaOrigen.getIdorigen()) + String.format("%02d", ctaOrigen.getIdgrupo()) + String.format("%06d", ctaOrigen.getIdsocio());
+
             if (bOrigen) {
                 Double saldo = Double.parseDouble(ctaOrigen.getSaldo().toString());
-                Productos prOrigen = em.find(Productos.class, ctaOrigen.getAuxiliaresPK().getIdproducto());
-                    //si el producto no es un prestamo
-                    if (prOrigen.getTipoproducto() == 0) {
+                if (ogsCtaOrigen.equals(socio)) {
+                    Productos prOrigen = em.find(Productos.class, ctaOrigen.getAuxiliaresPK().getIdproducto());
+                    //si el producto no es un prestamo              
+                    if (prOrigen.getTipoproducto() == 0) {//Falta regla de negocio si se permiten transferencias desde todas las cuentas
                         //Verifico el estatus de la cuenta origen
                         if (ctaOrigen.getEstatus() == 2) {
                             //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
@@ -393,7 +404,220 @@ public abstract class FacadeInstructions<T> {
                                 Auxiliares ctaDestino = null;
                                 boolean bDestino = false;
                                 //Busco la cuenta destino
-                                System.out.println("CuentaDestino:" + cuentaDestino);
+
+                                try {
+                                    Query queryDestino = em.createNativeQuery(cuentaDestino, Auxiliares.class);
+                                    ctaDestino = (Auxiliares) queryDestino.getSingleResult();
+                                    bDestino = true;
+                                } catch (Exception e) {
+                                    System.out.println("Error al encontrar productoDestino:" + e.getMessage());
+                                    bDestino = false;
+                                }
+
+                                if (bDestino) {
+                                    //Busco el producto destino
+                                    Productos productoDestino = em.find(Productos.class, ctaDestino.getAuxiliaresPK().getIdproducto());
+                                    //Valido que la cuenta destino este activa
+                                    if (ctaDestino.getEstatus() == 2) {
+                                        //Valido que el producto destino no sea un prestamo
+                                        if (productoDestino.getTipoproducto() == 0) {//validar regla que todos los productos puedan recibir tranferencias excepto prestamos
+                                            //Valido que realmente el producto destino pertenezca al mismo socio(porque es entre mis cuentas 
+                                            if (ctaOrigen.getIdorigen() == ctaDestino.getIdorigen() && ctaOrigen.getIdgrupo() == ctaDestino.getIdgrupo() && ctaOrigen.getIdsocio() == ctaDestino.getIdsocio()) {
+                                                //valido el minimo y maximo permitido para una transferencia
+                                                if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
+                                                    if (MaxPordia(opaOrigen, montoTransferencia)) {
+                                                        mensage = "validado con exito";
+                                                    } else {
+                                                        mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
+                                                    }
+                                                } else {
+                                                    mensage = "EL MONTO QUE INTENTA TRANFERIR ES:" + minMax(montoTransferencia) + " AL PERMITIDO";
+                                                }
+                                            } else {
+                                                mensage = "PRODUCTO DESTINO NO PERTENECE AL MISMO SOCIO";
+                                            }
+                                        } else {
+                                            mensage = "PRODUCTO DESTINO NO ACEPTA SOBRECARGOS";
+                                        }
+                                    } else {
+                                        mensage = "PRODUCTO DESTINO ESTA INACTIVA";
+                                    }
+                                } else {
+                                    mensage = "NO SE ENCONTRO PRODUCTO DESTINO";
+                                }
+
+                            } else {
+                                mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
+                            }
+                        } else {
+                            mensage = "PRODUCTO ORIGEN INACTIVO";
+                        }
+                    } else {
+                        mensage = "PRODUCTO ORIGEN NO PERMITE SOBRECARGOS";
+                    }
+                } else {
+                    mensage = "CUENTA ORIGEN NO PERTENECE AL SOCIO:" + socio;
+                }
+            } else {
+                mensage = "CUENTA ORIGEN NO EXISTE";
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error al validar transferencia entre mis cuentas:" + e.getMessage());
+            if (!mensage.equals("NO EXISTE CUENTA ORIGEN")) {
+                mensage = e.getMessage();
+            }
+            em.close();
+            return mensage;
+        } finally {
+            em.close();
+        }
+
+        return mensage.toUpperCase();
+    }
+
+    //Validar Transferencia a terceros dentro de la entidad
+    private String validarTransferenciasATercerosDE(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
+        EntityManager em = emf.createEntityManager();
+        String cuentaOrigen = "SELECT * FROM auxiliares a "
+                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaOrigen + "'";
+
+        String cuentaDestino = "SELECT * FROM auxiliares a "
+                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaDestino + "'";
+        String mensage = "";
+        try {
+            Auxiliares ctaOrigen = null;
+            boolean bOrigen = false;
+
+            try {
+                Query query = em.createNativeQuery(cuentaOrigen, Auxiliares.class);
+                ctaOrigen = (Auxiliares) query.getSingleResult();
+                bOrigen = true;
+            } catch (Exception e) {
+                System.out.println("No Existe Cuenta Origen");
+                mensage = "NO EXISTE CUENTA ORIGEN";
+                bOrigen = false;
+            }
+
+            if (bOrigen) {
+                Double saldo = Double.parseDouble(ctaOrigen.getSaldo().toString());
+
+                String ogsCtaOrigen = String.format("%06d", ctaOrigen.getIdorigen()) + String.format("%02d", ctaOrigen.getIdgrupo()) + String.format("%06d", ctaOrigen.getIdsocio());
+                if (ogsCtaOrigen.equals(socio)) {
+                    Productos prOrigen = em.find(Productos.class, ctaOrigen.getAuxiliaresPK().getIdproducto());
+                    //si el producto no es un prestamo
+                    if (prOrigen.getTipoproducto() == 0) {//Falta regla de negocio si se permiten transferencias desde todas las cuentas
+                        //Verifico el estatus de la cuenta origen
+                        if (ctaOrigen.getEstatus() == 2) {
+                            //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
+                            if (saldo >= montoTransferencia) {
+                                Auxiliares ctaDestino = null;
+                                boolean bDestino = false;
+                                //Busco la cuenta destino
+
+                                try {
+                                    Query queryDestino = em.createNativeQuery(cuentaDestino, Auxiliares.class);
+                                    ctaDestino = (Auxiliares) queryDestino.getSingleResult();
+                                    bDestino = true;
+                                } catch (Exception e) {
+                                    System.out.println("Error al encontrar productoDestino:" + e.getMessage());
+                                    bDestino = false;
+                                }
+
+                                if (bDestino) {
+                                    //Busco el producto destino
+                                    Productos productoDestino = em.find(Productos.class, ctaDestino.getAuxiliaresPK().getIdproducto());
+                                    //Valido que la cuenta destino este activa
+                                    if (ctaDestino.getEstatus() == 2) {
+                                        //Valido que el producto destino no sea un prestamo
+                                        if (productoDestino.getTipoproducto() == 0) {//validar regla que todos los productos puedan recibir tranferencias excepto prestamos
+
+                                            //valido el minimo y maximo permitido para una transferencia
+                                            if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
+                                                if (MaxPordia(opaOrigen, montoTransferencia)) {
+                                                    mensage = "validado con exito";
+                                                } else {
+                                                    mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
+                                                }
+                                            } else {
+                                                mensage = "EL MONTO QUE INTENTA TRANFERIR ES:" + minMax(montoTransferencia) + " AL PERMITIDO";
+                                            }
+                                        } else {
+                                            mensage = "PRODUCTO DESTINO NO ACEPTA SOBRECARGOS";
+                                        }
+                                    } else {
+                                        mensage = "PRODUCTO DESTINO ESTA INACTIVA";
+                                    }
+                                } else {
+                                    mensage = "NO SE ENCONTRO PRODUCTO DESTINO";
+                                }
+
+                            } else {
+                                mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
+                            }
+                        } else {
+                            mensage = "PRODUCTO ORIGEN INACTIVO";
+                        }
+                    } else {
+                        mensage = "PRODUCTO ORIGEN NO PERMITE SOBRECARGOS";
+                    }
+                } else {
+                    mensage = "CUENTA DESTINO NO PERTENECE AL SOCIO:" + socio;
+                }
+            } else {
+                mensage = "CUENTA ORIGEN NO EXISTE";
+            }
+
+        } catch (Exception e) {
+            em.close();
+            System.out.println("Error al realizar transferencia a tercero:" + e.getMessage());
+            if (!mensage.contains("CUENTA ORIGEN")) {
+                mensage = e.getMessage();
+            }
+            return mensage;
+        } finally {
+            em.close();
+        }
+
+        return mensage.toUpperCase();
+    }
+
+    //Validar pago de prestamo propio
+    private String validarPagoPrestamo(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
+        EntityManager em = emf.createEntityManager();
+        String cuentaOrigen = "SELECT * FROM auxiliares a "
+                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaOrigen + "'";
+
+        String cuentaDestino = "SELECT * FROM auxiliares a "
+                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaDestino + "'";
+        String mensage = "";
+        try {
+            Auxiliares ctaOrigen = null;
+            boolean bOrigen = false;
+            try {
+                Query query = em.createNativeQuery(cuentaOrigen, Auxiliares.class);
+                ctaOrigen = (Auxiliares) query.getSingleResult();
+                bOrigen = true;
+            } catch (Exception e) {
+                System.out.println("No Existe Cuenta Origen");
+                mensage = " NO EXISTE LA CUENTA ORIGEN";
+                bOrigen = false;
+            }
+
+            if (bOrigen) {
+                Double saldo = Double.parseDouble(ctaOrigen.getSaldo().toString());
+                String ogsCtaOrigen = String.format("%06d", ctaOrigen.getIdorigen()) + String.format("%02d", ctaOrigen.getIdgrupo()) + String.format("%06d", ctaOrigen.getIdsocio());
+                if (ogsCtaOrigen.equals(socio)) {
+                    Productos prOrigen = em.find(Productos.class, ctaOrigen.getAuxiliaresPK().getIdproducto());
+                    //si el producto no es un prestamo
+                    if (prOrigen.getTipoproducto() == 0) {//Falta regla de negocio si se permiten transferencias desde todas las cuentas
+                        //Verifico el estatus de la cuenta origen
+                        if (ctaOrigen.getEstatus() == 2) {
+                            //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
+                            if (saldo >= montoTransferencia) {
+                                Auxiliares ctaDestino = null;
+                                boolean bDestino = false;
+                                //Busco la cuenta destino
                                 try {
                                     Query queryDestino = em.createNativeQuery(cuentaDestino, Auxiliares.class);
                                     ctaDestino = (Auxiliares) queryDestino.getSingleResult();
@@ -407,46 +631,187 @@ public abstract class FacadeInstructions<T> {
                                     Productos productoDestino = em.find(Productos.class, ctaDestino.getAuxiliaresPK().getIdproducto());
                                     //Valido que la cuenta destino este activa
                                     if (ctaDestino.getEstatus() == 2) {
-                                            //Valido que el producto destino no sea un prestamo
-                                            if (productoDestino.getTipoproducto() == 0) {
-                                                //Valido que realmente el producto destino pertenezca al mismo socio 
-                                                if (ctaOrigen.getIdorigen() == ctaDestino.getIdorigen() && ctaOrigen.getIdgrupo() == ctaDestino.getIdgrupo() && ctaOrigen.getIdsocio() == ctaDestino.getIdsocio()) {
-                                                    //Si se puede realizar la transferencia
-                                                    bandera = true;
+                                        //Valido que el producto destino no sea un prestamo
+                                        if (productoDestino.getTipoproducto() == 2) {//validar regla que todos los productos puedan recibir tranferencias excepto prestamos
+                                            //Valido que realmente el producto destino pertenezca al mismo socio(porque es entre mis cuentas 
+                                            if (ctaOrigen.getIdorigen() == ctaDestino.getIdorigen() && ctaOrigen.getIdgrupo() == ctaDestino.getIdgrupo() && ctaOrigen.getIdsocio() == ctaDestino.getIdsocio()) {
+                                                //valido el minimo y maximo permitido para una transferencia
+                                                if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
+                                                    if (MaxPordia(opaOrigen, montoTransferencia)) {
+                                                        mensage = "validado con exito";
+                                                    } else {
+                                                        mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
+                                                    }
                                                 } else {
-                                                    System.out.println("PRODUCTO DESTINO NO PERTENECE AL MISMO SOCIO");
+                                                    mensage = "EL MONTO QUE INTENTA TRANFERIR ES:" + minMax(montoTransferencia) + " AL PERMITIDO";
                                                 }
                                             } else {
-                                                System.out.println("PRODUCTO DESTINO NO ACEPTA SOBRECARGOS");
+                                                mensage = "PRODUCTO DESTINO NO PERTENECE AL MISMO SOCIO";
                                             }
+                                        } else {
+                                            mensage = "PRODUCTO DESTINO NO ES UN PRESTAMO";
+                                        }
                                     } else {
-                                        System.out.println("PRODUCTO DESTINO ESTA INACTIVA");
+                                        mensage = "PRODUCTO DESTINO ESTA INACTIVA";
                                     }
                                 } else {
-                                    System.out.println("NO SE ENCONTRO PRODUCTO DESTINO");
+                                    mensage = "NO SE ENCONTRO PRODUCTO DESTINO";
                                 }
+
                             } else {
-                                System.out.println("FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION");
+                                mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
                             }
                         } else {
-                            System.out.println("PRODUCTO ORIGEN INACTIVO");
+                            mensage = "PRODUCTO ORIGEN INACTIVO";
                         }
                     } else {
-                        System.out.println("PRODUCTO ORIGEN NO PERMITE SOBRECARGOS");
+                        mensage = "PRODUCTO ORIGEN NO PERMITE SOBRECARGOS";
                     }
+                } else {
+                    mensage = "CUENTA ORIGEN NO PERTENCE AL SOCIO:" + socio;
+                }
             } else {
-                System.out.println("Producto origen no pertenece al socio");
+                mensage = "CUENTA ORIGEN NO EXISTE";
             }
-            
+
         } catch (Exception e) {
             em.close();
-            System.out.println("Error al realizar tranferencia entre mis cuentas");
-            return bandera;
+            System.out.println("Error al realizar pago de prestamo:" + e.getMessage());
+            if (!mensage.contains("CUENTA ORIGEN")) {
+                mensage = e.getMessage();
+            }
+            return mensage;
         } finally {
             em.close();
         }
 
-        return bandera;
+        return mensage.toUpperCase();
+    }
+
+    //Validar pago de servicio(solo se valida la cuenta origen)
+    private String validarPagoServicio(String socio, String opaOrigen, Double TotalPagoServicio) {
+        EntityManager em = emf.createEntityManager();
+        String cuentaOrigen = "SELECT * FROM auxiliares a "
+                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaOrigen + "'";
+        String mensage = "";
+        try {
+            Auxiliares ctaOrigen = null;
+            boolean bOrigen = false;
+            try {
+                Query query = em.createNativeQuery(cuentaOrigen, Auxiliares.class);
+                ctaOrigen = (Auxiliares) query.getSingleResult();
+                bOrigen = true;
+            } catch (Exception e) {
+                System.out.println("No Existe Cuenta Origen");
+                mensage = "NO EXISTE CUENTA ORIGEN";
+                bOrigen = false;
+            }
+
+            if (bOrigen) {
+                Double saldo = Double.parseDouble(ctaOrigen.getSaldo().toString());
+                String ogsCtaOrigen = String.format("%06d", ctaOrigen.getIdorigen()) + String.format("%02d", ctaOrigen.getIdgrupo()) + String.format("%06d", ctaOrigen.getIdsocio());
+                if (ogsCtaOrigen.equals(socio)) {
+                    Productos prOrigen = em.find(Productos.class, ctaOrigen.getAuxiliaresPK().getIdproducto());
+                    //si el producto no es un prestamo
+                    if (prOrigen.getTipoproducto() == 0) {//Falta regla de negocio si se permiten transferencias desde todas las cuentas
+                        //Verifico el estatus de la cuenta origen
+                        if (ctaOrigen.getEstatus() == 2) {
+                            //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
+                            if (saldo >= TotalPagoServicio) {
+                                //valido el minimo y maximo permitido para una transferencia
+                                if (minMax(TotalPagoServicio).toUpperCase().contains("VALIDO")) {
+                                    if (MaxPordia(opaOrigen, TotalPagoServicio)) {
+                                        mensage = "validado con exito";
+                                    } else {
+                                        mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
+                                    }
+                                } else {
+                                    mensage = "EL MONTO QUE INTENTA TRANFERIR ES:" + minMax(TotalPagoServicio) + " AL PERMITIDO";
+                                }
+                            } else {
+                                mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
+                            }
+                        } else {
+                            mensage = "PRODUCTO ORIGEN INACTIVO";
+                        }
+                    } else {
+                        mensage = "PRODUCTO ORIGEN NO PERMITE SOBRECARGOS";
+                    }
+                } else {
+                    mensage = "CUENTA ORIGEN NO PERTENCE AL SOCIO:" + socio;
+                }
+            } else {
+                mensage = "CUENTA ORIGEN NO EXISTE";
+            }
+
+        } catch (Exception e) {
+            em.close();
+            System.out.println("Error al realizar pago de prestamo:" + e.getMessage());
+            if (!mensage.contains("CUENTA ORIGEN")) {
+                mensage = e.getMessage();
+            }
+            return mensage;
+        } finally {
+            em.close();
+        }
+
+        return mensage.toUpperCase();
+    }
+
+    public validateMonetaryInstructionDTO validacionesOrdenSPEI(OrderWsSPEI orden) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            String validationId = "";
+            //Validamos que exista el solicitante
+            if (validarTransferenciaSPEI(orden).toUpperCase().contains("EXITO")) {
+                validationId = RandomAlfa().toUpperCase();
+            } else {
+                validationId = validarTransferenciaSPEI(orden);
+            }
+        } catch (Exception e) {
+
+        }
+
+        return null;
+
+    }
+
+    //Valida el monto maximo permitido por dia
+    public boolean MaxPordia(String opa, Double montoI) {
+        EntityManager em = emf.createEntityManager();
+        Calendar c1 = Calendar.getInstance();
+        String dia = Integer.toString(c1.get(5));
+        String mes = Integer.toString(c1.get(2) + 1);
+        String annio = Integer.toString(c1.get(1));
+        String fechaActual = String.format("%04d", Integer.parseInt(annio)) + "/" + String.format("%02d", Integer.parseInt(mes)) + "/" + String.format("%02d", Integer.parseInt(dia));
+        TablasPK tbPk = new TablasPK("banca_movil", "montomaximo");
+        Tablas tb = em.find(Tablas.class,
+                tbPk);
+        try {
+            //Busco el total de monto de transferencias por dia
+            String consultaTransferencias = "SELECT sum(monto) FROM e_transferenciassiscoop WHERE"
+                    + " cuentaorigen='" + opa + "' AND to_char(date(fechaejecucion),'yyyy/MM/dd')='" + fechaActual + "'";
+            Query query = em.createNativeQuery(consultaTransferencias);
+            String montoObtenidodb = "";
+            if (query.getSingleResult() != null) {
+                montoObtenidodb = String.valueOf(query.getSingleResult());
+            } else {
+                montoObtenidodb = "0";
+            }
+            Double monto = Double.parseDouble(String.valueOf(montoObtenidodb)) + montoI;
+            System.out.println("monto:" + monto);
+            if (monto <= Double.parseDouble(tb.getDato1())) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            em.close();
+            System.out.println("Error al validar permitido diario:" + e.getMessage());
+        } finally {
+            em.close();
+        }
+        return false;
     }
 
     private boolean aplicarCargos(String accountId, Double monto, int tipocargo) {
@@ -487,7 +852,6 @@ public abstract class FacadeInstructions<T> {
     private boolean findBalance(String accountId, Double monto) {
         EntityManager em = emf.createEntityManager();
         boolean bandera = false;
-        System.out.println("Llegooooooooooooooo");
         try {
             String consulta = "SELECT * FROM auxiliares a "
                     + "WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId + "' AND estatus=2 AND saldo>=" + monto;
@@ -528,60 +892,104 @@ public abstract class FacadeInstructions<T> {
         System.out.println("Cadena:" + cadena);
         return cadena;
     }
-    
-    public String validarTransferenciaSPEI(OrderWsSPEI orden){
-        EntityManager em=emf.createEntityManager();
-        String mensaje="";
+
+    public String validarTransferenciaSPEI(OrderWsSPEI orden) {
+        EntityManager em = emf.createEntityManager();
+        String mensaje = "";
         try {
-           String busquedaSolicitante="SELECT * FROM personas WHERE replace(to_char(idorigen,'099999')||to_char(idgrupo,'09')||to_char(idsocio,'099999'),' ','')='"+orden.getCIF()+"'";
-           Query queryBusquedaSolicitante=em.createNativeQuery(busquedaSolicitante,Persona.class);
-           Persona p=(Persona) queryBusquedaSolicitante.getSingleResult();
-           String cuentaOrigen="SELECT * FROM auxiliares a WHERE replace(to_char(idorigenp,'099999')||to_char(idproducto,'09999')||to_char(idauxiliar,'09999999'),' ','')='"+orden.getClabeSolicitante()+"'";
-           if(p!=null){
-               Query queryOrigen=em.createNativeQuery(cuentaOrigen,Auxiliares.class);
-               Auxiliares a=(Auxiliares)queryOrigen.getSingleResult();
-               if(a!=null){
-                   //Validamos que pertenezca al socio
-                   String opa=String.format("%06d",a.getIdorigen())+String.format("%02d",a.getIdgrupo())+String.format("%06d",a.getIdsocio());
-                   if(opa.equals(orden.getClabeSolicitante())){
-                       //Validamos el estatus
-                       if(a.getEstatus()==2){
-                           //Validar el tipo de producto
-                           Productos pr=em.find(Productos.class,a.getAuxiliaresPK().getIdproducto());
-                           if(pr.getTipoproducto()!=2){
-                               //Solo validado para ahorro solo faltaria para inversion
-                               if(pr.getTipoproducto()==1){
-                                   
-                               }else if(pr.getTipoproducto()==0){
-                                   if(Double.parseDouble(a.getSaldo().toString())>=orden.getMonto()){
-                                       //Validare el maximo para banca movil
-                                       mensaje="EXITOSO";
-                                   }else{
-                                       mensaje="Fondos insuficientes";
-                                   }
-                               }
-                           }else{
-                               mensaje="No se puede transferir de un prestamo";
-                           }     
-                       }else{
-                           mensaje="La cuenta esta inactiva";
-                       }
-                   }else{
-                       mensaje="La cuenta no pertenece al socio";
-                   }
-               }else{
-                   mensaje="Cuenta no existe";
-               }
-           }else{
-               mensaje="Socio no existe";
-           }
+            String busquedaSolicitante = "SELECT * FROM personas WHERE replace(to_char(idorigen,'099999')||to_char(idgrupo,'09')||to_char(idsocio,'099999'),' ','')='" + orden.getCIF() + "'";
+            Query queryBusquedaSolicitante = em.createNativeQuery(busquedaSolicitante, Persona.class);
+            Persona p = (Persona) queryBusquedaSolicitante.getSingleResult();
+            String cuentaOrigen = "SELECT * FROM auxiliares a WHERE replace(to_char(idorigenp,'099999')||to_char(idproducto,'09999')||to_char(idauxiliar,'09999999'),' ','')='" + orden.getClabeSolicitante() + "'";
+            if (p != null) {
+                Query queryOrigen = em.createNativeQuery(cuentaOrigen, Auxiliares.class);
+                Auxiliares a = (Auxiliares) queryOrigen.getSingleResult();
+                if (a != null) {
+                    //Validamos que pertenezca al socio
+                    String opa = String.format("%06d", a.getIdorigen()) + String.format("%02d", a.getIdgrupo()) + String.format("%06d", a.getIdsocio());
+                    if (opa.equals(orden.getClabeSolicitante())) {
+                        //Validamos el estatus
+                        if (a.getEstatus() == 2) {
+                            //Validar el tipo de producto
+                            Productos pr = em.find(Productos.class, a.getAuxiliaresPK().getIdproducto());
+                            if (pr.getTipoproducto() != 2) {
+                                //Solo validado para ahorro solo faltaria para inversion
+                                if (pr.getTipoproducto() == 1) {
+
+                                } else if (pr.getTipoproducto() == 0) {
+                                    if (Double.parseDouble(a.getSaldo().toString()) >= orden.getMonto()) {
+                                        //Validare el maximo para banca movil
+                                        mensaje = "EXITOSO";
+                                    } else {
+                                        mensaje = "Fondos insuficientes";
+                                    }
+                                }
+                            } else {
+                                mensaje = "No se puede transferir de un prestamo";
+                            }
+                        } else {
+                            mensaje = "La cuenta esta inactiva";
+                        }
+                    } else {
+                        mensaje = "La cuenta no pertenece al socio";
+                    }
+                } else {
+                    mensaje = "Cuenta no existe";
+                }
+            } else {
+                mensaje = "Socio no existe";
+            }
         } catch (Exception e) {
-            mensaje=e.getMessage();
-            System.out.println("Error en procesar la validacion:"+e.getMessage());
+            mensaje = e.getMessage();
+            System.out.println("Error en procesar la validacion:" + e.getMessage());
             return mensaje;
         }
         return mensaje;
     }
+
+    //Solo aplica para cnmx
+    public boolean validarSaldosMinimoProducto(AuxiliaresPK auxPK, Double monto) {
+        EntityManager em = emf.createEntityManager();
+        /*try {
+        Auxiliares a=em.find(Auxiliares.class, auxPK);
+        Double saldoValidar=Double.parseDouble(a.getSaldo().toString())-monto;
+        if(a.getAuxiliaresPK().getIdproducto()==100){
+            
+        }
+        if(saldovalidar>=100)
+            
+        } catch (Exception e) {
+            
+        }finally{
+            em.close();
+        }*/
+        return false;
+    }
+
+    //valida el monto para banca movil total de transferencias
+    public String minMax(Double amount) {
+        EntityManager em = emf.createEntityManager();
+        String mensaje = "";
+        try {
+            TablasPK tbPk = new TablasPK("banca_movil", "montomaximominimo");
+            Tablas tb = em.find(Tablas.class,
+                    tbPk);
+            if (amount > Double.parseDouble(tb.getDato1())) {
+                mensaje = "MAYOR";
+            } else if (amount < Double.parseDouble(tb.getDato2())) {
+                mensaje = "MENOR";
+            } else {
+                mensaje = "VALIDO";
+            }
+        } catch (Exception e) {
+            em.close();
+            System.out.println("Error al validar monto min-max:" + e.getMessage());
+        } finally {
+            em.close();
+        }
+        return mensaje;
+    }
+
     public void cerrar() {
         emf.close();
     }

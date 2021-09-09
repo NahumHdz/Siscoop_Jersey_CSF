@@ -31,12 +31,17 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
+import org.joda.time.format.DateTimeFormat;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 /**
@@ -47,7 +52,6 @@ public abstract class FacadeAccounts<T> {
 
     private static EntityManagerFactory emf;
 
-
     public FacadeAccounts(Class<T> entityClass) {
         emf = AbstractFacade.conexion();
     }
@@ -57,12 +61,12 @@ public abstract class FacadeAccounts<T> {
         int o = Integer.parseInt(accountId.substring(0, 6));
         int p = Integer.parseInt(accountId.substring(6, 11));
         int a = Integer.parseInt(accountId.substring(11, 19));
-        System.out.println("AccountIDDDDDDDDDDDDD:"+accountId);
+        System.out.println("AccountIDDDDDDDDDDDDD:" + accountId);
         List<AccountHoldersDTO> holders = new ArrayList<AccountHoldersDTO>();
         try {
             String consulta = "SELECT * FROM auxiliares a WHERE "
-                    + "replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId+"'";
-            System.out.println("consulta:"+consulta);
+                    + "replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId + "'";
+            System.out.println("consulta:" + consulta);
             Query query = em.createNativeQuery(consulta, Auxiliares.class);
             Auxiliares aa = (Auxiliares) query.getSingleResult();
             PersonasPK personaspk = new PersonasPK(aa.getIdorigen(), aa.getIdgrupo(), aa.getIdsocio());
@@ -70,15 +74,15 @@ public abstract class FacadeAccounts<T> {
             /*
         AuxiliaresPK auxpk = new AuxiliaresPK(o, p, a);
         Auxiliares aa = em.find(Auxiliares.class, auxpk);
-       */
-        String persona = person.getNombre() + " " + person.getAppaterno() + " " + person.getApmaterno();
+             */
+            String persona = person.getNombre() + " " + person.getAppaterno() + " " + person.getApmaterno();
             AccountHoldersDTO dto = new AccountHoldersDTO(persona, "SOW");
             holders.add(dto);
         } catch (Exception e) {
             em.close();
             System.out.println("Error al crear lista:" + e.getMessage());
         } finally {
-            em.close(); 
+            em.close();
         }
         System.out.println("Holders:" + holders);
         return holders;
@@ -237,11 +241,13 @@ public abstract class FacadeAccounts<T> {
         System.out.println("fechaDate:" + fechaDate);
         return fechaDate;
     }
+    
+    
 
     public List<transferencias_completadas_siscoop> History(String accountId, String initialDate, String finalDate, int pageSize, int pageStartIndex) {
         EntityManager em = emf.createEntityManager();
         List<transferencias_completadas_siscoop> lista = null;
-        List<transferencias_completadas_siscoop> trs=new ArrayList<transferencias_completadas_siscoop>();
+        List<transferencias_completadas_siscoop> trs = new ArrayList<transferencias_completadas_siscoop>();
         try {
             String consulta = "SELECT * FROM e_transferenciassiscoop WHERE "
                     + "cuentaorigen='" + accountId.trim()
@@ -249,7 +255,7 @@ public abstract class FacadeAccounts<T> {
                     + "' AND fechaejecucion BETWEEN '" + initialDate.trim() + "' AND '" + finalDate.trim() + "' ORDER BY fechaejecucion DESC";
             System.out.println("Consulta:" + consulta);
             Query query = em.createNativeQuery(consulta, transferencias_completadas_siscoop.class);
-            trs=query.getResultList();                       
+            trs = query.getResultList();
             query.setFirstResult(pageStartIndex);
             query.setMaxResults(pageSize);
             //lista = query.getResultList();
@@ -265,7 +271,7 @@ public abstract class FacadeAccounts<T> {
 
     public DetailsAccountDTO detailsAccount(String accountId) {
         EntityManager em = emf.createEntityManager();
-        DetailsAccountDTO dto = null;
+        DetailsAccountDTO dto = new DetailsAccountDTO();
         try {
             String consulta = "SELECT * FROM auxiliares a WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId.trim() + "'";
             System.out.println("Consulta:" + consulta);
@@ -290,7 +296,7 @@ public abstract class FacadeAccounts<T> {
             String aa = String.format("%08d", a.getAuxiliaresPK().getIdauxiliar());
             String cadenaa = aa.substring(4, 8);
             String cade = "******" + cadenaa;
-            dto = new DetailsAccountDTO(
+            /*dto = new DetailsAccountDTO(
                     accountId,
                     accountId,//String.valueOf(a.getAuxiliaresPK().getIdorigenp()) + "" + String.valueOf(a.getAuxiliaresPK().getIdproducto()) + "" + String.valueOf(a.getAuxiliaresPK().getIdauxiliar()),
                     accountId,//String.valueOf(a.getAuxiliaresPK().getIdorigenp()) + "" + String.valueOf(a.getAuxiliaresPK().getIdproducto()) + "" + String.valueOf(a.getAuxiliaresPK().getIdauxiliar()),
@@ -299,7 +305,58 @@ public abstract class FacadeAccounts<T> {
                     String.valueOf(a.getAuxiliaresPK().getIdproducto()),
                     e,
                     sucursal,
-                    String.valueOf(a.getFechaactivacion()));
+                    String.valueOf(a.getFechaactivacion()));*/
+            Productos producto = em.find(Productos.class, a.getAuxiliaresPK().getIdproducto());
+
+            String fechaTrabajo = "SELECT date(fechatrabajo) FROM origenes limit 1";
+            Query queryOrigenes = em.createNativeQuery(fechaTrabajo);
+            String fechaTrabajoReal = String.valueOf(queryOrigenes.getSingleResult());
+            String fecha[] = fechaTrabajoReal.split("-");
+            LocalDate date = LocalDate.of(Integer.parseInt(fecha[0]), Integer.parseInt(fecha[1]), Integer.parseInt(fecha[2]));
+            date = date.plusDays(7);
+            String date_semana = String.valueOf(date);
+            if (producto.getTipoproducto() == 1 || producto.getTipoproducto() == 8) {
+                //Corremos sai_auxiliar para obetener datos  
+
+                //Corro SAi para calculo de interes en una semana
+                String sai_interes = "SELECT sai_auxiliar(" + a.getAuxiliaresPK().getIdorigenp() + "," + a.getAuxiliaresPK().getIdproducto() + "," + a.getAuxiliaresPK().getIdauxiliar() + ",'" + date_semana + "')";
+                System.out.println("sasaasas:" + sai_interes);
+                Query RsSai = em.createNativeQuery(sai_interes);
+                String sai_aux = RsSai.getSingleResult().toString();
+                String[] parts = sai_aux.split("\\|");
+                List list = Arrays.asList(parts);
+                SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy");                
+                Date fechaDate = formato.parse(list.get(2).toString());
+                SimpleDateFormat formato2 = new SimpleDateFormat("yyyy/MM/dd");
+                String realDate=formato2.format(fechaDate);
+                dto.setProximoMontoInteres(Double.parseDouble(list.get(5).toString()));
+                dto.setProximaFechaPago(date_semana);
+                dto.setFechaVencimiento(realDate.replace("/", "-"));
+
+            }else if(producto.getTipoproducto()==2){
+                //Corro SAi para calculo de interes en una semana
+                String sai_interes = "SELECT sai_auxiliar(" + a.getAuxiliaresPK().getIdorigenp() + "," + a.getAuxiliaresPK().getIdproducto() + "," + a.getAuxiliaresPK().getIdauxiliar() + ",'" + date_semana + "')";
+                System.out.println("sasaasas:" + sai_interes);
+                Query RsSai = em.createNativeQuery(sai_interes);
+                String sai_aux = RsSai.getSingleResult().toString();
+                String[] parts = sai_aux.split("\\|");
+                List lista = Arrays.asList(parts);
+                dto.setProximoMontoInteres(Double.parseDouble(lista.get(6).toString()));
+                dto.setProximaFechaPago(date_semana);
+                dto.setFechaVencimiento(lista.get(8).toString());
+            }
+
+            dto.setAccountId(accountId);
+            dto.setAccountNumber(accountId);
+            dto.setDisplayAccountNumber(accountId);
+            dto.setAccountType(tps.getProducttypename().toUpperCase());
+            dto.setCurrencyCode("MXN");
+            dto.setProductCode(String.valueOf(a.getAuxiliaresPK().getIdproducto()));
+            dto.setStatus(e);
+            dto.setSucursal(sucursal);
+            dto.setOpenedDate(String.valueOf(String.valueOf(a.getFechaactivacion())));
+            dto.setTasa(a.getTasaio().doubleValue());
+
         } catch (Exception e) {
             System.out.println("Error en buscar detalles de cuenta:" + e.getMessage());
         } finally {
@@ -324,8 +381,6 @@ public abstract class FacadeAccounts<T> {
         }
         return nombre;
     }
-
-  
 
     public String accountType(int idproducto) {
         EntityManager em = emf.createEntityManager();

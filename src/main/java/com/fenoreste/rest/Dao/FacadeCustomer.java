@@ -14,7 +14,6 @@ import com.fenoreste.rest.Entidades.PersonasPK;
 import com.fenoreste.rest.Entidades.Productos;
 import com.fenoreste.rest.Entidades.validaciones_telefono_siscoop;
 import java.security.SecureRandom;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 import java.util.List;
@@ -182,7 +181,6 @@ public abstract class FacadeCustomer<T> {
     public List<CustomerAccountDTO> Accounts(String customerId) {
         EntityManager em = emf.createEntityManager();
         Query query = null;
-        List<CustomerAccountDTO> ListaProductos = new ArrayList<CustomerAccountDTO>();
         String consulta = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tp USING(idproducto) WHERE replace((to_char(idorigen,'099999')||to_char(idgrupo,'09')||to_char(idsocio,'099999')),' ','')='" + customerId + "' AND estatus=2";
         CustomerAccountDTO producto = new CustomerAccountDTO();
         try {

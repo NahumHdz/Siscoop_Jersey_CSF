@@ -20,11 +20,15 @@ public class DetailsAccountDTO {
     private String status;
     private String sucursal;
     private String openedDate;
+    private double tasa;
+    private double proximoMontoInteres;
+    private String proximaFechaPago;
+    private String fechaVencimiento;
 
     public DetailsAccountDTO() {
     }
 
-    public DetailsAccountDTO(String accountId, String accountNumber, String displayAccountNumber, String accountType, String currencyCode, String productCode, String status, String sucursal, String openedDate) {
+    public DetailsAccountDTO(String accountId, String accountNumber, String displayAccountNumber, String accountType, String currencyCode, String productCode, String status, String sucursal, String openedDate, double tasa, double proximoMontoInteres, String proximaFechaPago, String fechaVencimiento) {
         this.accountId = accountId;
         this.accountNumber = accountNumber;
         this.displayAccountNumber = displayAccountNumber;
@@ -34,6 +38,10 @@ public class DetailsAccountDTO {
         this.status = status;
         this.sucursal = sucursal;
         this.openedDate = openedDate;
+        this.tasa = tasa;
+        this.proximoMontoInteres = proximoMontoInteres;
+        this.proximaFechaPago = proximaFechaPago;
+        this.fechaVencimiento = fechaVencimiento;
     }
 
     public String getAccountId() {
@@ -108,9 +116,36 @@ public class DetailsAccountDTO {
         this.openedDate = openedDate;
     }
 
-    @Override
-    public String toString() {
-        return "DetailsAccountDTO{" + "accountId=" + accountId + ", accountNumber=" + accountNumber + ", displayAccountNumber=" + displayAccountNumber + ", accountType=" + accountType + ", currencyCode=" + currencyCode + ", productCode=" + productCode + ", status=" + status + ", sucursal=" + sucursal + ", openedDate=" + openedDate + '}';
+    public double getTasa() {
+        return tasa;
+    }
+
+    public void setTasa(double tasa) {
+        this.tasa = tasa;
+    }
+
+    public double getProximoMontoInteres() {
+        return proximoMontoInteres;
+    }
+
+    public void setProximoMontoInteres(double proximoMontoInteres) {
+        this.proximoMontoInteres = proximoMontoInteres;
+    }
+
+    public String getProximaFechaPago() {
+        return proximaFechaPago;
+    }
+
+    public void setProximaFechaPago(String proximaFechaPago) {
+        this.proximaFechaPago = proximaFechaPago;
+    }
+
+    public String getFechaVencimiento() {
+        return fechaVencimiento;
+    }
+
+    public void setFechaVencimiento(String fechaVencimiento) {
+        this.fechaVencimiento = fechaVencimiento;
     }
 
 }
