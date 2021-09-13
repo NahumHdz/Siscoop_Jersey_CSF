@@ -3,8 +3,10 @@ import com.fenoreste.rest.Entidades.Auxiliares;
 import com.fenoreste.rest.Entidades.CuentasSiscoop;
 import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
 import DTO.ProductsDTO;
+import DTO.ogsDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Util.TimerBeepClock;
+import com.fenoreste.rest.Util.Util_OGS_OPA;
 import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +16,8 @@ import javax.persistence.Query;
 
 public abstract class FacadeProductos<T> {
   private static EntityManagerFactory emf;
+  
+    Util_OGS_OPA Util = new Util_OGS_OPA();
   
   public FacadeProductos(Class<T> entityClass) {
     emf = AbstractFacade.conexion();
@@ -80,10 +84,13 @@ public abstract class FacadeProductos<T> {
   
   public List<String> Rates(String accountType, int amount, String customerId, String productCode) {
     EntityManager em = emf.createEntityManager();
+      ogsDTO ogs = Util.ogs(customerId);
     System.out.println("si llego");
     List<String> listaString = new ArrayList<>();
     try {
-      String consulta = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tps USING(idproducto) WHERE replace(to_char(a.idorigen,'099999')||to_char(a.idgrupo,'09')||to_char(a.idsocio,'099999'),' ','')='" + customerId + "' AND REPLACE(UPPER(tps.producttypename),' ','')='" + accountType.toUpperCase() + "' AND tps.idproducto=" + productCode;
+      String consulta = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tps USING(idproducto)"
+              + " WHERE a.idorigen = " + ogs.getIdorigen() + " AND a.idgrupo = " + ogs.getIdgrupo() + " AND a.idsocio = " + ogs.getIdsocio()
+              + " AND REPLACE(UPPER(tps.producttypename),' ','')='" + accountType.toUpperCase() + "' AND tps.idproducto=" + productCode;
       System.out.println("Consulta:" + consulta);
       Query query = em.createNativeQuery(consulta, Auxiliares.class);
       Auxiliares a = (Auxiliares)query.getSingleResult();

@@ -5,11 +5,14 @@
  */
 package com.fenoreste.rest.Dao;
 
+import DTO.ogsDTO;
+import DTO.opaDTO;
 import com.fenoreste.rest.Entidades.e_Alerts;
 import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
 import com.fenoreste.rest.Entidades.v_Alertas;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Util.UtilDate;
+import com.fenoreste.rest.Util.Util_OGS_OPA;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -48,7 +51,9 @@ public abstract class FacadeAlerts<T> {
     public FacadeAlerts(Class<T> entityClass) {
         emf = AbstractFacade.conexion();
     }
-
+    
+    Util_OGS_OPA Util = new Util_OGS_OPA();
+    
     public String validateAlert(String customerId, String alertCode, boolean enabled, String accountId, String property, Double monto, String operator, String ruleType) {
         EntityManager em = emf.createEntityManager();
         boolean bandera = false;
@@ -156,9 +161,12 @@ public abstract class FacadeAlerts<T> {
     public boolean buscarDatosCuenta(String customerId, String accountId) {
         EntityManager em = emf.createEntityManager();
         boolean bandera = false;
+        opaDTO opa = Util.opa(accountId);
+        ogsDTO ogs = Util.ogs(customerId);
         try {
-            String consulta = "SELECT count(*) FROM auxiliares a WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId + "'"
-                    + " AND replace(to_char(a.idorigen,'099999')||to_char(a.idgrupo,'09')||to_char(a.idsocio,'099999'),' ','')='" + customerId + "' AND a.estatus=2";
+            String consulta = "SELECT count(*) FROM auxiliares a WHERE "
+                    + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar()
+                    + " AND a.idorigen = " + ogs.getIdorigen() + " AND a.idgrupo = " + ogs.getIdgrupo() + " AND a.idsocio = " + ogs.getIdsocio() + " AND a.estatus = 2";
             Query query = em.createNativeQuery(consulta);
             int count = Integer.parseInt(String.valueOf(query.getSingleResult()));
             System.out.println("count:" + count);

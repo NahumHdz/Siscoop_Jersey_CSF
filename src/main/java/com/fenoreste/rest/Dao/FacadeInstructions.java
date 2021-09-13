@@ -14,11 +14,14 @@ import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;
 import com.fenoreste.rest.Entidades.validaciones_transferencias_siscoop;
 import DTO.MonetaryInstructionDTO;
 import DTO.OrderWsSPEI;
+import DTO.ogsDTO;
+import DTO.opaDTO;
 import com.fenoreste.rest.Entidades.AuxiliaresPK;
 import com.fenoreste.rest.Entidades.Persona;
 import com.fenoreste.rest.Entidades.Productos;
 import com.fenoreste.rest.Entidades.Tablas;
 import com.fenoreste.rest.Entidades.TablasPK;
+import com.fenoreste.rest.Util.Util_OGS_OPA;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
@@ -38,6 +41,8 @@ import javax.persistence.Query;
 public abstract class FacadeInstructions<T> {
 
     private static EntityManagerFactory emf;
+    
+    Util_OGS_OPA Util = new Util_OGS_OPA();
 
     public FacadeInstructions(Class<T> entityClass) {
         emf = AbstractFacade.conexion();//Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);    
@@ -279,7 +284,9 @@ public abstract class FacadeInstructions<T> {
             String consulta = "SELECT * FROM v_transferenciassiscoop WHERE validationid='" + validationId + "' ORDER BY fechaejecucion DESC LIMIT 1";
             Query query = em.createNativeQuery(consulta, validaciones_transferencias_siscoop.class);
             validaciones_transferencias_siscoop validacion_guardada = (validaciones_transferencias_siscoop) query.getSingleResult();
-            String running_balance = "SELECT saldo -" + validacion_guardada.getMonto() + " FROM auxiliares a where replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(idauxiliar,'09999999'),' ','')='" + validacion_guardada.getCuentaorigen() + "'";
+            opaDTO opa = Util.opa(validacion_guardada.getCuentaorigen());
+            String running_balance = "SELECT saldo -" + validacion_guardada.getMonto() + " FROM auxiliares a where "
+                    + " and a.idorigenp = " + opa.getIdorigenp() + " and a.idproducto = " + opa.getIdproducto() + " and a.idauxiliar = " + opa.getIdauxiliar();
             Query query1 = em.createNativeQuery(running_balance);
             Double saldo = Double.parseDouble(String.valueOf(query1.getSingleResult()));
             
@@ -328,10 +335,11 @@ public abstract class FacadeInstructions<T> {
     public List<AccountHoldersDTO> accountHolders(String accountId) {
         EntityManager em = emf.createEntityManager();
         List<AccountHoldersDTO> listaDTO = new ArrayList<AccountHoldersDTO>();
+        opaDTO opa = Util.opa(accountId);
         try {
             String consulta = "SELECT p.nombre||' '||p.appaterno||' '||p.apmaterno as nombre FROM auxiliares a "
                     + " INNER JOIN personas p USING(idorigen,idgrupo,idsocio)"
-                    + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId + "'";
+                    + " WHERE a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
             Query query = em.createNativeQuery(consulta);
             System.out.println("Consulta:" + consulta);
             String nombre = (String) query.getSingleResult();
@@ -369,11 +377,13 @@ public abstract class FacadeInstructions<T> {
     //Validar Trasnferencia entre mis cuentas
     private String validarTransferenciaEntreMisCuentas(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
         EntityManager em = emf.createEntityManager();
+        opaDTO opa_orig = Util.opa(opaOrigen);
+        opaDTO opa_dest = Util.opa(opaDestino);
         String cuentaOrigen = "SELECT * FROM auxiliares a "
-                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaOrigen + "'";
+                + " WHERE a.idorigenp = " + opa_orig.getIdorigenp() + " AND a.idproducto = " + opa_orig.getIdproducto() + " AND a.idauxiliar = " + opa_orig.getIdauxiliar();
 
         String cuentaDestino = "SELECT * FROM auxiliares a "
-                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaDestino + "'";
+                + " WHERE a.idorigenp = " + opa_dest.getIdorigenp() + " AND a.idproducto = " + opa_dest.getIdproducto() + " AND a.idauxiliar = " + opa_dest.getIdauxiliar();
         String mensage = "";
 
         try {
@@ -479,11 +489,15 @@ public abstract class FacadeInstructions<T> {
     //Validar Transferencia a terceros dentro de la entidad
     private String validarTransferenciasATercerosDE(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
         EntityManager em = emf.createEntityManager();
+        opaDTO opa_orig = Util.opa(opaOrigen);
+        opaDTO opa_dest = Util.opa(opaDestino);
+        
         String cuentaOrigen = "SELECT * FROM auxiliares a "
-                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaOrigen + "'";
+                + " WHERE a.idorigenp = " + opa_orig.getIdorigenp() + " AND a.idproducto = " + opa_orig.getIdproducto() + " AND a.idauxiliar = " + opa_orig.getIdauxiliar();
 
         String cuentaDestino = "SELECT * FROM auxiliares a "
-                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaDestino + "'";
+                + " WHERE a.idorigenp = " + opa_dest.getIdorigenp() + " AND a.idproducto = " + opa_dest.getIdproducto() + " AND a.idauxiliar = " + opa_dest.getIdauxiliar();
+
         String mensage = "";
         try {
             Auxiliares ctaOrigen = null;
@@ -585,11 +599,14 @@ public abstract class FacadeInstructions<T> {
     //Validar pago de prestamo propio
     private String validarPagoPrestamo(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
         EntityManager em = emf.createEntityManager();
+        opaDTO opa_orig = Util.opa(opaOrigen);
+        opaDTO opa_dest = Util.opa(opaDestino);
         String cuentaOrigen = "SELECT * FROM auxiliares a "
-                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaOrigen + "'";
+                + " WHERE a.idorigenp = " + opa_orig.getIdorigenp() + " AND a.idproducto = " + opa_orig.getIdproducto() + " AND a.idauxiliar = " + opa_orig.getIdauxiliar();
 
         String cuentaDestino = "SELECT * FROM auxiliares a "
-                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaDestino + "'";
+                + " WHERE a.idorigenp = " + opa_dest.getIdorigenp() + " AND a.idproducto = " + opa_dest.getIdproducto() + " AND a.idauxiliar = " + opa_dest.getIdauxiliar();
+        
         String mensage = "";
         try {
             Auxiliares ctaOrigen = null;
@@ -691,8 +708,10 @@ public abstract class FacadeInstructions<T> {
     //Validar pago de servicio(solo se valida la cuenta origen)
     private String validarPagoServicio(String socio, String opaOrigen, Double TotalPagoServicio) {
         EntityManager em = emf.createEntityManager();
+        opaDTO opa_orig = Util.opa(opaOrigen);
         String cuentaOrigen = "SELECT * FROM auxiliares a "
-                + " WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','') = '" + opaOrigen + "'";
+                + " WHERE a.idorigenp = " + opa_orig.getIdorigenp() + " AND a.idproducto = " + opa_orig.getIdproducto() + " AND a.idauxiliar = " + opa_orig.getIdauxiliar();
+
         String mensage = "";
         try {
             Auxiliares ctaOrigen = null;
@@ -816,7 +835,9 @@ public abstract class FacadeInstructions<T> {
 
     private boolean aplicarCargos(String accountId, Double monto, int tipocargo) {
         EntityManager em = emf.createEntityManager();
-        String ba = "SELECT * FROM auxiliares a WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId + "'";
+        opaDTO opa = Util.opa(accountId);
+        String ba = "SELECT * FROM auxiliares a WHERE a.idorigenp = " + opa.getIdorigenp() 
+                + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
         Query query = em.createNativeQuery(ba, Auxiliares.class);
         Auxiliares a = (Auxiliares) query.getSingleResult();
         Double l = Double.parseDouble(monto.toString());
@@ -851,10 +872,12 @@ public abstract class FacadeInstructions<T> {
 
     private boolean findBalance(String accountId, Double monto) {
         EntityManager em = emf.createEntityManager();
+        opaDTO opa = Util.opa(accountId);
         boolean bandera = false;
         try {
             String consulta = "SELECT * FROM auxiliares a "
-                    + "WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId + "' AND estatus=2 AND saldo>=" + monto;
+                    + " WHERE a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() 
+                    + " AND a.idauxiliar = " + opa.getIdauxiliar() + " AND estatus = 2 AND saldo >= " + monto;
             Query query = em.createNativeQuery(consulta, Auxiliares.class);
             Auxiliares a = (Auxiliares) query.getSingleResult();
             if (a != null) {
@@ -895,12 +918,16 @@ public abstract class FacadeInstructions<T> {
 
     public String validarTransferenciaSPEI(OrderWsSPEI orden) {
         EntityManager em = emf.createEntityManager();
+        ogsDTO ogs_or = Util.ogs(orden.getCIF());
+        opaDTO opa_or = Util.opa(orden.getClabeSolicitante());
         String mensaje = "";
         try {
-            String busquedaSolicitante = "SELECT * FROM personas WHERE replace(to_char(idorigen,'099999')||to_char(idgrupo,'09')||to_char(idsocio,'099999'),' ','')='" + orden.getCIF() + "'";
+            String busquedaSolicitante = "SELECT * FROM personas WHERE idorigen = " + ogs_or.getIdorigen()
+                    + " AND idgrupo = " + ogs_or.getIdgrupo() + " AND idsocio = " + ogs_or.getIdsocio();
             Query queryBusquedaSolicitante = em.createNativeQuery(busquedaSolicitante, Persona.class);
             Persona p = (Persona) queryBusquedaSolicitante.getSingleResult();
-            String cuentaOrigen = "SELECT * FROM auxiliares a WHERE replace(to_char(idorigenp,'099999')||to_char(idproducto,'09999')||to_char(idauxiliar,'09999999'),' ','')='" + orden.getClabeSolicitante() + "'";
+            String cuentaOrigen = "SELECT * FROM auxiliares a WHERE idorigenp = " + opa_or.getIdorigenp()
+                    + " AND idproducto = " + opa_or.getIdproducto() + " AND idauxiliar = " + opa_or.getIdauxiliar();
             if (p != null) {
                 Query queryOrigen = em.createNativeQuery(cuentaOrigen, Auxiliares.class);
                 Auxiliares a = (Auxiliares) queryOrigen.getSingleResult();

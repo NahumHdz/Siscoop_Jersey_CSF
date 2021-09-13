@@ -4,6 +4,7 @@ import DTO.CustomerAccountDTO;
 import DTO.CustomerContactDetailsDTO;
 import DTO.CustomerDetailsDTO;
 import DTO.CustomerSearchDTO;
+import DTO.ogsDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Entidades.Auxiliares;
 import com.fenoreste.rest.Entidades.AuxiliaresD;
@@ -13,6 +14,7 @@ import com.fenoreste.rest.Entidades.Persona;
 import com.fenoreste.rest.Entidades.PersonasPK;
 import com.fenoreste.rest.Entidades.Productos;
 import com.fenoreste.rest.Entidades.validaciones_telefono_siscoop;
+import com.fenoreste.rest.Util.Util_OGS_OPA;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 
@@ -30,7 +32,9 @@ public abstract class FacadeCustomer<T> {
     private static EntityManagerFactory emf;
 
     List<Object[]> lista = null;
-
+    
+    Util_OGS_OPA Util = new Util_OGS_OPA();
+    
     public FacadeCustomer(Class<T> entityClass) {
         emf = AbstractFacade.conexion();
     }
@@ -50,7 +54,10 @@ public abstract class FacadeCustomer<T> {
             Date birthDate = null;
             String sql = "";
             if (!ogs.equals("")) {
-                sql = "SELECT * FROM personas WHERE replace(to_char(idorigen,'099999')||to_char(idgrupo,'09')||to_char(idsocio,'099999'),' ','')='" + ogs + "' AND idgrupo=10";
+                ogsDTO id_ogs = Util.ogs(ogs);
+                sql = "SELECT * FROM personas WHERE "
+                        + " idorigen = " + id_ogs.getIdorigen() + " AND idgrupo = " + id_ogs.getIdgrupo() + " AND idsocio = " + id_ogs.getIdsocio()
+                        + " AND idgrupo = 10";
                 /*o = Integer.parseInt(ogs.substring(0, 6));
                 g = Integer.parseInt(ogs.substring(6, 8));
                 s = Integer.parseInt(ogs.substring(8, 14));
@@ -135,9 +142,12 @@ public abstract class FacadeCustomer<T> {
      EntityManager em = emf.createEntityManager();
         Query query = null;
         List<Object[]> ListaObjetos = null;
+        ogsDTO id_ogs = Util.ogs(ogs);
         String consulta = "SELECT CASE WHEN p.telefono != '' THEN p.telefono ELSE '0' END as phone,"
                 + " CASE WHEN p.celular != '' THEN p.celular ELSE '0000000000' END as cellphone,"
-                + " CASE WHEN p.email != '' THEN  p.email ELSE '0' END as email FROM personas p WHERE replace(to_char(p.idorigen,'099999')||to_char(p.idgrupo,'09')||to_char(p.idsocio,'099999'),' ','')='" + ogs + "'";
+                + " CASE WHEN p.email != '' THEN  p.email ELSE '0' END as email"
+                + " FROM personas p WHERE "
+                + " p.idorigen = " + id_ogs.getIdorigen() + " AND p.idgrupo = " + id_ogs.getIdgrupo() + " AND p.idsocio = " + id_ogs.getIdsocio();
         CustomerContactDetailsDTO contactsPhone = new CustomerContactDetailsDTO();
         CustomerContactDetailsDTO contactsCellphone = new CustomerContactDetailsDTO();
         CustomerContactDetailsDTO contactsEmail = new CustomerContactDetailsDTO();
@@ -180,8 +190,10 @@ public abstract class FacadeCustomer<T> {
 
     public List<CustomerAccountDTO> Accounts(String customerId) {
         EntityManager em = emf.createEntityManager();
+        ogsDTO ogs = Util.ogs(customerId);
         Query query = null;
-        String consulta = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tp USING(idproducto) WHERE replace((to_char(idorigen,'099999')||to_char(idgrupo,'09')||to_char(idsocio,'099999')),' ','')='" + customerId + "' AND estatus=2";
+        String consulta = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tp USING(idproducto) WHERE "
+                + " idorigen = " + ogs.getIdorigen() + " AND idgrupo = " + ogs.getIdgrupo() + " AND idsocio = " + ogs.getIdsocio() + " AND estatus = 2";
         CustomerAccountDTO producto = new CustomerAccountDTO();
         try {
             query = em.createNativeQuery(consulta, Auxiliares.class);
@@ -251,8 +263,10 @@ public abstract class FacadeCustomer<T> {
     public boolean findCustomer(String ogs) {
         boolean bandera = false;
         EntityManager em = emf.createEntityManager();
+        ogsDTO id_ogs = Util.ogs(ogs);
         try {
-            Query query = em.createNativeQuery("SELECT * FROM personas WHERE replace(to_char(p.idorigen,'099999')||to_char(p.idgrupo,'09')||to_char(p.idsocio,'099999'),' ','')='" + ogs + "'");
+            Query query = em.createNativeQuery("SELECT * FROM personas WHERE "
+                    + " p.idorigen = " + id_ogs.getIdorigen() + " AND p.idgrupo = " + id_ogs.getIdgrupo() + " AND p.idsocio = " + id_ogs.getIdsocio());
             if (query != null) {
                 bandera = true;
             }
@@ -267,6 +281,7 @@ public abstract class FacadeCustomer<T> {
         String CHAR_LOWER = "abcdefghijklmnopqrstuvwxyz";
         String CHAR_UPPER = CHAR_LOWER.toUpperCase();
         String NUMBER = "0123456789";
+        ogsDTO ogs = Util.ogs(customerId);
 
         String DATA_FOR_RANDOM_STRING = CHAR_LOWER + CHAR_UPPER + NUMBER;
         SecureRandom random = new SecureRandom();
@@ -285,7 +300,7 @@ public abstract class FacadeCustomer<T> {
              EntityTransaction tr=em.getTransaction();
             tr.begin();
             em.createNativeQuery("UPDATE personas p SET celular='"+phone1.replace("+","")+
-                                "' WHERE replace(to_char(p.idorigen,'099999')||to_char(p.idgrupo,'09')||to_char(p.idsocio,'099999'),' ','')='" + customerId + "'").executeUpdate();
+                                "' WHERE p.idorigen = " + ogs.getIdorigen() + " AND p.idgrupo = " + ogs.getIdgrupo() + " AND p.idsocio = " + ogs.getIdsocio()).executeUpdate();
             
             validaciones_telefono_siscoop vl=new validaciones_telefono_siscoop(0,cadena.toUpperCase(),customerId,phone1);
             em.persist(vl);
@@ -333,14 +348,15 @@ public abstract class FacadeCustomer<T> {
 
     public Double[] position(String customerId) {
         EntityManager em = emf.createEntityManager();
+        ogsDTO ogs = Util.ogs(customerId);
         Double ledGer=0.0,avalaible=0.0;
         double saldo_congelado_ahorros=0.0;
                 double saldo_disponible_ahorros=0.0;
         try {
             String c = "SELECT * FROM auxiliares a"
                     + " INNER JOIN productos pr USING(idproducto)"
-                    + " WHERE pr.tipoproducto in(0,1) AND replace(to_char(a.idorigen,'099999')||"
-                    + "to_char(a.idgrupo,'09')||to_char(a.idsocio,'099999'),' ','')='" + customerId.trim() + "'";
+                    + " WHERE pr.tipoproducto in(0,1) "
+                    + " AND a.idorigen = " + ogs.getIdorigen() + " AND a.idgrupo = " + ogs.getIdgrupo() + " AND a.idsocio = " + ogs.getIdsocio();
             System.out.println("Consulta:"+c);
             Query query = em.createNativeQuery(c, Auxiliares.class);
             List<Auxiliares> lista = query.getResultList();
@@ -417,14 +433,15 @@ public abstract class FacadeCustomer<T> {
     
     public Double[] positionHistory(String customerId,String fecha1,String fecha2) {
         EntityManager em = emf.createEntityManager();
+        ogsDTO ogs = Util.ogs(customerId);
         Double ledGer=0.0,avalaible=0.0;
         try {
             String c = "SELECT * FROM auxiliares_d ad "
                     + "INNER JOIN auxiliares a using(idorigenp,idproducto,idauxiliar)"
                     + " INNER JOIN productos pr USING(idproducto)"
-                    + " WHERE pr.tipoproducto in(0,1) AND replace(to_char(a.idorigen,'099999')||"
-                    + "to_char(a.idgrupo,'09')||to_char(a.idsocio,'099999'),' ','')='" + customerId.trim() 
-                    + "' AND date(ad.fecha) between '"+fecha1+"' AND '"+fecha2+"'";
+                    + " WHERE pr.tipoproducto in(0,1) "
+                    + " AND a.idorigen = " + ogs.getIdorigen() + " AND a.idgrupo = " + ogs.getIdgrupo() + " AND a.idsocio = "+ ogs.getIdsocio()
+                    + " AND date(ad.fecha) between '"+fecha1+"' AND '"+fecha2+"'";
             System.out.println("Consulta:"+c);
             Query query = em.createNativeQuery(c, AuxiliaresD.class);
             List<AuxiliaresD> lista = query.getResultList();

@@ -9,6 +9,8 @@ import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Entidades.Auxiliares;
 import com.fenoreste.rest.Entidades.Productos;
 import DTO.BalancesDTO;
+import DTO.opaDTO;
+import com.fenoreste.rest.Util.Util_OGS_OPA;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
@@ -28,7 +30,9 @@ public abstract class FacadeBalances<T> {
 
     private static EntityManagerFactory emf;
     List<Object[]> lista = null;
-
+    
+    Util_OGS_OPA Util = new Util_OGS_OPA();
+    
     public FacadeBalances(Class<T> entityClass) {
         emf = AbstractFacade.conexion();
     }
@@ -45,10 +49,11 @@ public abstract class FacadeBalances<T> {
             for(i=0;i<accountsId.length;i++){
             String accountId=accountsId[i];
                 System.out.println("AccountID:"+accountId);
-            String c = "SELECT * FROM auxiliares a"
-                    + " INNER JOIN productos pr USING(idproducto)"
-                    + " WHERE replace(to_char(a.idorigenp,'099999')||"
-                    + "to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId + "'";
+                opaDTO opa = Util.opa(accountId);
+            String c = "SELECT * FROM auxiliares a "
+                    + " INNER JOIN productos pr USING(idproducto) "
+                    + " WHERE a.idorigenp = " + opa.getIdorigenp()
+                    + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
             System.out.println("Consulta:" + c);
             Query query = em.createNativeQuery(c, Auxiliares.class);
             Auxiliares a = (Auxiliares) query.getSingleResult();

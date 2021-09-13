@@ -9,6 +9,7 @@ import DTO.AccountHoldersDTO;
 import DTO.DetailsAccountDTO;
 import DTO.HoldsDTO;
 import DTO.StatementsDTO;
+import DTO.opaDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Entidades.Auxiliares;
 import com.fenoreste.rest.Entidades.AuxiliaresD;
@@ -20,6 +21,7 @@ import com.fenoreste.rest.Entidades.V_auxiliares;
 import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
 import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;
 import com.fenoreste.rest.Entidades.v_auxiliaresPK;
+import com.fenoreste.rest.Util.Util_OGS_OPA;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -55,17 +57,18 @@ public abstract class FacadeAccounts<T> {
     public FacadeAccounts(Class<T> entityClass) {
         emf = AbstractFacade.conexion();
     }
-
+    
+    Util_OGS_OPA Util = new Util_OGS_OPA();
+    
     public List<AccountHoldersDTO> validateInternalAccount(String accountId) {
         EntityManager em = emf.createEntityManager();
-        int o = Integer.parseInt(accountId.substring(0, 6));
-        int p = Integer.parseInt(accountId.substring(6, 11));
-        int a = Integer.parseInt(accountId.substring(11, 19));
+        opaDTO opa = Util.opa(accountId);
+
         System.out.println("AccountIDDDDDDDDDDDDD:" + accountId);
         List<AccountHoldersDTO> holders = new ArrayList<AccountHoldersDTO>();
         try {
-            String consulta = "SELECT * FROM auxiliares a WHERE "
-                    + "replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId + "'";
+            String consulta = "SELECT * FROM auxiliares a WHERE " 
+                    + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
             System.out.println("consulta:" + consulta);
             Query query = em.createNativeQuery(consulta, Auxiliares.class);
             Auxiliares aa = (Auxiliares) query.getSingleResult();
@@ -170,10 +173,11 @@ public abstract class FacadeAccounts<T> {
     public List<HoldsDTO> holds(String accountId) {
         EntityManager em = emf.createEntityManager();
         List<HoldsDTO> listaDTO = new ArrayList<HoldsDTO>();
+        opaDTO opa = Util.opa(accountId);
         try {
-            String consulta = "SELECT * FROM auxiliares a WHERE"
-                    + " replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(idauxiliar,'09999999'),' ','')='" + accountId
-                    + "' AND estatus=2 AND garantia > 0";
+            String consulta = "SELECT * FROM auxiliares a WHERE "
+                    + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto()+ " AND a.idauxiliar = " + opa.getIdauxiliar()
+                    + " AND estatus = 2 AND garantia > 0";
             System.out.println("consulta:" + consulta);
 
             Query query = em.createNativeQuery(consulta, Auxiliares.class);
@@ -272,8 +276,10 @@ public abstract class FacadeAccounts<T> {
     public DetailsAccountDTO detailsAccount(String accountId) {
         EntityManager em = emf.createEntityManager();
         DetailsAccountDTO dto = new DetailsAccountDTO();
+        opaDTO opa = Util.opa(accountId);
         try {
-            String consulta = "SELECT * FROM auxiliares a WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId.trim() + "'";
+            String consulta = "SELECT * FROM auxiliares a WHERE "
+                    + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
             System.out.println("Consulta:" + consulta);
             Query query = em.createNativeQuery(consulta, Auxiliares.class);
             Auxiliares a = (Auxiliares) query.getSingleResult();
@@ -368,8 +374,10 @@ public abstract class FacadeAccounts<T> {
     public String Holders(String accountId) {
         EntityManager em = emf.createEntityManager();
         String nombre = "";
+        opaDTO opa = Util.opa(accountId);
         try {
-            String consulta = "SELECT * FROM auxiliares a WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId.trim() + "'";
+            String consulta = "SELECT * FROM auxiliares a WHERE "
+                    + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
             Query query = em.createNativeQuery(consulta, Auxiliares.class);
             Auxiliares a = (Auxiliares) query.getSingleResult();
             PersonasPK pk = new PersonasPK(a.getIdorigen(), a.getIdgrupo(), a.getIdsocio());
@@ -491,8 +499,10 @@ public abstract class FacadeAccounts<T> {
 
     public boolean validarCuenta(String accountId) {
         EntityManager em = emf.createEntityManager();
+        opaDTO opa = Util.opa(accountId);
         try {
-            String consulta = "SELECT count(*) FROM auxiliares a WHERE replace(to_char(a.idorigenp,'099999')||to_char(a.idproducto,'09999')||to_char(a.idauxiliar,'09999999'),' ','')='" + accountId.trim() + "'";
+            String consulta = "SELECT count(*) FROM auxiliares a WHERE "
+                    + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
             Query query = em.createNativeQuery(consulta);
             int count = Integer.parseInt(String.valueOf(query.getSingleResult()));
             if (count > 0) {
