@@ -8,11 +8,9 @@ package com.fenoreste.rest.Dao;
 import DTO.AccountHoldersDTO;
 import DTO.DetailsAccountDTO;
 import DTO.HoldsDTO;
-import DTO.StatementsDTO;
 import DTO.opaDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Entidades.Auxiliares;
-import com.fenoreste.rest.Entidades.AuxiliaresD;
 import com.fenoreste.rest.Entidades.AuxiliaresPK;
 import com.fenoreste.rest.Entidades.Persona;
 import com.fenoreste.rest.Entidades.PersonasPK;
@@ -21,7 +19,7 @@ import com.fenoreste.rest.Entidades.V_auxiliares;
 import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
 import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;
 import com.fenoreste.rest.Entidades.v_auxiliaresPK;
-import com.fenoreste.rest.Util.Util_OGS_OPA;
+import com.fenoreste.rest.Util.Utilidades;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -34,8 +32,6 @@ import java.io.OutputStreamWriter;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -58,7 +54,7 @@ public abstract class FacadeAccounts<T> {
         emf = AbstractFacade.conexion();
     }
     
-    Util_OGS_OPA Util = new Util_OGS_OPA();
+    Utilidades Util = new Utilidades();
     
     public List<AccountHoldersDTO> validateInternalAccount(String accountId) {
         EntityManager em = emf.createEntityManager();
@@ -104,9 +100,9 @@ public abstract class FacadeAccounts<T> {
             Persona person = em.find(Persona.class, personaspk);
             String persona = person.getNombre() + " " + person.getAppaterno() + " " + person.getApmaterno();
             tipos_cuenta_siscoop tps = em.find(tipos_cuenta_siscoop.class, aa.getAuxiliaresPK().getIdproducto());
-            if (tps.getProducttypename().replace(" ", "").toUpperCase().contains(accountType.replace(" ", ""))) {
+            if (tps.getProducttypename().trim().replace(" ", "").toUpperCase().contains(accountType.replace(" ", ""))) {
                 lista.add(persona.toUpperCase());
-                lista.add(tps.getProducttypename().toUpperCase());
+                lista.add(tps.getProducttypename().trim().toUpperCase());
                 lista.add(accountId);
             } else {
                 System.out.println("no es");
@@ -355,7 +351,7 @@ public abstract class FacadeAccounts<T> {
             dto.setAccountId(accountId);
             dto.setAccountNumber(accountId);
             dto.setDisplayAccountNumber(accountId);
-            dto.setAccountType(tps.getProducttypename().toUpperCase());
+            dto.setAccountType(tps.getProducttypename().trim().toUpperCase());
             dto.setCurrencyCode("MXN");
             dto.setProductCode(String.valueOf(a.getAuxiliaresPK().getIdproducto()));
             dto.setStatus(e);
@@ -398,7 +394,7 @@ public abstract class FacadeAccounts<T> {
         } catch (Exception e) {
             System.out.println("Error al buscar tipo cuenta siscoop:" + e.getMessage());
         }
-        return tip.getProducttypename();
+        return tip.getProducttypename().trim().toUpperCase();
     }
 
 

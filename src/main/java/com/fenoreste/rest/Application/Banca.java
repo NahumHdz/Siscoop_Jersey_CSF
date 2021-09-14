@@ -24,6 +24,8 @@ public class Banca extends Application {
     }*/
 
     private void addRestResourceClasses(Set<Class<?>> resources) {
+        resources.add(com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.class);
+        resources.add(com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider.class);
         resources.add(com.fenoreste.rest.services.AccountsResources.class);
         resources.add(com.fenoreste.rest.services.AlertsResources.class);
         resources.add(com.fenoreste.rest.services.BalancesResources.class);
@@ -38,5 +40,6 @@ public class Banca extends Application {
         resources.add(com.fenoreste.rest.services.SPEI.ResourcesSPEI.class);
         resources.add(com.fenoreste.rest.services.TimeResources.class);
         resources.add(com.fenoreste.rest.services.ValidateBeneficiary.class);
+        resources.add(org.glassfish.jersey.server.wadl.internal.WadlResource.class);
     }
 }

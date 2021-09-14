@@ -6,7 +6,7 @@ import DTO.ProductsDTO;
 import DTO.ogsDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Util.TimerBeepClock;
-import com.fenoreste.rest.Util.Util_OGS_OPA;
+import com.fenoreste.rest.Util.Utilidades;
 import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ import javax.persistence.Query;
 public abstract class FacadeProductos<T> {
   private static EntityManagerFactory emf;
   
-    Util_OGS_OPA Util = new Util_OGS_OPA();
+    Utilidades Util = new Utilidades();
   
   public FacadeProductos(Class<T> entityClass) {
     emf = AbstractFacade.conexion();
@@ -39,8 +39,8 @@ public abstract class FacadeProductos<T> {
       for (int i = 0; i < Lista.size(); i++) {
         CuentasSiscoop model = Lista.get(i);
         String c = "";
-        c = model.getProducttypename();
-        if (model.getProducttypename().toUpperCase().contains("TIME")){
+        c = model.getProducttypename().trim().toUpperCase();
+        if (model.getProducttypename().trim().toUpperCase().contains("TIME")){
             c = "TIME"; 
         }
                
@@ -48,7 +48,7 @@ public abstract class FacadeProductos<T> {
                               String.valueOf(model.getIdproducto()),
                               model.getProducttypeid(),
                               c,
-                              model.getDescripcion().toUpperCase());
+                              model.getDescripcion().trim().toUpperCase());
         ListagetP.add(dto);
       } 
       System.out.println("ListaProd:" + ListagetP.size());

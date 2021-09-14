@@ -10,7 +10,7 @@ import com.fenoreste.rest.Entidades.Auxiliares;
 import com.fenoreste.rest.Entidades.Productos;
 import DTO.BalancesDTO;
 import DTO.opaDTO;
-import com.fenoreste.rest.Util.Util_OGS_OPA;
+import com.fenoreste.rest.Util.Utilidades;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
@@ -31,7 +31,7 @@ public abstract class FacadeBalances<T> {
     private static EntityManagerFactory emf;
     List<Object[]> lista = null;
     
-    Util_OGS_OPA Util = new Util_OGS_OPA();
+    Utilidades Util = new Utilidades();
     
     public FacadeBalances(Class<T> entityClass) {
         emf = AbstractFacade.conexion();
@@ -43,7 +43,7 @@ public abstract class FacadeBalances<T> {
         String op = "", aa = "";
         Double Ledger = 0.0;
         Double Avalaible = 0.0;
-        ArrayList<BalancesDTO>dtos=new ArrayList<BalancesDTO>();
+        ArrayList<BalancesDTO>dtos=new ArrayList<>();
         try {
             int i=0;
             for(i=0;i<accountsId.length;i++){

@@ -11,8 +11,7 @@ import com.fenoreste.rest.Entidades.e_Alerts;
 import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
 import com.fenoreste.rest.Entidades.v_Alertas;
 import com.fenoreste.rest.Util.AbstractFacade;
-import com.fenoreste.rest.Util.UtilDate;
-import com.fenoreste.rest.Util.Util_OGS_OPA;
+import com.fenoreste.rest.Util.Utilidades;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -20,23 +19,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import static java.time.format.DateTimeFormatter.ofPattern;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.ISODateTimeFormat;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -52,7 +40,7 @@ public abstract class FacadeAlerts<T> {
         emf = AbstractFacade.conexion();
     }
     
-    Util_OGS_OPA Util = new Util_OGS_OPA();
+    Utilidades Util = new Utilidades();
     
     public String validateAlert(String customerId, String alertCode, boolean enabled, String accountId, String property, Double monto, String operator, String ruleType) {
         EntityManager em = emf.createEntityManager();

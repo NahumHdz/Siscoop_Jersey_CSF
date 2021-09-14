@@ -18,13 +18,17 @@ import DTO.ogsDTO;
 import DTO.opaDTO;
 import com.fenoreste.rest.Entidades.AuxiliaresPK;
 import com.fenoreste.rest.Entidades.Persona;
+import com.fenoreste.rest.Entidades.Procesa_pago_movimientos;
 import com.fenoreste.rest.Entidades.Productos;
 import com.fenoreste.rest.Entidades.Tablas;
 import com.fenoreste.rest.Entidades.TablasPK;
-import com.fenoreste.rest.Util.Util_OGS_OPA;
+import com.fenoreste.rest.Util.Utilidades;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -41,8 +45,8 @@ import javax.persistence.Query;
 public abstract class FacadeInstructions<T> {
 
     private static EntityManagerFactory emf;
-    
-    Util_OGS_OPA Util = new Util_OGS_OPA();
+
+    Utilidades util = new Utilidades();
 
     public FacadeInstructions(Class<T> entityClass) {
         emf = AbstractFacade.conexion();//Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);    
@@ -68,7 +72,7 @@ public abstract class FacadeInstructions<T> {
                 dtoMonetary.setMonto(ListaTransferencias.get(i).getMonto());
                 int idproducto = Integer.parseInt(ListaTransferencias.get(i).getCuentaorigen().substring(6, 11));
                 tipos_cuenta_siscoop tps = em.find(tipos_cuenta_siscoop.class, idproducto);
-                dtoMonetary.setTypeNameId(tps.getProducttypename().toUpperCase());
+                dtoMonetary.setTypeNameId(tps.getProducttypename().trim().toUpperCase());
                 dtoMonetary.setOriginatorTransactionType(ListaTransferencias.get(i).getTipotransferencia());
                 dtoMonetary.setMonetaryId(ListaTransferencias.get(i).getId());
                 listaMonetary.add(dtoMonetary);
@@ -130,7 +134,7 @@ public abstract class FacadeInstructions<T> {
                 validacionesTransferencias.setTipoejecucion(tipoEjecucion);
                 validacionesTransferencias.setMonto(montoTransferencia);
                 validacionesTransferencias.setFechaejecucion(hoy);
-                validacionesTransferencias.setEstatus(true);
+                validacionesTransferencias.setEstatus(false);
                 validacionesTransferencias.setCustomerId(customerId);
                 validacionesTransferencias.setCuentaorigen(cuentaorigen);
                 validacionesTransferencias.setCuentadestino(cuentadestino);
@@ -161,118 +165,6 @@ public abstract class FacadeInstructions<T> {
             em.close();
         }
 
-        /*try {
-            //Busca la cuenta y busca si tiene saldo
-            if (findAccount(cuentaorigen, customerId) && findBalance(cuentaorigen, montoTransferencia)) {
-                validationId = RandomAlfa().toUpperCase();
-                //si es una pago de servicio Nomas la guarda porque no se esta habilitado el servicio pero si debe validar que exista la cuenta origen y que tenga saldo
-                if (identificadorTransferencia == 1) {//Transferencia entre mis cuentas
-                    mensageDinamico= validarTransferenciaEntreMisCuentas("", cuentaorigen, montoTransferencia, cuentadestino);
-                } else if (identificadorTransferencia == 2) {//Trasnsferencia a terceros dentro de la entidad
-
-                } else if (identificadorTransferencia == 3) {//Pago a prestamos dentro de la entidad
-
-                } else if (identificadorTransferencia == 4) {//pago de servicios
-
-                } else if (identificadorTransferencia == 5) {//transferencias SPEI
-
-                }
-
-                if (tipotransferencia.toUpperCase().contains("BILL_PAYMENT")) {
-                    EntityTransaction tr = em.getTransaction();
-                    tr.begin();
-                    validaciones_transferencias_siscoop vl = new validaciones_transferencias_siscoop();
-                    vl.setCuentaorigen(cuentaorigen);
-                    vl.setCuentadestino(cuentadestino);
-                    vl.setTipotransferencia(tipotransferencia);
-                    vl.setComentario1(comentario);
-                    vl.setComentario2(propcuentadestino);
-                    vl.setCustomerId(customerId);
-                    vl.setMonto(montoTransferencia);
-                    vl.setFechaejecucion(hoy);
-                    vl.setTipoejecucion(tipoejecucion);
-                    vl.setEstatus(false);
-                    vl.setValidationId(validationId);
-                    em.persist(vl);
-                    tr.commit();
-                    bandera = true;
-                } else if (tipotransferencia.toUpperCase().contains("DOMESTIC_PAYMENT")) {
-                    //Es un pago SPEI
-
-                } else {
-                    //Si es una programada
-                    if (!FechaTiempoReal.equals(fechaejecucion)) {
-                        EntityTransaction tr = em.getTransaction();
-                        tr.begin();
-                        validaciones_transferencias_siscoop vl = new validaciones_transferencias_siscoop();
-                        vl.setCuentaorigen(cuentaorigen);
-                        vl.setCuentadestino(cuentadestino);
-                        vl.setTipotransferencia(tipotransferencia);
-                        vl.setComentario1("Programada no en uso");
-                        vl.setComentario2(propcuentadestino);
-                        vl.setCustomerId(customerId);
-                        vl.setMonto(montoTransferencia);
-                        vl.setFechaejecucion(stringToDate(fechaejecucion.replace("-", "/")));
-                        vl.setTipoejecucion(tipoejecucion);
-                        vl.setEstatus(false);
-                        vl.setValidationId(validationId);
-                        em.persist(vl);
-                        tr.commit();
-                        bandera = true;
-                    } else {
-                        //Tranferencias entre cuentas propias
-                        if (tipotransferencia.toUpperCase().contains("TRANSFER_OWN")) {
-                            if (validarTransferenciaEntreMisCuentas(customerId, cuentaorigen, montoTransferencia, cuentadestino)) {
-                                EntityTransaction tr = em.getTransaction();
-                                tr.begin();
-                                validaciones_transferencias_siscoop vl = new validaciones_transferencias_siscoop();
-                                vl.setCuentaorigen(cuentaorigen);
-                                vl.setCuentadestino(cuentadestino);
-                                vl.setTipotransferencia(tipotransferencia);
-                                vl.setComentario1(comentario);
-                                vl.setComentario2(propcuentadestino);
-                                vl.setCustomerId(customerId);
-                                vl.setFechaejecucion(hoy);
-                                vl.setMonto(montoTransferencia);
-                                vl.setTipoejecucion(tipoejecucion);
-                                vl.setEstatus(false);
-                                vl.setValidationId(validationId);
-                                em.persist(vl);
-                                tr.commit();
-                                bandera = true;
-                            }
-                        } else if (tipotransferencia.toUpperCase().contains("INTRABANK")) {//Si la cuenta destino es un tercero ya solo la manda
-                            EntityTransaction tr = em.getTransaction();
-                            tr.begin();
-                            validaciones_transferencias_siscoop vl = new validaciones_transferencias_siscoop();
-                            vl.setCuentaorigen(cuentaorigen);
-                            vl.setCuentadestino(cuentadestino);
-                            vl.setTipotransferencia(tipotransferencia);
-                            vl.setComentario1(comentario);
-                            vl.setComentario2(propcuentadestino);
-                            vl.setCustomerId(customerId);
-                            vl.setFechaejecucion(hoy);
-                            vl.setMonto(montoTransferencia);
-                            vl.setTipoejecucion(tipoejecucion);
-                            vl.setEstatus(false);
-                            vl.setValidationId(validationId);
-                            em.persist(vl);
-                            tr.commit();
-                            bandera = true;
-                        }
-                    }
-
-                }
-            }
-            if (bandera) {
-                dto = new validateMonetaryInstructionDTO(validationId, fees, fe);
-            }
-        } catch (Exception e) {
-            System.out.println("Error:" + e.getMessage());
-            em.close();
-        } finally {
-            em.close();
-        }*/
         return validateMonetary;
     }
 
@@ -282,35 +174,206 @@ public abstract class FacadeInstructions<T> {
         try {
             //Buscamos la validacion guardada no ejecutada con el id que se nos proporciona
             String consulta = "SELECT * FROM v_transferenciassiscoop WHERE validationid='" + validationId + "' ORDER BY fechaejecucion DESC LIMIT 1";
-            Query query = em.createNativeQuery(consulta, validaciones_transferencias_siscoop.class);
-            validaciones_transferencias_siscoop validacion_guardada = (validaciones_transferencias_siscoop) query.getSingleResult();
-            opaDTO opa = Util.opa(validacion_guardada.getCuentaorigen());
-            String running_balance = "SELECT saldo -" + validacion_guardada.getMonto() + " FROM auxiliares a where "
-                    + " and a.idorigenp = " + opa.getIdorigenp() + " and a.idproducto = " + opa.getIdproducto() + " and a.idauxiliar = " + opa.getIdauxiliar();
-            Query query1 = em.createNativeQuery(running_balance);
-            Double saldo = Double.parseDouble(String.valueOf(query1.getSingleResult()));
-            
-            transferencias_completadas_siscoop ejecutar_transferencia = new transferencias_completadas_siscoop();
-            ejecutar_transferencia.setCuentaorigen(validacion_guardada.getCuentaorigen());
-            ejecutar_transferencia.setCuentadestino(validacion_guardada.getCuentadestino());
-            ejecutar_transferencia.setTipotransferencia(validacion_guardada.getTipotransferencia());
-            ejecutar_transferencia.setComentario1(validacion_guardada.getComentario1());
-            ejecutar_transferencia.setComentario2(validacion_guardada.getComentario2());
-            ejecutar_transferencia.setCustomerId(validacion_guardada.getCustomerId());
-            ejecutar_transferencia.setFechaejecucion(validacion_guardada.getFechaejecucion());
-            ejecutar_transferencia.setMonto(validacion_guardada.getMonto());
-            ejecutar_transferencia.setTipoejecucion(validacion_guardada.getTipoejecucion());
-            ejecutar_transferencia.setEstatus(true);
-            ejecutar_transferencia.setRunningBalance(saldo);
-            em.getTransaction().begin();
-            em.persist(ejecutar_transferencia);
-            mensaje = "completed";
-            em.getTransaction().commit();
+            validaciones_transferencias_siscoop validacion_guardada = null;
+            try {
+                Query query = em.createNativeQuery(consulta, validaciones_transferencias_siscoop.class);
+                validacion_guardada = (validaciones_transferencias_siscoop) query.getSingleResult();
             } catch (Exception e) {
+                mensaje = "Id para validacion no existe";
+                System.out.println("Error el id para validar ya no existe:" + e.getMessage());
+            }
+
+            if (mensaje.equals("")) {
+                System.out.println("entroooooooooooo");
+                opaDTO opa = util.opa(validacion_guardada.getCuentaorigen());
+                String running_balance = "SELECT saldo-" + validacion_guardada.getMonto() + " FROM auxiliares a WHERE "
+                        + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
+
+                Query query1 = em.createNativeQuery(running_balance);
+                Double saldo = Double.parseDouble(String.valueOf(query1.getSingleResult()));
+
+                transferencias_completadas_siscoop ejecutar_transferencia = new transferencias_completadas_siscoop();
+                ejecutar_transferencia.setCuentaorigen(validacion_guardada.getCuentaorigen());
+                ejecutar_transferencia.setCuentadestino(validacion_guardada.getCuentadestino());
+                ejecutar_transferencia.setTipotransferencia(validacion_guardada.getTipotransferencia());
+                ejecutar_transferencia.setComentario1(validacion_guardada.getComentario1());
+                ejecutar_transferencia.setComentario2(validacion_guardada.getComentario2());
+                ejecutar_transferencia.setCustomerId(validacion_guardada.getCustomerId());
+                ejecutar_transferencia.setFechaejecucion(validacion_guardada.getFechaejecucion());
+                ejecutar_transferencia.setMonto(validacion_guardada.getMonto());
+                ejecutar_transferencia.setTipoejecucion(validacion_guardada.getTipoejecucion());
+                ejecutar_transferencia.setEstatus(true);
+                ejecutar_transferencia.setRunningBalance(saldo);
+                boolean banderaEstatusTransferencia = false;
+                opaDTO opaD = util.opa(ejecutar_transferencia.getCuentadestino());
+                //Obtengo los productos origen y destino
+                //Origen
+
+                String origenP = "SELECT * FROM auxiliares WHERE idorigenp=" + opa.getIdorigenp() + " AND idproducto=" + opa.getIdproducto() + " AND idauxiliar=" + opa.getIdauxiliar();
+                Query queryOrigen = em.createNativeQuery(origenP, Auxiliares.class);
+                Auxiliares aOrigen = (Auxiliares) queryOrigen.getSingleResult();
+                //Destino
+                String destinoP = "SELECT * FROM auxiliares WHERE idorigenp=" + opaD.getIdorigenp() + " AND idproducto=" + opaD.getIdproducto() + " AND idauxiliar=" + opaD.getIdauxiliar();
+                Query queryDestino = em.createNativeQuery(destinoP, Auxiliares.class);
+                Auxiliares aDestino = (Auxiliares) queryDestino.getSingleResult();
+
+                //Obtengo el producto 
+                Productos prDestino = em.find(Productos.class, aDestino.getAuxiliaresPK().getIdproducto());
+
+                Procesa_pago_movimientos procesaDestino = new Procesa_pago_movimientos();
+
+                Procesa_pago_movimientos procesaOrigen = new Procesa_pago_movimientos();
+                //Obtener los datos para procesar la transaccion
+                long time = System.currentTimeMillis();
+                Timestamp timestamp = new Timestamp(time);
+                Query sesion = em.createNativeQuery("select text(pg_backend_pid())||'-'||trim(to_char(now(),'ddmmyy'))");
+                String sesionc = String.valueOf(sesion.getSingleResult());
+                int rn = (int) (Math.random() * 999999 + 1);
+                //Obtener HH:mm:ss.microsegundos
+
+                String fechaArray[] = timestamp.toString().substring(0, 10).split("-");
+                String fReal = fechaArray[2] + "/" + fechaArray[1] + "/" + fechaArray[0];
+                String referencia = String.valueOf(rn) + "" + ejecutar_transferencia.getCuentaorigen().substring(0, 5) + "" + ejecutar_transferencia.getCuentadestino().substring(0, 5) + fReal.replace("/", "");
+
+                //Leemos fechatrabajo e idusuario
+                String fechaTrabajo = "SELECT to_char(fechatrabajo,'yyyy-MM-dd HH:mm:ss') FROM ORIGENES LIMIT 1";
+                Query fechaTrabajo_ = em.createNativeQuery(fechaTrabajo);
+                String fechaTr_ = String.valueOf(fechaTrabajo_.getSingleResult());
+
+                TablasPK idusuarioPK = new TablasPK("bankingly_banca_movil", "usuario_banca_movil");
+                Tablas tbUsuario_ = em.find(Tablas.class, idusuarioPK);
+
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                LocalDateTime localDate = LocalDateTime.parse(fechaTr_, dtf);
+
+                //Timestamp hoyT=Timestamp.from(hoy);
+                //Insertamos a la tabla donde se obtienen los datos a procesar
+                //Origen
+                Timestamp ts = Timestamp.valueOf(localDate);
+                procesaOrigen.setAuxiliaresPK(aOrigen.getAuxiliaresPK());
+                procesaOrigen.setFecha(ts);
+                procesaOrigen.setIdusuario(Integer.parseInt(tbUsuario_.getDato1()));
+                procesaOrigen.setSesion(sesionc);
+                procesaOrigen.setReferencia(referencia + ts.toString().replace(" ", "").substring(10, 18).replace(":", ""));
+                procesaOrigen.setIdorigen(aOrigen.getIdorigen());
+                procesaOrigen.setIdgrupo(aOrigen.getIdgrupo());
+                procesaOrigen.setIdsocio(aOrigen.getIdsocio());
+                procesaOrigen.setCargoabono(0);
+                procesaOrigen.setMonto(ejecutar_transferencia.getMonto());
+                procesaOrigen.setIva(Double.parseDouble(aOrigen.getIva().toString()));
+                procesaOrigen.setTipo_amort(Integer.parseInt(String.valueOf(aOrigen.getTipoamortizacion())));
+
+                procesaOrigen.setSai_aux("");
+
+                //Guardamos la cuenta origen para la transferencia
+                em.getTransaction().begin();
+                em.persist(procesaOrigen);
+                em.getTransaction().commit();
+                em.clear();
+
+                //Destino
+                procesaDestino.setAuxiliaresPK(aDestino.getAuxiliaresPK());
+                procesaDestino.setFecha(ts);
+                procesaDestino.setIdusuario(Integer.parseInt(tbUsuario_.getDato1()));
+                procesaDestino.setSesion(sesionc);
+                procesaDestino.setReferencia(referencia + ts.toString().replace(" ", "").substring(10, 18).replace(":", ""));
+                procesaDestino.setIdorigen(aDestino.getIdorigen());
+                procesaDestino.setIdgrupo(aDestino.getIdgrupo());
+                procesaDestino.setIdsocio(aDestino.getIdsocio());
+                procesaDestino.setCargoabono(1);
+                procesaDestino.setMonto(ejecutar_transferencia.getMonto());
+                procesaDestino.setIva(Double.parseDouble(aDestino.getIva().toString()));
+                procesaDestino.setTipo_amort(Integer.parseInt(String.valueOf(aDestino.getTipoamortizacion())));
+                procesaDestino.setSai_aux("");
+
+                //Guardamos la cuenta destino para la transferencia
+                em.getTransaction().begin();
+                em.persist(procesaDestino);
+                em.getTransaction().commit();
+
+                //Ejecuto la distribucion del monto(Funciona final)
+                String procesar = "SELECT sai_bankingly_aplica_transaccion('" + fechaTr_.substring(0, 10) + "'," + procesaOrigen.getIdusuario() + ",'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')";
+                Query procesa_pago = em.createNativeQuery(procesar);
+                int respuestaProcesada = Integer.parseInt(String.valueOf(procesa_pago.getSingleResult()));
+
+                System.out.println("RespuestaProcesada:" + respuestaProcesada);
+
+                //Si la cuenta a la que se esta transfiriendo es un prestamo
+                if (prDestino.getTipoproducto() == 2) {
+                    //Obtengo los datos(Seguro hipotecario,comisones cobranza,interes ect.)
+                    String distribucion = "SELECT sai_bankingly_detalle_transaccion_aplicada('" + fechaTr_.substring(0, 10) + "'," + procesaOrigen.getIdusuario() + ",'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')";
+                    System.out.println("DistribucionConsulta:" + distribucion);
+                    Query procesa_distribucion = em.createNativeQuery(distribucion);
+                    String distribucionProcesada = String.valueOf(procesa_distribucion.getSingleResult());
+                    System.out.println("Distribucion_Procesada:" + distribucionProcesada);
+                    String ArrayDistribucion[] = distribucionProcesada.split("\\|");
+                    //Retorno: Seguro hipotecario | Comision cobranza | IM | Iva IM | IO | Iva IO | A Capital
+                    //Si es un prestamo tipo amortizacion 5 y tiene referencia de tipoporducto 5012,5011 si tiene seguro hipotecario
+                    //Si es un tipoamortizacion 5 no tiene adelanto de intereses
+
+                    // if(prDestino.getTipoproducto()==5){
+                    /*mensajeBackendResult = "PAGO EXITOSO" + "\n"
+                        + "SEGURO HIPOTECARIO    :" + ArrayDistribucion[0] + "\n "
+                        + "COMISON COBRANZA      :" + ArrayDistribucion[1] + "\n "
+                        + "INTERES MORATORIO     :" + ArrayDistribucion[2] + "\n "
+                        + "IVA INTERES MORATORIO :" + ArrayDistribucion[3] + "\n"
+                        + "INTERES ORDINARIO     :" + ArrayDistribucion[4] + "\n"
+                        + "IVA INTERES ORDINARIO :" + ArrayDistribucion[5] + "\n"
+                        + "CAPITAL               :" + ArrayDistribucion[5] + "\n"
+                        + "ADELANTO DE INTERES   :" + ArrayDistribucion[6] + "\n";//Para adelanto de interese solo aplicaria para los productos configurados*/
+ /*}else{
+                        mensajeBackendResult="PAGO EXITOSO"  +"\n"+
+                                         //"SEGURO HIPOTECARIO    :"+ArrayDistribucion[0]+"\n "+
+                                         "COMISON COBRANZA      :"+ArrayDistribucion[1]+"\n "+
+                                         "INTERES MORATORIO     :"+ArrayDistribucion[2]+"\n "+
+                                         "IVA INTERES MORATORIO :"+ArrayDistribucion[3]+"\n"+
+                                         "INTERES ORDINARIO     :"+ArrayDistribucion[4]+"\n"+
+                                         "IVA INTERES ORDINARIO :"+ArrayDistribucion[5]+"\n"+
+                                         "CAPITAL               :"+ArrayDistribucion[5]+"\n"+
+                                         "ADELANTO DE INTERES   :"+ArrayDistribucion[6]+"\n";
+                    }*/
+                    //Query queryLimpiar = em.createNativeQuery("SELECT sai_bankingly_termina_transaccion (NULL,NULL,'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')");
+                    //int clean = Integer.parseInt(String.valueOf(queryLimpiar.getSingleResult()));
+                } else {
+                    //mensajeBackendResult = "TRANSACCION EXITOSA";
+                    System.out.println("Transaccion exitosa");
+                    banderaEstatusTransferencia = true;
+                    //Query queryLimpiar = em.createNativeQuery("SELECT sai_bankingly_termina_transaccion (NULL,NULL,'" + procesaOrigen.getSesion() + "'," + procesaOrigen.getReferencia() + "')");
+                    //int clean=Integer.parseInt(String.valueOf(queryLimpiar.getSingleResult()));
+                }
+
+                if (respuestaProcesada == 2) {
+                    banderaEstatusTransferencia = true;
+                }
+                if (banderaEstatusTransferencia) {
+                    //Aplico la distribucion
+
+                    String clean = "SELECT sai_bankingly_termina_transaccion('" + fechaTr_.substring(0, 10) + "'," + procesaOrigen.getIdusuario() + ",'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')";
+                    Query queryL = em.createNativeQuery(clean);
+                    int registrosLimpiados = Integer.parseInt(String.valueOf(queryL.getSingleResult()));
+                    System.out.println("Registros Limpiados con exito:" + registrosLimpiados);
+
+                    em.getTransaction().begin();
+                    validaciones_transferencias_siscoop val = em.find(validaciones_transferencias_siscoop.class, validacion_guardada.getId());
+                    em.remove(val);
+                    em.getTransaction().commit();
+
+                    em.getTransaction().begin();
+                    em.persist(ejecutar_transferencia);
+                    mensaje = "completed";
+                    em.getTransaction().commit();
+                }
+            }else{
+                mensaje="ERROR validationId no existe";
+            }
+
+        } catch (Exception e) {
             System.out.println("Error en execute:" + e.getMessage());
             em.close();
             em.getTransaction().rollback();
-            return "rejected";
+            return e.getMessage();
+        } finally {
+            em.close();
         }
         return mensaje;
     }
@@ -335,7 +398,7 @@ public abstract class FacadeInstructions<T> {
     public List<AccountHoldersDTO> accountHolders(String accountId) {
         EntityManager em = emf.createEntityManager();
         List<AccountHoldersDTO> listaDTO = new ArrayList<AccountHoldersDTO>();
-        opaDTO opa = Util.opa(accountId);
+        opaDTO opa = util.opa(accountId);
         try {
             String consulta = "SELECT p.nombre||' '||p.appaterno||' '||p.apmaterno as nombre FROM auxiliares a "
                     + " INNER JOIN personas p USING(idorigen,idgrupo,idsocio)"
@@ -377,8 +440,8 @@ public abstract class FacadeInstructions<T> {
     //Validar Trasnferencia entre mis cuentas
     private String validarTransferenciaEntreMisCuentas(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
         EntityManager em = emf.createEntityManager();
-        opaDTO opa_orig = Util.opa(opaOrigen);
-        opaDTO opa_dest = Util.opa(opaDestino);
+        opaDTO opa_orig = util.opa(opaOrigen);
+        opaDTO opa_dest = util.opa(opaDestino);
         String cuentaOrigen = "SELECT * FROM auxiliares a "
                 + " WHERE a.idorigenp = " + opa_orig.getIdorigenp() + " AND a.idproducto = " + opa_orig.getIdproducto() + " AND a.idauxiliar = " + opa_orig.getIdauxiliar();
 
@@ -489,9 +552,9 @@ public abstract class FacadeInstructions<T> {
     //Validar Transferencia a terceros dentro de la entidad
     private String validarTransferenciasATercerosDE(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
         EntityManager em = emf.createEntityManager();
-        opaDTO opa_orig = Util.opa(opaOrigen);
-        opaDTO opa_dest = Util.opa(opaDestino);
-        
+        opaDTO opa_orig = util.opa(opaOrigen);
+        opaDTO opa_dest = util.opa(opaDestino);
+
         String cuentaOrigen = "SELECT * FROM auxiliares a "
                 + " WHERE a.idorigenp = " + opa_orig.getIdorigenp() + " AND a.idproducto = " + opa_orig.getIdproducto() + " AND a.idauxiliar = " + opa_orig.getIdauxiliar();
 
@@ -599,14 +662,14 @@ public abstract class FacadeInstructions<T> {
     //Validar pago de prestamo propio
     private String validarPagoPrestamo(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
         EntityManager em = emf.createEntityManager();
-        opaDTO opa_orig = Util.opa(opaOrigen);
-        opaDTO opa_dest = Util.opa(opaDestino);
+        opaDTO opa_orig = util.opa(opaOrigen);
+        opaDTO opa_dest = util.opa(opaDestino);
         String cuentaOrigen = "SELECT * FROM auxiliares a "
                 + " WHERE a.idorigenp = " + opa_orig.getIdorigenp() + " AND a.idproducto = " + opa_orig.getIdproducto() + " AND a.idauxiliar = " + opa_orig.getIdauxiliar();
 
         String cuentaDestino = "SELECT * FROM auxiliares a "
                 + " WHERE a.idorigenp = " + opa_dest.getIdorigenp() + " AND a.idproducto = " + opa_dest.getIdproducto() + " AND a.idauxiliar = " + opa_dest.getIdauxiliar();
-        
+
         String mensage = "";
         try {
             Auxiliares ctaOrigen = null;
@@ -708,7 +771,7 @@ public abstract class FacadeInstructions<T> {
     //Validar pago de servicio(solo se valida la cuenta origen)
     private String validarPagoServicio(String socio, String opaOrigen, Double TotalPagoServicio) {
         EntityManager em = emf.createEntityManager();
-        opaDTO opa_orig = Util.opa(opaOrigen);
+        opaDTO opa_orig = util.opa(opaOrigen);
         String cuentaOrigen = "SELECT * FROM auxiliares a "
                 + " WHERE a.idorigenp = " + opa_orig.getIdorigenp() + " AND a.idproducto = " + opa_orig.getIdproducto() + " AND a.idauxiliar = " + opa_orig.getIdauxiliar();
 
@@ -803,7 +866,7 @@ public abstract class FacadeInstructions<T> {
         String mes = Integer.toString(c1.get(2) + 1);
         String annio = Integer.toString(c1.get(1));
         String fechaActual = String.format("%04d", Integer.parseInt(annio)) + "/" + String.format("%02d", Integer.parseInt(mes)) + "/" + String.format("%02d", Integer.parseInt(dia));
-        TablasPK tbPk = new TablasPK("banca_movil", "montomaximo");
+        TablasPK tbPk = new TablasPK("bankingly_banca_movil", "montomaximo");
         Tablas tb = em.find(Tablas.class,
                 tbPk);
         try {
@@ -835,8 +898,8 @@ public abstract class FacadeInstructions<T> {
 
     private boolean aplicarCargos(String accountId, Double monto, int tipocargo) {
         EntityManager em = emf.createEntityManager();
-        opaDTO opa = Util.opa(accountId);
-        String ba = "SELECT * FROM auxiliares a WHERE a.idorigenp = " + opa.getIdorigenp() 
+        opaDTO opa = util.opa(accountId);
+        String ba = "SELECT * FROM auxiliares a WHERE a.idorigenp = " + opa.getIdorigenp()
                 + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
         Query query = em.createNativeQuery(ba, Auxiliares.class);
         Auxiliares a = (Auxiliares) query.getSingleResult();
@@ -872,11 +935,11 @@ public abstract class FacadeInstructions<T> {
 
     private boolean findBalance(String accountId, Double monto) {
         EntityManager em = emf.createEntityManager();
-        opaDTO opa = Util.opa(accountId);
+        opaDTO opa = util.opa(accountId);
         boolean bandera = false;
         try {
             String consulta = "SELECT * FROM auxiliares a "
-                    + " WHERE a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() 
+                    + " WHERE a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto()
                     + " AND a.idauxiliar = " + opa.getIdauxiliar() + " AND estatus = 2 AND saldo >= " + monto;
             Query query = em.createNativeQuery(consulta, Auxiliares.class);
             Auxiliares a = (Auxiliares) query.getSingleResult();
@@ -918,8 +981,8 @@ public abstract class FacadeInstructions<T> {
 
     public String validarTransferenciaSPEI(OrderWsSPEI orden) {
         EntityManager em = emf.createEntityManager();
-        ogsDTO ogs_or = Util.ogs(orden.getCIF());
-        opaDTO opa_or = Util.opa(orden.getClabeSolicitante());
+        ogsDTO ogs_or = util.ogs(orden.getCIF());
+        opaDTO opa_or = util.opa(orden.getClabeSolicitante());
         String mensaje = "";
         try {
             String busquedaSolicitante = "SELECT * FROM personas WHERE idorigen = " + ogs_or.getIdorigen()
@@ -998,7 +1061,7 @@ public abstract class FacadeInstructions<T> {
         EntityManager em = emf.createEntityManager();
         String mensaje = "";
         try {
-            TablasPK tbPk = new TablasPK("banca_movil", "montomaximominimo");
+            TablasPK tbPk = new TablasPK("bankingly_banca_movil", "montomaximominimo");
             Tablas tb = em.find(Tablas.class,
                     tbPk);
             if (amount > Double.parseDouble(tb.getDato1())) {

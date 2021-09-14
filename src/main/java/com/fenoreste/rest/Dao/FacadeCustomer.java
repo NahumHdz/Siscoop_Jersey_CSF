@@ -14,7 +14,7 @@ import com.fenoreste.rest.Entidades.Persona;
 import com.fenoreste.rest.Entidades.PersonasPK;
 import com.fenoreste.rest.Entidades.Productos;
 import com.fenoreste.rest.Entidades.validaciones_telefono_siscoop;
-import com.fenoreste.rest.Util.Util_OGS_OPA;
+import com.fenoreste.rest.Util.Utilidades;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 
@@ -33,7 +33,7 @@ public abstract class FacadeCustomer<T> {
 
     List<Object[]> lista = null;
     
-    Util_OGS_OPA Util = new Util_OGS_OPA();
+    Utilidades Util = new Utilidades();
     
     public FacadeCustomer(Class<T> entityClass) {
         emf = AbstractFacade.conexion();
@@ -210,7 +210,7 @@ public abstract class FacadeCustomer<T> {
                     System.out.println("IdproductoA:" + a.getAuxiliaresPK().getIdproducto());
                     try {
                         CuentasSiscoop tp = em.find(CuentasSiscoop.class, a.getAuxiliaresPK().getIdproducto());
-                        accountType = String.valueOf(tp.getProducttypename().toUpperCase());
+                        accountType = String.valueOf(tp.getProducttypename().trim().toUpperCase());
                         if(accountType.contains("TIME")){
                             accountType="TIME";
                         }

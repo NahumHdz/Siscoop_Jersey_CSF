@@ -12,7 +12,7 @@ import DTO.opaDTO;
  *
  * @author nahum
  */
-public class Util_OGS_OPA {
+public class Utilidades {
     
     public ogsDTO ogs(String cadena_ogs) {
         ogsDTO ogs = new ogsDTO();

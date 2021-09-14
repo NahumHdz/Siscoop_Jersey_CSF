@@ -373,12 +373,7 @@ public class InstructionsResources {
         String msj = "";
         String validationProgramadas = "45KLF09612FGHCVXX";//Se puso esa cadena porque para programadas no almaceno datos en la base responde dummy y esa cadena se usa
         try {
-            msj = dao.executeMonetaryInstruction(validationId);
-            if (msj.equalsIgnoreCase("completed")) {
-
-            } else if (validationProgramadas.equals("45KLF09612FGHCVXX")) {
-                msj = "completed";
-            }
+            msj = dao.executeMonetaryInstruction(validationId);            
             jsonb.put("status", msj);
             return Response.status(Response.Status.OK).entity(jsonb).build();
         } catch (Exception e) {
