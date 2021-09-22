@@ -6,12 +6,14 @@ import DTO.DetailsAccountDTO;
 import DTO.HoldsDTO;
 import com.fenoreste.rest.Dao.AccountsDAO;
 import com.fenoreste.rest.Dao.TransfersDAO;
+import com.fenoreste.rest.Entidades.AuxiliaresD;
 import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;
 import com.github.cliftonlabs.json_simple.JsonObject;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.List;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -198,6 +200,7 @@ public class AccountsResources {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response History(String cadena, @HeaderParam("authorization") String authString) {
         Security scr = new Security();
+        System.out.println("CADENAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: " + cadena);
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
@@ -220,36 +223,39 @@ public class AccountsResources {
                 finalDate = js1.getString("value");
                 System.out.println("id:" + initialDate + ",fd:" + finalDate);
             }
-            List<transferencias_completadas_siscoop> lista = dao.History(accountId, initialDate, finalDate, pageSize, pageStartIndex);
+            List<AuxiliaresD> lista = dao.History(accountId, initialDate, finalDate, pageSize, pageStartIndex);
+            List<AuxiliaresD> lista_size = dao.History_Size(accountId, initialDate, finalDate);
             JsonObject create = null;
             JsonArrayBuilder listaJson = Json.createArrayBuilder();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+            SimpleDateFormat sdf1 = new SimpleDateFormat("dd/MM/yyyy HH:MM:ss");
+            SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd");
+            Date fechaDate = null;
             String fe = "";
+            double monto = 0.0;
+            int id = 0;
             for (int j = 0; j < lista.size(); j++) {
-                transferencias_completadas_siscoop dto = lista.get(j);
-                System.out.println("dto:" + dto);
-                fe = sdf.format(dto.getFechaejecucion()).replace("/", "-");
-                ZonedDateTime zonedDateTime = ZonedDateTime.parse(fe + "T00:00:00.000-07:00");
-                String feR = String.valueOf(zonedDateTime);
-                System.out.println("DTOCtaOrigen:" + dto.getCuentaorigen());
-                int o = Integer.parseInt(dto.getCuentaorigen().substring(0, 6));
-                int p = Integer.parseInt(dto.getCuentaorigen().substring(6, 11));
-                int a = Integer.parseInt(dto.getCuentaorigen().substring(11, 19));
+                AuxiliaresD ax = lista.get(j);
+                System.out.println("FechaHora:"+ax.getAuxiliaresDPK().getFecha());
+                fechaDate=formato.parse(String.valueOf(ax.getAuxiliaresDPK().getFecha()).substring(0,10));
+                System.out.println("Fecha date:"+fechaDate);
+                fe = sdf.format(fechaDate);
 
-                int o1 = Integer.parseInt(accountId.substring(0, 6));
-                int p1 = Integer.parseInt(accountId.substring(6, 11));
-                int a1 = Integer.parseInt(accountId.substring(11, 19));
-                int co = o + p + a;
-                int co1 = o1 + p1 + a1;
-                if (co == co1) {
-                    dto.setMonto(-dto.getMonto());
-                } else {
-                    dto.setMonto(dto.getMonto());
+                System.out.println("Fe:" + fe + " " + ax.getCargoabono() + " " + ax.getMonto());
+                ZonedDateTime zonedDateTime = ZonedDateTime.parse(fe.replace("/","-")+ "T00:00:00.000-07:00");
+                String feR = String.valueOf(zonedDateTime);
+                //System.out.println("DTOCtaOrigen:" + dto.getCuentaorigen());
+                id = ax.getIdorigenc() + Integer.parseInt(ax.getPeriodo()) + ax.getIdtipo() + ax.getIdpoliza();
+                //Pintamos los saldos + y -s 
+                if (ax.getCargoabono() == 0) {
+                    monto = -ax.getMonto().doubleValue();
+                } else if (ax.getCargoabono() == 1) {
+                    monto = ax.getMonto().doubleValue();
                 }
-                javax.json.JsonObject jsi = Json.createObjectBuilder().add("transactionId", String.valueOf(dto.getId())).add("amount", Json.createObjectBuilder().add("amount", dto.getMonto()).add("currencyCode", "MXN").build()).add("postingDate", feR).add("valueDate", fe.replace("/", "-")).add("runningBalance", Json.createObjectBuilder().add("amount", dto.getRunningBalance()).add("currencyCode", "MXN").build()).add("description", dto.getComentario1()).add("originatorReferenceId", String.valueOf(dto.getId())).add("originatorCode", String.valueOf(dto.getId())).add("description2", Json.createObjectBuilder().add("value", String.valueOf(dto.getId())).add("valueType", "string").add("isSensitive", false).build()).build();
-                listaJson.add((JsonValue) jsi);
+                javax.json.JsonObject jsi = Json.createObjectBuilder().add("transactionId", id).add("amount", Json.createObjectBuilder().add("amount", monto).add("currencyCode", "MXN").build()).add("postingDate",feR).add("valueDate", fe.replace("/","-")).add("runningBalance", Json.createObjectBuilder().add("amount", ax.getSaldoec()).add("currencyCode", "MXN").build()).add("description", ax.getTicket()).add("originatorReferenceId", id).add("originatorCode", id).add("description2", Json.createObjectBuilder().add("value", id).add("valueType", "string").add("isSensitive", false).build()).build();
+                listaJson.add(jsi);
             }
-            javax.json.JsonObject Found = Json.createObjectBuilder().add("totalRecords", lista.size()).add("queryId", "").add("transactions", listaJson).build();
+            javax.json.JsonObject Found = Json.createObjectBuilder().add("totalRecords", lista_size.size()).add("queryId", "").add("transactions", listaJson).build();
             return Response.status(Response.Status.OK).entity(Found).build();
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());
@@ -275,76 +281,76 @@ public class AccountsResources {
             accountId = jsonRecibido.getString("accountId");
             DetailsAccountDTO dto = dao.detailsAccount(accountId);
             System.out.println("DTO:" + dto);
-            javax.json.JsonObject jsi=null;
-            if(dto.getAccountType().toUpperCase().contains("TIM") || dto.getAccountType().toUpperCase().contains("LOA")){
-               jsi= Json.createObjectBuilder().add("accountDetails", Json.createObjectBuilder()
-                    .add("accountId", dto.getAccountId())
-                    .add("accountNumber", dto.getAccountNumber())
-                    .add("displayAccountNumber", dto.getDisplayAccountNumber())
-                    .add("accountType", dto.getAccountType().trim())
-                    .add("currencyCode", dto.getCurrencyCode())
-                    .add("productCode", dto.getProductCode())
-                    .add("status", dto.getStatus())
-                    .add("branch", (JsonValue) Json.createObjectBuilder()
-                            .add("value", dto.getSucursal())
-                            .add("valueType", "string")
-                            .add("isSensitive", false)
-                            .build())
-                    .add("openedDate", (JsonValue) Json.createObjectBuilder()
-                            .add("value", dto.getOpenedDate())
-                            .add("valueType", "date")
-                            .add("isSensitive", false)
-                            .build())
-                    .add("iban", (JsonValue) Json.createObjectBuilder()
-                            .add("description", "IBAN")
-                            .add("isSensitive", true)
-                            .add("valueType", "string")
-                            .add("value", "******" + dto.getAccountId().substring(15, 19))
-                            .build())
-                    .add("interestRate", Json.createObjectBuilder()
-                            .add("value", dto.getTasa())
-                            .add("valueType", "decimal")
-                            .add("isSensitive", false).build())
-                    .add("nextPaymentAmount", Json.createObjectBuilder()
-                            .add("value", dto.getProximoMontoInteres())
-                            .add("valueType", "decimal")
-                            .add("isSensitive", false).build())
-                    .add("nextPaymentDate", Json.createObjectBuilder()
-                            .add("value", dto.getProximaFechaPago())
-                            .add("valueType", "date")
-                            .add("isSensitive", false).build())
-                    .add("maturityDate", Json.createObjectBuilder()
-                            .add("value", dto.getFechaVencimiento())
-                            .add("valueType", "date")
-                            .add("isSensitive", false).build())
-                    .build()).build(); 
-            }else{
-               jsi= Json.createObjectBuilder().add("accountDetails", Json.createObjectBuilder()
-                    .add("accountId", dto.getAccountId())
-                    .add("accountNumber", dto.getAccountNumber())
-                    .add("displayAccountNumber", dto.getDisplayAccountNumber())
-                    .add("accountType", dto.getAccountType().trim())
-                    .add("currencyCode", dto.getCurrencyCode())
-                    .add("productCode", dto.getProductCode())
-                    .add("status", dto.getStatus())
-                    .add("branch", (JsonValue) Json.createObjectBuilder()
-                            .add("value", dto.getSucursal())
-                            .add("valueType", "string")
-                            .add("isSensitive", false)
-                            .build())
-                    .add("openedDate", (JsonValue) Json.createObjectBuilder()
-                            .add("value", dto.getOpenedDate())
-                            .add("valueType", "date")
-                            .add("isSensitive", false)
-                            .build())
-                    .add("iban", (JsonValue) Json.createObjectBuilder()
-                            .add("description", "IBAN")
-                            .add("isSensitive", true)
-                            .add("valueType", "string")
-                            .add("value", "******" + dto.getAccountId().substring(15, 19))
-                            .build())).build(); 
+            javax.json.JsonObject jsi = null;
+            if (dto.getAccountType().toUpperCase().contains("TIM") || dto.getAccountType().toUpperCase().contains("LOA")) {
+                jsi = Json.createObjectBuilder().add("accountDetails", Json.createObjectBuilder()
+                        .add("accountId", dto.getAccountId())
+                        .add("accountNumber", dto.getAccountNumber())
+                        .add("displayAccountNumber", dto.getDisplayAccountNumber())
+                        .add("accountType", dto.getAccountType().trim())
+                        .add("currencyCode", dto.getCurrencyCode())
+                        .add("productCode", dto.getProductCode())
+                        .add("status", dto.getStatus())
+                        .add("branch", (JsonValue) Json.createObjectBuilder()
+                                .add("value", dto.getSucursal())
+                                .add("valueType", "string")
+                                .add("isSensitive", false)
+                                .build())
+                        .add("openedDate", (JsonValue) Json.createObjectBuilder()
+                                .add("value", dto.getOpenedDate())
+                                .add("valueType", "date")
+                                .add("isSensitive", false)
+                                .build())
+                        .add("iban", (JsonValue) Json.createObjectBuilder()
+                                .add("description", "IBAN")
+                                .add("isSensitive", true)
+                                .add("valueType", "string")
+                                .add("value", "******" + dto.getAccountId().substring(15, 19))
+                                .build())
+                        .add("interestRate", Json.createObjectBuilder()
+                                .add("value", dto.getTasa())
+                                .add("valueType", "decimal")
+                                .add("isSensitive", false).build())
+                        .add("nextPaymentAmount", Json.createObjectBuilder()
+                                .add("value", dto.getProximoMontoInteres())
+                                .add("valueType", "decimal")
+                                .add("isSensitive", false).build())
+                        .add("nextPaymentDate", Json.createObjectBuilder()
+                                .add("value", dto.getProximaFechaPago())
+                                .add("valueType", "date")
+                                .add("isSensitive", false).build())
+                        .add("maturityDate", Json.createObjectBuilder()
+                                .add("value", dto.getFechaVencimiento())
+                                .add("valueType", "date")
+                                .add("isSensitive", false).build())
+                        .build()).build();
+            } else {
+                jsi = Json.createObjectBuilder().add("accountDetails", Json.createObjectBuilder()
+                        .add("accountId", dto.getAccountId())
+                        .add("accountNumber", dto.getAccountNumber())
+                        .add("displayAccountNumber", dto.getDisplayAccountNumber())
+                        .add("accountType", dto.getAccountType().trim())
+                        .add("currencyCode", dto.getCurrencyCode())
+                        .add("productCode", dto.getProductCode())
+                        .add("status", dto.getStatus())
+                        .add("branch", (JsonValue) Json.createObjectBuilder()
+                                .add("value", dto.getSucursal())
+                                .add("valueType", "string")
+                                .add("isSensitive", false)
+                                .build())
+                        .add("openedDate", (JsonValue) Json.createObjectBuilder()
+                                .add("value", dto.getOpenedDate())
+                                .add("valueType", "date")
+                                .add("isSensitive", false)
+                                .build())
+                        .add("iban", (JsonValue) Json.createObjectBuilder()
+                                .add("description", "IBAN")
+                                .add("isSensitive", true)
+                                .add("valueType", "string")
+                                .add("value", "******" + dto.getAccountId().substring(15, 19))
+                                .build())).build();
             }
-            
+
             return Response.status(Response.Status.OK).entity(jsi).build();
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());

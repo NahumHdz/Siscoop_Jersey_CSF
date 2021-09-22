@@ -363,8 +363,8 @@ public abstract class FacadeInstructions<T> {
                     mensaje = "completed";
                     em.getTransaction().commit();
                 }
-            }else{
-                mensaje="ERROR validationId no existe";
+            } else {
+                mensaje = "ERROR validationId no existe";
             }
 
         } catch (Exception e) {
@@ -472,55 +472,72 @@ public abstract class FacadeInstructions<T> {
                     if (prOrigen.getTipoproducto() == 0) {//Falta regla de negocio si se permiten transferencias desde todas las cuentas
                         //Verifico el estatus de la cuenta origen
                         if (ctaOrigen.getEstatus() == 2) {
-                            //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
-                            if (saldo >= montoTransferencia) {
-                                Auxiliares ctaDestino = null;
-                                boolean bDestino = false;
-                                //Busco la cuenta destino
+                            //Valido saldo minimo y maximo del producto
+                            String vali_max_min = "";
+                            vali_max_min = limite_saldo_max_min(socio, opaOrigen, 0, montoTransferencia);
+                            System.out.println("VALIDACION SALDO MAXIMO_MINIMO: " + vali_max_min);
+                            if (vali_max_min.equals("")) {
+                                System.out.println("SI SE PUEDE REALIZAR");
 
-                                try {
-                                    Query queryDestino = em.createNativeQuery(cuentaDestino, Auxiliares.class);
-                                    ctaDestino = (Auxiliares) queryDestino.getSingleResult();
-                                    bDestino = true;
-                                } catch (Exception e) {
-                                    System.out.println("Error al encontrar productoDestino:" + e.getMessage());
-                                    bDestino = false;
-                                }
+                                //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
+                                if (saldo >= montoTransferencia) {
+                                    Auxiliares ctaDestino = null;
+                                    boolean bDestino = false;
+                                    //Busco la cuenta destino
 
-                                if (bDestino) {
-                                    //Busco el producto destino
-                                    Productos productoDestino = em.find(Productos.class, ctaDestino.getAuxiliaresPK().getIdproducto());
-                                    //Valido que la cuenta destino este activa
-                                    if (ctaDestino.getEstatus() == 2) {
-                                        //Valido que el producto destino no sea un prestamo
-                                        if (productoDestino.getTipoproducto() == 0) {//validar regla que todos los productos puedan recibir tranferencias excepto prestamos
-                                            //Valido que realmente el producto destino pertenezca al mismo socio(porque es entre mis cuentas 
-                                            if (ctaOrigen.getIdorigen() == ctaDestino.getIdorigen() && ctaOrigen.getIdgrupo() == ctaDestino.getIdgrupo() && ctaOrigen.getIdsocio() == ctaDestino.getIdsocio()) {
-                                                //valido el minimo y maximo permitido para una transferencia
-                                                if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
-                                                    if (MaxPordia(opaOrigen, montoTransferencia)) {
-                                                        mensage = "validado con exito";
+                                    try {
+                                        Query queryDestino = em.createNativeQuery(cuentaDestino, Auxiliares.class);
+                                        ctaDestino = (Auxiliares) queryDestino.getSingleResult();
+                                        bDestino = true;
+                                    } catch (Exception e) {
+                                        System.out.println("Error al encontrar productoDestino:" + e.getMessage());
+                                        bDestino = false;
+                                    }
+
+                                    if (bDestino) {
+                                        //Busco el producto destino
+                                        Productos productoDestino = em.find(Productos.class, ctaDestino.getAuxiliaresPK().getIdproducto());
+                                        //Valido que la cuenta destino este activa
+                                        if (ctaDestino.getEstatus() == 2) {
+                                            //Valido que el producto destino no sea un prestamo
+                                            if (productoDestino.getTipoproducto() == 0) {//validar regla que todos los productos puedan recibir tranferencias excepto prestamos
+                                                //Valido que realmente el producto destino pertenezca al mismo socio(porque es entre mis cuentas 
+                                                if (ctaOrigen.getIdorigen() == ctaDestino.getIdorigen() && ctaOrigen.getIdgrupo() == ctaDestino.getIdgrupo() && ctaOrigen.getIdsocio() == ctaDestino.getIdsocio()) {
+                                                    //valido el minimo y maximo permitido para una transferencia
+                                                    if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
+                                                        if (MaxPordia(opaOrigen, montoTransferencia)) {
+                                                            mensage = "validado con exito";
+                                                        } else {
+                                                            mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
+                                                        }
                                                     } else {
-                                                        mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
+                                                        mensage = "EL MONTO QUE INTENTA TRANSFERIR ES:" + minMax(montoTransferencia) + " AL PERMITIDO";
                                                     }
                                                 } else {
-                                                    mensage = "EL MONTO QUE INTENTA TRANFERIR ES:" + minMax(montoTransferencia) + " AL PERMITIDO";
+                                                    mensage = "PRODUCTO DESTINO NO PERTENECE AL MISMO SOCIO";
+                                                }
+                                            } else if (productoDestino.getTipoproducto() == 2) {
+                                                if (ctaOrigen.getIdorigen() == ctaDestino.getIdorigen() && ctaOrigen.getIdgrupo() == ctaDestino.getIdgrupo() && ctaOrigen.getIdsocio() == ctaDestino.getIdsocio()) {
+                                                    mensage = "validado con exito";
+                                                } else {
+                                                    mensage = "PRODUCTO DESTINO NO PERTENECE AL MISMO SOCIO";
                                                 }
                                             } else {
-                                                mensage = "PRODUCTO DESTINO NO PERTENECE AL MISMO SOCIO";
+                                                mensage = "PRODUCTO DESTINO NO ACEPTA SOBRECARGOS";
                                             }
+
                                         } else {
-                                            mensage = "PRODUCTO DESTINO NO ACEPTA SOBRECARGOS";
+                                            mensage = "PRODUCTO DESTINO ESTA INACTIVA";
                                         }
                                     } else {
-                                        mensage = "PRODUCTO DESTINO ESTA INACTIVA";
+                                        mensage = "NO SE ENCONTRO PRODUCTO DESTINO";
                                     }
                                 } else {
-                                    mensage = "NO SE ENCONTRO PRODUCTO DESTINO";
+                                    mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
                                 }
-
                             } else {
-                                mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
+                                mensage = vali_max_min;
+                                System.out.println("NO SE PUEDE REALIZAR RELGAS DE NEGOCIO APLICADAS");
                             }
                         } else {
                             mensage = "PRODUCTO ORIGEN INACTIVO";
@@ -586,51 +603,77 @@ public abstract class FacadeInstructions<T> {
                     if (prOrigen.getTipoproducto() == 0) {//Falta regla de negocio si se permiten transferencias desde todas las cuentas
                         //Verifico el estatus de la cuenta origen
                         if (ctaOrigen.getEstatus() == 2) {
-                            //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
-                            if (saldo >= montoTransferencia) {
-                                Auxiliares ctaDestino = null;
-                                boolean bDestino = false;
-                                //Busco la cuenta destino
+                            //Valido saldo minimo y maximo del producto
+                            String vali_max_min = "";
+                            vali_max_min = limite_saldo_max_min(socio, opaOrigen, 0, montoTransferencia);
+                            System.out.println("VALIDACION SALDO MAXIMO_MINIMO: " + vali_max_min);
+                            if (vali_max_min.equals("")) {
+                                System.out.println("SI SE PUEDE REALIZAR");
 
-                                try {
-                                    Query queryDestino = em.createNativeQuery(cuentaDestino, Auxiliares.class);
-                                    ctaDestino = (Auxiliares) queryDestino.getSingleResult();
-                                    bDestino = true;
-                                } catch (Exception e) {
-                                    System.out.println("Error al encontrar productoDestino:" + e.getMessage());
-                                    bDestino = false;
-                                }
+                                //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
+                                if (saldo >= montoTransferencia) {
+                                    Auxiliares ctaDestino = null;
+                                    boolean bDestino = false;
+                                    //Busco la cuenta destino
 
-                                if (bDestino) {
-                                    //Busco el producto destino
-                                    Productos productoDestino = em.find(Productos.class, ctaDestino.getAuxiliaresPK().getIdproducto());
-                                    //Valido que la cuenta destino este activa
-                                    if (ctaDestino.getEstatus() == 2) {
-                                        //Valido que el producto destino no sea un prestamo
-                                        if (productoDestino.getTipoproducto() == 0) {//validar regla que todos los productos puedan recibir tranferencias excepto prestamos
+                                    try {
+                                        Query queryDestino = em.createNativeQuery(cuentaDestino, Auxiliares.class);
+                                        ctaDestino = (Auxiliares) queryDestino.getSingleResult();
+                                        bDestino = true;
+                                    } catch (Exception e) {
+                                        System.out.println("Error al encontrar productoDestino:" + e.getMessage());
+                                        bDestino = false;
+                                    }
 
-                                            //valido el minimo y maximo permitido para una transferencia
-                                            if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
-                                                if (MaxPordia(opaOrigen, montoTransferencia)) {
-                                                    mensage = "validado con exito";
+                                    if (bDestino) {
+                                        //Busco el producto destino
+                                        Productos productoDestino = em.find(Productos.class, ctaDestino.getAuxiliaresPK().getIdproducto());
+                                        //Valido que la cuenta destino este activa
+                                        if (ctaDestino.getEstatus() == 2) {
+                                            //Valido que el producto destino no sea un prestamo
+                                          if (productoDestino.getTipoproducto() == 0 || productoDestino.getTipoproducto()==2) {//validar regla que todos los productos puedan recibir tranferencias excepto prestamos
+    //Valido saldo maximo del producto
+                                                String vali_maxmin = "";
+                                                String o_d = String.format("%06d", ctaDestino.getIdorigen());
+                                                String g_d = String.format("%02d", ctaDestino.getIdgrupo());
+                                                String s_d = String.format("%06d", ctaDestino.getIdsocio());
+                                                String socio_destino = o_d + g_d + s_d;
+
+                                                vali_maxmin = limite_saldo_max_min(socio_destino, opaDestino, 1, montoTransferencia);
+                                                System.out.println("VALIDACION SALDO MAXIMO: " + vali_maxmin);
+                                                if (vali_maxmin.equals("")) {
+                                                    System.out.println("SI SE PUEDE REALIZAR TRANSFERENCIA A TERCERO");
+
+                                                    //valido el minimo y maximo permitido para una transferencia
+                                                    if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
+                                                        if (MaxPordia(opaOrigen, montoTransferencia)) {
+                                                            mensage = "validado con exito";
+                                                        } else {
+                                                            mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
+                                                        }
+                                                    } else {
+                                                        mensage = "EL MONTO QUE INTENTA TRANSFERIR ES:" + minMax(montoTransferencia) + " AL PERMITIDO";
+                                                    }
                                                 } else {
-                                                    mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
+                                                    mensage = vali_maxmin.replace("-", "");
+                                                    System.out.println("NO SE PUEDE REALIZAR TRANSFERENCIA A TERCERO");
                                                 }
                                             } else {
-                                                mensage = "EL MONTO QUE INTENTA TRANFERIR ES:" + minMax(montoTransferencia) + " AL PERMITIDO";
+                                                mensage = "PRODUCTO DESTINO NO ACEPTA SOBRECARGOS";
                                             }
                                         } else {
-                                            mensage = "PRODUCTO DESTINO NO ACEPTA SOBRECARGOS";
+                                            mensage = "PRODUCTO DESTINO ESTA INACTIVA";
                                         }
                                     } else {
-                                        mensage = "PRODUCTO DESTINO ESTA INACTIVA";
+                                        mensage = "NO SE ENCONTRO PRODUCTO DESTINO";
                                     }
-                                } else {
-                                    mensage = "NO SE ENCONTRO PRODUCTO DESTINO";
-                                }
 
+                                } else {
+                                    mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
+                                }
                             } else {
-                                mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
+                                mensage = vali_max_min;
+                                System.out.println("NO SE PUEDE REALIZAR");
                             }
                         } else {
                             mensage = "PRODUCTO ORIGEN INACTIVO";
@@ -693,53 +736,69 @@ public abstract class FacadeInstructions<T> {
                     if (prOrigen.getTipoproducto() == 0) {//Falta regla de negocio si se permiten transferencias desde todas las cuentas
                         //Verifico el estatus de la cuenta origen
                         if (ctaOrigen.getEstatus() == 2) {
-                            //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
-                            if (saldo >= montoTransferencia) {
-                                Auxiliares ctaDestino = null;
-                                boolean bDestino = false;
-                                //Busco la cuenta destino
-                                try {
-                                    Query queryDestino = em.createNativeQuery(cuentaDestino, Auxiliares.class);
-                                    ctaDestino = (Auxiliares) queryDestino.getSingleResult();
-                                    bDestino = true;
-                                } catch (Exception e) {
-                                    System.out.println("Error al encontrar productoDestino:" + e.getMessage());
-                                    bDestino = false;
-                                }
-                                if (bDestino) {
-                                    //Busco el producto destino
-                                    Productos productoDestino = em.find(Productos.class, ctaDestino.getAuxiliaresPK().getIdproducto());
-                                    //Valido que la cuenta destino este activa
-                                    if (ctaDestino.getEstatus() == 2) {
-                                        //Valido que el producto destino no sea un prestamo
-                                        if (productoDestino.getTipoproducto() == 2) {//validar regla que todos los productos puedan recibir tranferencias excepto prestamos
-                                            //Valido que realmente el producto destino pertenezca al mismo socio(porque es entre mis cuentas 
-                                            if (ctaOrigen.getIdorigen() == ctaDestino.getIdorigen() && ctaOrigen.getIdgrupo() == ctaDestino.getIdgrupo() && ctaOrigen.getIdsocio() == ctaDestino.getIdsocio()) {
-                                                //valido el minimo y maximo permitido para una transferencia
-                                                if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
-                                                    if (MaxPordia(opaOrigen, montoTransferencia)) {
-                                                        mensage = "validado con exito";
+                            //Valido saldo minimo y maximo del producto
+                            String vali_max_min = "";
+                            vali_max_min = limite_saldo_max_min(socio, opaOrigen, 0, montoTransferencia);
+                            System.out.println("VALIDACION SALDO MAXIMO_MINIMO: " + vali_max_min);
+                            if (vali_max_min.equals("")) {
+                                System.out.println("SI SE PUEDE REALIZAR EL PAGO A PRESTAMO");
+
+                                //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
+                                if (saldo >= montoTransferencia) {
+                                    Auxiliares ctaDestino = null;
+                                    boolean bDestino = false;
+                                    //Busco la cuenta destino
+                                    try {
+                                        Query queryDestino = em.createNativeQuery(cuentaDestino, Auxiliares.class);
+                                        ctaDestino = (Auxiliares) queryDestino.getSingleResult();
+                                        bDestino = true;
+                                    } catch (Exception e) {
+                                        System.out.println("Error al encontrar productoDestino:" + e.getMessage());
+                                        bDestino = false;
+                                    }
+                                    if (bDestino) {
+                                        //Busco el producto destino
+                                        Productos productoDestino = em.find(Productos.class, ctaDestino.getAuxiliaresPK().getIdproducto());
+                                        //Valido que la cuenta destino este activa
+                                        if (ctaDestino.getEstatus() == 2) {
+                                            //Valido que el producto destino sea un prestamo
+                                            if (productoDestino.getTipoproducto() == 2) {//validar regla que todos los productos puedan recibir tranferencias excepto prestamos
+                                                //Valido que realmente el producto destino pertenezca al mismo socio(porque es entre mis cuentas 
+                                                if (ctaOrigen.getIdorigen() == ctaDestino.getIdorigen() && ctaOrigen.getIdgrupo() == ctaDestino.getIdgrupo() && ctaOrigen.getIdsocio() == ctaDestino.getIdsocio()) {
+                                                    //Valido que el monto a transferir sea menor o igual al saldo del prestamo
+                                                    Double Saldo_Destino = Double.valueOf(String.valueOf(ctaDestino.getSaldo()));
+                                                    if (montoTransferencia <= Saldo_Destino) {
+                                                        //valido el minimo y maximo permitido para una transferencia
+                                                        if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
+                                                            if (MaxPordia(opaOrigen, montoTransferencia)) {
+                                                                mensage = "validado con exito";
+                                                            } else {
+                                                                mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
+                                                            }
+                                                        } else {
+                                                            mensage = "EL MONTO QUE INTENTA TRANSFERIR ES: " + minMax(montoTransferencia) + " AL PERMITIDO";
+                                                        }
                                                     } else {
-                                                        mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
+                                                        mensage = "EL MONTO DE TRANSFERENCIA ES MAYOR AL SALDO DEL PRESTAMO";
                                                     }
                                                 } else {
-                                                    mensage = "EL MONTO QUE INTENTA TRANFERIR ES:" + minMax(montoTransferencia) + " AL PERMITIDO";
+                                                    mensage = "PRODUCTO DESTINO NO PERTENECE AL MISMO SOCIO";
                                                 }
                                             } else {
-                                                mensage = "PRODUCTO DESTINO NO PERTENECE AL MISMO SOCIO";
+                                                mensage = "PRODUCTO DESTINO NO ES UN PRESTAMO";
                                             }
                                         } else {
-                                            mensage = "PRODUCTO DESTINO NO ES UN PRESTAMO";
+                                            mensage = "PRODUCTO DESTINO ESTA INACTIVA";
                                         }
                                     } else {
-                                        mensage = "PRODUCTO DESTINO ESTA INACTIVA";
+                                        mensage = "NO SE ENCONTRO PRODUCTO DESTINO";
                                     }
                                 } else {
-                                    mensage = "NO SE ENCONTRO PRODUCTO DESTINO";
+                                    mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
                                 }
-
                             } else {
-                                mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
+                                mensage = vali_max_min;
+                                System.out.println("NO SE PUEDE REALIZAR EL PAGO A PRESTAMO");
                             }
                         } else {
                             mensage = "PRODUCTO ORIGEN INACTIVO";
@@ -808,7 +867,7 @@ public abstract class FacadeInstructions<T> {
                                         mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
                                     }
                                 } else {
-                                    mensage = "EL MONTO QUE INTENTA TRANFERIR ES:" + minMax(TotalPagoServicio) + " AL PERMITIDO";
+                                    mensage = "EL MONTO QUE INTENTA TRANSFERIR ES:" + minMax(TotalPagoServicio) + " AL PERMITIDO";
                                 }
                             } else {
                                 mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
@@ -894,65 +953,6 @@ public abstract class FacadeInstructions<T> {
             em.close();
         }
         return false;
-    }
-
-    private boolean aplicarCargos(String accountId, Double monto, int tipocargo) {
-        EntityManager em = emf.createEntityManager();
-        opaDTO opa = util.opa(accountId);
-        String ba = "SELECT * FROM auxiliares a WHERE a.idorigenp = " + opa.getIdorigenp()
-                + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
-        Query query = em.createNativeQuery(ba, Auxiliares.class);
-        Auxiliares a = (Auxiliares) query.getSingleResult();
-        Double l = Double.parseDouble(monto.toString());
-        Double s = Double.parseDouble(a.getSaldo().toString());
-        boolean bandera = false;
-        try {
-            if (tipocargo == 0) {
-                BigDecimal saldor = new BigDecimal(s - l);
-                EntityTransaction tr = em.getTransaction();
-                tr.begin();
-                a.setSaldo(saldor);
-                em.persist(a);
-                tr.commit();
-                bandera = true;
-            } else if (tipocargo == 1) {
-                BigDecimal saldor = new BigDecimal(s + l);
-                EntityTransaction tr = em.getTransaction();
-                tr.begin();
-                a.setSaldo(saldor);
-                em.persist(a);
-                tr.commit();
-                bandera = true;
-            }
-        } catch (Exception e) {
-            em.close();
-            System.out.println("Error en cargos:" + e.getMessage());
-        } finally {
-            em.close();
-        }
-        return bandera;
-    }
-
-    private boolean findBalance(String accountId, Double monto) {
-        EntityManager em = emf.createEntityManager();
-        opaDTO opa = util.opa(accountId);
-        boolean bandera = false;
-        try {
-            String consulta = "SELECT * FROM auxiliares a "
-                    + " WHERE a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto()
-                    + " AND a.idauxiliar = " + opa.getIdauxiliar() + " AND estatus = 2 AND saldo >= " + monto;
-            Query query = em.createNativeQuery(consulta, Auxiliares.class);
-            Auxiliares a = (Auxiliares) query.getSingleResult();
-            if (a != null) {
-                bandera = true;
-            }
-        } catch (Exception e) {
-            em.close();
-            System.out.println("Error en find balance:" + e.getMessage());
-            return bandera;
-        }
-        em.close();
-        return bandera;
     }
 
     public String dateToString(Date cadena) {
@@ -1054,6 +1054,56 @@ public abstract class FacadeInstructions<T> {
             em.close();
         }*/
         return false;
+    }
+
+    //validacion de saldo minimo y maximo
+    public String limite_saldo_max_min(String num_socio, String num_opa, int cargo_abono, Double monto_transferencia) {
+        EntityManager em = emf.createEntityManager();
+        String mensaje = "";
+        //Parseamos ogs y opa
+        ogsDTO ogs = util.ogs(num_socio);
+        opaDTO opa = util.opa(num_opa);
+
+        try {
+            AuxiliaresPK auxPK = new AuxiliaresPK(opa.getIdorigenp(), opa.getIdproducto(), opa.getIdauxiliar());
+            Auxiliares auxi = em.find(Auxiliares.class, auxPK);
+            TablasPK tbPK = new TablasPK("bankingly_banca_movil", "usuario_banca_movil");
+            Tablas tbus = em.find(Tablas.class, tbPK);
+
+            String sal_max_min = "SELECT sai_valida_limites_de_saldo_max_min(" + opa.getIdproducto() + ",'"
+                    + "socio:" + ogs.getIdorigen() + "-" + ogs.getIdgrupo() + "-" + ogs.getIdsocio() + "|"
+                    + "opa:" + opa.getIdorigenp() + "-" + opa.getIdproducto() + "-" + opa.getIdauxiliar() + "|"
+                    + "cargoabono:" + cargo_abono + "|"
+                    + "monto:" + monto_transferencia + "|"
+                    + "saldo:" + auxi.getSaldo() + "|"
+                    + "idproducto:" + opa.getIdproducto() + "|"
+                    + "modulo:4|"
+                    + "plazo:" + auxi.getPlazo() + "|"
+                    + "montosolicitado:" + auxi.getMontosolicitado() + "|"
+                    + "montoautorizado:" + auxi.getMontoautorizado() + "|"
+                    + "montoprestado:" + auxi.getMontoprestado() + "|"
+                    + "usuario:" + tbus.getDato1() + "')";
+            System.out.println("QUERY SALDO MAXIMO Y MINIMO: " + sal_max_min);
+
+            Query saldo_max_min = em.createNativeQuery(sal_max_min);
+            String resultado_max_min = String.valueOf(saldo_max_min.getSingleResult());
+            String resmaxmin = resultado_max_min;
+
+            if (resmaxmin.equals("null")/*!resmaxmin.equals("")*/) {
+                System.out.println("SI ENTRO");
+            } else {
+                mensaje = resmaxmin;
+                System.out.println("NO ENTRO");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error producido en validar permitido:"+e.getMessage());
+            em.close();
+        }finally{
+            em.close();
+        }
+
+        return mensaje;
     }
 
     //valida el monto para banca movil total de transferencias

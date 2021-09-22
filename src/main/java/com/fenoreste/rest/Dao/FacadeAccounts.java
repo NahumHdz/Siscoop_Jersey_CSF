@@ -11,6 +11,7 @@ import DTO.HoldsDTO;
 import DTO.opaDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Entidades.Auxiliares;
+import com.fenoreste.rest.Entidades.AuxiliaresD;
 import com.fenoreste.rest.Entidades.AuxiliaresPK;
 import com.fenoreste.rest.Entidades.Persona;
 import com.fenoreste.rest.Entidades.PersonasPK;
@@ -20,9 +21,12 @@ import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
 import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;
 import com.fenoreste.rest.Entidades.v_auxiliaresPK;
 import com.fenoreste.rest.Util.Utilidades;
+import com.itextpdf.html2pdf.ConverterProperties;
+import com.itextpdf.html2pdf.HtmlConverter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -53,9 +57,9 @@ public abstract class FacadeAccounts<T> {
     public FacadeAccounts(Class<T> entityClass) {
         emf = AbstractFacade.conexion();
     }
-    
+
     Utilidades Util = new Utilidades();
-    
+
     public List<AccountHoldersDTO> validateInternalAccount(String accountId) {
         EntityManager em = emf.createEntityManager();
         opaDTO opa = Util.opa(accountId);
@@ -63,7 +67,7 @@ public abstract class FacadeAccounts<T> {
         System.out.println("AccountIDDDDDDDDDDDDD:" + accountId);
         List<AccountHoldersDTO> holders = new ArrayList<AccountHoldersDTO>();
         try {
-            String consulta = "SELECT * FROM auxiliares a WHERE " 
+            String consulta = "SELECT * FROM auxiliares a WHERE "
                     + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
             System.out.println("consulta:" + consulta);
             Query query = em.createNativeQuery(consulta, Auxiliares.class);
@@ -172,7 +176,7 @@ public abstract class FacadeAccounts<T> {
         opaDTO opa = Util.opa(accountId);
         try {
             String consulta = "SELECT * FROM auxiliares a WHERE "
-                    + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto()+ " AND a.idauxiliar = " + opa.getIdauxiliar()
+                    + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar()
                     + " AND estatus = 2 AND garantia > 0";
             System.out.println("consulta:" + consulta);
 
@@ -241,32 +245,54 @@ public abstract class FacadeAccounts<T> {
         System.out.println("fechaDate:" + fechaDate);
         return fechaDate;
     }
-    
-    
 
-    public List<transferencias_completadas_siscoop> History(String accountId, String initialDate, String finalDate, int pageSize, int pageStartIndex) {
+    public List<AuxiliaresD> History(String accountId, String initialDate, String finalDate, int pageSize, int pageStartIndex) {
         EntityManager em = emf.createEntityManager();
-        List<transferencias_completadas_siscoop> lista = null;
-        List<transferencias_completadas_siscoop> trs = new ArrayList<transferencias_completadas_siscoop>();
+        List<transferencias_completadas_siscoop> dtoFacade = new ArrayList<>();
+        List<AuxiliaresD> aux = new ArrayList<>();
+        opaDTO opa = Util.opa(accountId);
+        List<AuxiliaresD> listaContador = null;
         try {
-            String consulta = "SELECT * FROM e_transferenciassiscoop WHERE "
-                    + "cuentaorigen='" + accountId.trim()
-                    + "' or cuentadestino='" + accountId.trim()
-                    + "' AND fechaejecucion BETWEEN '" + initialDate.trim() + "' AND '" + finalDate.trim() + "' ORDER BY fechaejecucion DESC";
-            System.out.println("Consulta:" + consulta);
-            Query query = em.createNativeQuery(consulta, transferencias_completadas_siscoop.class);
-            trs = query.getResultList();
-            query.setFirstResult(pageStartIndex);
-            query.setMaxResults(pageSize);
-            //lista = query.getResultList();
+            int inicio_busqueda = pageStartIndex * pageSize;
+            String consulta = "SELECT * FROM auxiliares_d WHERE idorigenp = " + opa.getIdorigenp()
+                    + " AND idproducto = " + opa.getIdproducto() + " AND idauxiliar = " + opa.getIdauxiliar()
+                    + " AND date(fecha) between '" + initialDate.trim() + "' AND '" + finalDate.trim() + "' ORDER BY fecha desc";
+            System.out.println("CONSULTA: " + consulta);
+            Query query = em.createNativeQuery(consulta, AuxiliaresD.class);
+            listaContador = query.getResultList();
+            System.out.println("TOTAL REGISTROS H: " + listaContador.size());
 
+            query.setFirstResult(inicio_busqueda);
+            query.setMaxResults(pageSize);
+            aux = query.getResultList();
+
+            //lista = query.getResultList();
         } catch (Exception e) {
             System.out.println("Error al leer transacciones:" + e.getMessage());
         } finally {
             em.close();
         }
-        return trs;
+        return aux;
+    }
 
+    public List<AuxiliaresD> History_Size(String accountId, String initialDate, String finalDate) {
+        EntityManager em = emf.createEntityManager();
+        List<AuxiliaresD> aux = new ArrayList<>();
+        opaDTO opa = Util.opa(accountId);
+        try {
+            String consulta = "SELECT * FROM auxiliares_d WHERE idorigenp = " + opa.getIdorigenp()
+                    + " AND idproducto = " + opa.getIdproducto() + " AND idauxiliar = " + opa.getIdauxiliar()
+                    + " AND date(fecha) between '" + initialDate.trim() + "' AND '" + finalDate.trim() + "' ORDER BY fecha desc";
+            System.out.println("CONSULTA: " + consulta);
+            Query query = em.createNativeQuery(consulta, AuxiliaresD.class);
+            aux = query.getResultList();
+            System.out.println("TOTAL REGISTROS H_S: " + aux.size());
+        } catch (Exception e) {
+            System.out.println("Error al leer transacciones:" + e.getMessage());
+        } finally {
+            em.close();
+        }
+        return aux;
     }
 
     public DetailsAccountDTO detailsAccount(String accountId) {
@@ -327,15 +353,15 @@ public abstract class FacadeAccounts<T> {
                 String sai_aux = RsSai.getSingleResult().toString();
                 String[] parts = sai_aux.split("\\|");
                 List list = Arrays.asList(parts);
-                SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy");                
+                SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy");
                 Date fechaDate = formato.parse(list.get(2).toString());
                 SimpleDateFormat formato2 = new SimpleDateFormat("yyyy/MM/dd");
-                String realDate=formato2.format(fechaDate);
+                String realDate = formato2.format(fechaDate);
                 dto.setProximoMontoInteres(Double.parseDouble(list.get(5).toString()));
                 dto.setProximaFechaPago(date_semana);
                 dto.setFechaVencimiento(realDate.replace("/", "-"));
 
-            }else if(producto.getTipoproducto()==2){
+            } else if (producto.getTipoproducto() == 2) {
                 //Corro SAi para calculo de interes en una semana
                 String sai_interes = "SELECT sai_auxiliar(" + a.getAuxiliaresPK().getIdorigenp() + "," + a.getAuxiliaresPK().getIdproducto() + "," + a.getAuxiliaresPK().getIdauxiliar() + ",'" + date_semana + "')";
                 System.out.println("sasaasas:" + sai_interes);
@@ -405,19 +431,30 @@ public abstract class FacadeAccounts<T> {
         return home + separador + "Banca" + separador;
     }
 
-    public File crear_llenar_txt(String opa, String initialDate, String finalDate) {
+    public File crear_llenar_txt(String accountId, String initialDate, String finalDate) {
+        opaDTO opa = Util.opa(accountId);
         int numeroAleatorio = (int) (Math.random() * 9 + 1);
-        String nombre_txt = "e_cuenta_ahorro_" + opa + "_" + String.valueOf(numeroAleatorio) + ".txt";
-        System.out.println("nombreTxt:" + nombre_txt);
         EntityManager em = emf.createEntityManager();
         File file = null;
+        Productos pr = em.find(Productos.class, opa.getIdproducto());
+        String nombre_formato = "";
+        String nombre_archivo="";
+        if (pr.getTipoproducto() == 1) {
+            nombre_formato = "estado_cuenta_dpfs_ind";
+            nombre_archivo="e_cuenta_dpfs_ind_";
+        } else if (pr.getTipoproducto() == 0) {
+            nombre_formato = "estado_cuenta_ahorros";
+            nombre_archivo="e_cuenta_ahorros_";
+        } else if (pr.getTipoproducto() == 2) {
+            nombre_formato = "estado_cuenta_prestamos";
+            nombre_archivo="e_cuenta_prestamos_";
+        }
+        String nombre_txt = nombre_archivo + opa.getIdorigenp() + "" + opa.getIdproducto() + "" + opa.getIdauxiliar() + "_" + String.valueOf(numeroAleatorio) + ".txt";
+        System.out.println("nombreTxt:" + nombre_txt);
         try {
-            String o = opa.substring(0, 6);
-            String p = opa.substring(6, 11);
-            String a = opa.substring(11, 19);
             String fichero_txt = ruta() + nombre_txt;
             String contenido;
-            String consulta = "SELECT sai_estado_cuenta_ahorros(" + o + "," + p + "," + a + ",'" + initialDate + "','" + finalDate + "')";
+            String consulta = "SELECT sai_" + nombre_formato + "(" + opa.getIdorigenp() + "," + opa.getIdproducto() + "," + opa.getIdauxiliar() + ",'" + initialDate + "','" + finalDate + "')";
             System.out.println("Consulta Statements:" + consulta);
             Query query = em.createNativeQuery(consulta);
             contenido = String.valueOf(query.getSingleResult());
@@ -435,8 +472,10 @@ public abstract class FacadeAccounts<T> {
         } catch (Exception e) {
             em.close();
             System.out.println("Error:" + e.getMessage());
+        } finally {
+            em.close();
         }
-        em.close();
+
         return file;
     }
 
@@ -476,15 +515,20 @@ public abstract class FacadeAccounts<T> {
             String ficheroHTML = ruta + nombreDelHTMLAConvertir;
 
             String url = new File(ficheroHTML).toURI().toURL().toString();
-            System.out.println("url:" + url);
             //ruta donde se almacenara el pdf y que nombre se le data
-            String ficheroPDF = ruta + nombreDelHTMLAConvertir.replace(".html", ".pdf");
-            OutputStream os = new FileOutputStream(ficheroPDF);
+            String ficheroPDF = ruta + nombreDelHTMLAConvertir.replace("T", "").replace("-", "").replace(":", "").replace(".html", ".pdf");
+            /* OutputStream os = new FileOutputStream(ficheroPDF);
             ITextRenderer renderer = new ITextRenderer();
             renderer.setDocument(url);
             renderer.layout();
             renderer.createPDF(os);
-            os.close();
+            os.close();*/
+            File htmlSource = new File(ficheroHTML);
+            File pdfDest = new File(ficheroPDF);
+            // pdfHTML specific code
+            ConverterProperties converterProperties = new ConverterProperties();
+
+            HtmlConverter.convertToPdf(new FileInputStream(htmlSource), new FileOutputStream(pdfDest), converterProperties);
             return true;
         } catch (Exception e) {
             System.out.println("Error al crear PDF:" + e.getMessage());

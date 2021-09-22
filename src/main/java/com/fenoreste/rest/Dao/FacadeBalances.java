@@ -39,80 +39,79 @@ public abstract class FacadeBalances<T> {
 
     public ArrayList<BalancesDTO> balances(String[]accountsId) {
         EntityManager em = emf.createEntityManager();
-        System.out.println("length:"+accountsId.length);
+        System.out.println("length:" + accountsId.length);
         String op = "", aa = "";
         Double Ledger = 0.0;
         Double Avalaible = 0.0;
-        ArrayList<BalancesDTO>dtos=new ArrayList<>();
+        ArrayList<BalancesDTO> dtos = new ArrayList<>();
         try {
-            int i=0;
-            for(i=0;i<accountsId.length;i++){
-            String accountId=accountsId[i];
-                System.out.println("AccountID:"+accountId);
+            int i = 0;
+            for (i = 0; i < accountsId.length; i++) {
+                String accountId = accountsId[i];
+                System.out.println("AccountID:" + accountId);
                 opaDTO opa = Util.opa(accountId);
-            String c = "SELECT * FROM auxiliares a "
-                    + " INNER JOIN productos pr USING(idproducto) "
-                    + " WHERE a.idorigenp = " + opa.getIdorigenp()
-                    + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
-            System.out.println("Consulta:" + c);
-            Query query = em.createNativeQuery(c, Auxiliares.class);
-            Auxiliares a = (Auxiliares) query.getSingleResult();
-            Productos pr = em.find(Productos.class, a.getAuxiliaresPK().getIdproducto());
+                String c = "SELECT * FROM auxiliares a "
+                        + " INNER JOIN productos pr USING(idproducto) "
+                        + " INNER JOIN tipos_cuenta_siscoop tp USING(idproducto) WHERE a.idorigenp = " + opa.getIdorigenp()
+                        + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar() + " AND a.estatus=2";
+                System.out.println("Consulta:" + c);
+                Query query = em.createNativeQuery(c, Auxiliares.class);
+                Auxiliares a = (Auxiliares) query.getSingleResult();
+                Productos pr = em.find(Productos.class, a.getAuxiliaresPK().getIdproducto());
 
-            op = String.format("%06d", a.getAuxiliaresPK().getIdorigenp()) + String.format("%05d", a.getAuxiliaresPK().getIdproducto());
-            aa = String.format("%08d", a.getAuxiliaresPK().getIdauxiliar());
-            Ledger = Double.parseDouble(a.getSaldo().toString());
-            Double garantia = 0.0;
-            if (pr.getTipoproducto() == 1) {
-                System.out.println("es un dpf");
-                //Se suma fechaactivacion mas plazos para determinar si el producto ya se puede cobrar o aun no
-                String cc = "SELECT a.fechaactivacion + " + Integer.parseInt(String.valueOf(a.getPlazo())) + " FROM auxiliares a WHERE a.idorigenp="
-                        + a.getAuxiliaresPK().getIdorigenp()
-                        + " AND a.idproducto=" + a.getAuxiliaresPK().getIdproducto()
-                        + " AND a.idauxiliar=" + a.getAuxiliaresPK().getIdauxiliar();
-                System.out.println("ConsultaDPF:" + cc);
-                Query query_vencimiento_dpf = em.createNativeQuery(cc);
-                Query fecha_actual_servidor = em.createNativeQuery("SELECT date(now())");
-                Date fecha_servidor = ParseFecha(String.valueOf(fecha_actual_servidor.getSingleResult()).replace("-", "/"));
-                Date fecha_vencimiento_dpf = ParseFecha(String.valueOf(query_vencimiento_dpf.getSingleResult()).replace("-", "/"));
-                
-                BigDecimal bd = new BigDecimal(Ledger);                
-                bd = bd.setScale(2, RoundingMode.HALF_UP);
-                if (fecha_servidor == fecha_vencimiento_dpf || fecha_servidor.after(fecha_vencimiento_dpf)) {
-                    if (Double.parseDouble(a.getGarantia().toString()) > 0) {
-                        garantia = garantia + Double.parseDouble(a.getGarantia().toString());
-                        Avalaible = Ledger - garantia;
+                op = String.format("%06d", a.getAuxiliaresPK().getIdorigenp()) + String.format("%05d", a.getAuxiliaresPK().getIdproducto());
+                aa = String.format("%08d", a.getAuxiliaresPK().getIdauxiliar());
+                Ledger = Double.parseDouble(a.getSaldo().toString());
+                Double garantia = 0.0;
+                if (pr.getTipoproducto() == 1) {
+                    //Se suma fechaactivacion mas plazos para determinar si el producto ya se puede cobrar o aun no
+                    String cc = "SELECT a.fechaactivacion + " + Integer.parseInt(String.valueOf(a.getPlazo())) + " FROM auxiliares a WHERE a.idorigenp="
+                            + a.getAuxiliaresPK().getIdorigenp()
+                            + " AND a.idproducto=" + a.getAuxiliaresPK().getIdproducto()
+                            + " AND a.idauxiliar=" + a.getAuxiliaresPK().getIdauxiliar();
+                    System.out.println("ConsultaDPF:" + cc);
+                    Query query_vencimiento_dpf = em.createNativeQuery(cc);
+                    Query fecha_actual_servidor = em.createNativeQuery("SELECT date(now())");
+                    Date fecha_servidor = ParseFecha(String.valueOf(fecha_actual_servidor.getSingleResult()).replace("-", "/"));
+                    Date fecha_vencimiento_dpf = ParseFecha(String.valueOf(query_vencimiento_dpf.getSingleResult()).replace("-", "/"));
+
+                    if (fecha_servidor == fecha_vencimiento_dpf || fecha_servidor.after(fecha_vencimiento_dpf)) {
+                        if (Double.parseDouble(a.getGarantia().toString()) > 0) {
+                            garantia = garantia + Double.parseDouble(a.getGarantia().toString());
+                            Avalaible = Ledger - garantia;
+                        } else {
+                            Avalaible = Ledger;
+                        }
+                    }
+
+                } else if (pr.getTipoproducto() == 0) {
+                    if (pr.getNombre().toUpperCase().contains("NAVI")) {
+                        Ledger=a.getSaldo().doubleValue();
+                        Avalaible=0.0;
                     } else {
-                        Avalaible = Ledger;
+                        if (Double.parseDouble(a.getGarantia().toString()) > 0) {
+                            garantia = garantia + Double.parseDouble(a.getGarantia().toString());
+                            Avalaible = Ledger - garantia;
+                        } else {
+                            Avalaible = Ledger;
+                        }
                     }
                 }
 
-            } else if (pr.getTipoproducto() == 0) {
-                System.out.println("Es un ahorro");
-                if (Double.parseDouble(a.getGarantia().toString()) > 0) {
-                    garantia = garantia + Double.parseDouble(a.getGarantia().toString());
-                    Avalaible = Ledger - garantia;
-                } else {
-                    Avalaible = Ledger;
-                }
+                BalancesDTO dto = new BalancesDTO(accountId, Ledger, Avalaible);
+                dtos.add(dto);
             }
-            BalancesDTO dto=new BalancesDTO(accountId, Ledger, Avalaible);
-            dtos.add(dto);
-        }
             //}Terminaba el segundo for          
             ///}Terminaba el for
         } catch (Exception e) {
             e.getStackTrace();
             em.close();
             System.out.println("Error:" + e.getMessage());
+        } finally {
+            em.close();
         }
         System.out.println("Ledger:" + Ledger);
         System.out.println("Avalaible:" + Avalaible);
-        Double saldos[] = new Double[2];
-
-       /* saldos[0] = Ledger;
-        saldos[1] = Avalaible;*/
-        em.close();
         return dtos;//saldos;
     }
 
