@@ -348,8 +348,8 @@ public class CustomerResources {
             if (!balanceLedger.equals("") && !balanceAvalaible.equals("")) {
                 arr = dao.position(customerId);
             }
-            javax.json.JsonObject clientes1 = Json.createObjectBuilder().add("balanceType", "ledger").add("amount", (JsonValue) Json.createObjectBuilder().add("amount", arr[0].doubleValue()).add("currencyCode", "MXN").build()).build();
-            javax.json.JsonObject clientes2 = Json.createObjectBuilder().add("balanceType", "available").add("amount", (JsonValue) Json.createObjectBuilder().add("amount", arr[1].doubleValue()).add("currencyCode", "MXN").build()).build();
+            javax.json.JsonObject clientes1 = Json.createObjectBuilder().add("balanceType", "ledger").add("amount", (JsonValue) Json.createObjectBuilder().add("amount", arr[1].doubleValue()).add("currencyCode", "MXN").build()).build();
+            javax.json.JsonObject clientes2 = Json.createObjectBuilder().add("balanceType", "available").add("amount", (JsonValue) Json.createObjectBuilder().add("amount", arr[0].doubleValue()).add("currencyCode", "MXN").build()).build();
             json1 = Json.createObjectBuilder().add("positionPerCurrency", jsona.add(Json.createObjectBuilder().add("currencyCode", "MXN").add("balances", Json.createArrayBuilder().add((JsonValue) clientes1).add((JsonValue) clientes2)))).build();
             String status = "";
             datosOk.put("status", status);
@@ -368,6 +368,7 @@ public class CustomerResources {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response PositionHistory(String cadena, @HeaderParam("authorization") String authString) {
         Security scr = new Security();
+        System.out.println("CADENAAAAA: " + cadena);
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
@@ -397,7 +398,7 @@ public class CustomerResources {
         JsonArrayBuilder jsona = Json.createArrayBuilder();
         try {
             if (!balanceLedger.equals("") && !balanceAvalaible.equals("")) {
-                arr = dao.positionHistory(customerId, fecha1.trim().replace("-", "/"), fecha2.trim().replace("-", "/"));
+                dao.positionHistory1(customerId, fecha1.trim().replace("-", "/"), fecha2.trim().replace("-", "/"));
             }
             javax.json.JsonObject clientes1 = Json.createObjectBuilder().add("balanceType", "ledger").add("amount", (JsonValue) Json.createObjectBuilder().add("amount", arr[0].doubleValue()).add("currencyCode", "MXN").build()).build();
             javax.json.JsonObject clientes2 = Json.createObjectBuilder().add("balanceType", "available").add("amount", (JsonValue) Json.createObjectBuilder().add("amount", arr[1].doubleValue()).add("currencyCode", "MXN").build()).build();

@@ -184,7 +184,6 @@ public abstract class FacadeInstructions<T> {
             }
 
             if (mensaje.equals("")) {
-                System.out.println("entroooooooooooo");
                 opaDTO opa = util.opa(validacion_guardada.getCuentaorigen());
                 String running_balance = "SELECT saldo-" + validacion_guardada.getMonto() + " FROM auxiliares a WHERE "
                         + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
@@ -212,107 +211,113 @@ public abstract class FacadeInstructions<T> {
                 String origenP = "SELECT * FROM auxiliares WHERE idorigenp=" + opa.getIdorigenp() + " AND idproducto=" + opa.getIdproducto() + " AND idauxiliar=" + opa.getIdauxiliar();
                 Query queryOrigen = em.createNativeQuery(origenP, Auxiliares.class);
                 Auxiliares aOrigen = (Auxiliares) queryOrigen.getSingleResult();
-                //Destino
-                String destinoP = "SELECT * FROM auxiliares WHERE idorigenp=" + opaD.getIdorigenp() + " AND idproducto=" + opaD.getIdproducto() + " AND idauxiliar=" + opaD.getIdauxiliar();
-                Query queryDestino = em.createNativeQuery(destinoP, Auxiliares.class);
-                Auxiliares aDestino = (Auxiliares) queryDestino.getSingleResult();
-
-                //Obtengo el producto 
-                Productos prDestino = em.find(Productos.class, aDestino.getAuxiliaresPK().getIdproducto());
-
-                Procesa_pago_movimientos procesaDestino = new Procesa_pago_movimientos();
-
-                Procesa_pago_movimientos procesaOrigen = new Procesa_pago_movimientos();
-                //Obtener los datos para procesar la transaccion
-                long time = System.currentTimeMillis();
-                Timestamp timestamp = new Timestamp(time);
-                Query sesion = em.createNativeQuery("select text(pg_backend_pid())||'-'||trim(to_char(now(),'ddmmyy'))");
-                String sesionc = String.valueOf(sesion.getSingleResult());
-                int rn = (int) (Math.random() * 999999 + 1);
-                //Obtener HH:mm:ss.microsegundos
-
-                String fechaArray[] = timestamp.toString().substring(0, 10).split("-");
-                String fReal = fechaArray[2] + "/" + fechaArray[1] + "/" + fechaArray[0];
-                String referencia = String.valueOf(rn) + "" + ejecutar_transferencia.getCuentaorigen().substring(0, 5) + "" + ejecutar_transferencia.getCuentadestino().substring(0, 5) + fReal.replace("/", "");
-
-                //Leemos fechatrabajo e idusuario
-                String fechaTrabajo = "SELECT to_char(fechatrabajo,'yyyy-MM-dd HH:mm:ss') FROM ORIGENES LIMIT 1";
-                Query fechaTrabajo_ = em.createNativeQuery(fechaTrabajo);
-                String fechaTr_ = String.valueOf(fechaTrabajo_.getSingleResult());
-
-                TablasPK idusuarioPK = new TablasPK("bankingly_banca_movil", "usuario_banca_movil");
-                Tablas tbUsuario_ = em.find(Tablas.class, idusuarioPK);
-
-                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                LocalDateTime localDate = LocalDateTime.parse(fechaTr_, dtf);
-
-                //Timestamp hoyT=Timestamp.from(hoy);
-                //Insertamos a la tabla donde se obtienen los datos a procesar
-                //Origen
-                Timestamp ts = Timestamp.valueOf(localDate);
-                procesaOrigen.setAuxiliaresPK(aOrigen.getAuxiliaresPK());
-                procesaOrigen.setFecha(ts);
-                procesaOrigen.setIdusuario(Integer.parseInt(tbUsuario_.getDato1()));
-                procesaOrigen.setSesion(sesionc);
-                procesaOrigen.setReferencia(referencia + ts.toString().replace(" ", "").substring(10, 18).replace(":", ""));
-                procesaOrigen.setIdorigen(aOrigen.getIdorigen());
-                procesaOrigen.setIdgrupo(aOrigen.getIdgrupo());
-                procesaOrigen.setIdsocio(aOrigen.getIdsocio());
-                procesaOrigen.setCargoabono(0);
-                procesaOrigen.setMonto(ejecutar_transferencia.getMonto());
-                procesaOrigen.setIva(Double.parseDouble(aOrigen.getIva().toString()));
-                procesaOrigen.setTipo_amort(Integer.parseInt(String.valueOf(aOrigen.getTipoamortizacion())));
-
-                procesaOrigen.setSai_aux("");
-
-                //Guardamos la cuenta origen para la transferencia
-                em.getTransaction().begin();
-                em.persist(procesaOrigen);
-                em.getTransaction().commit();
-                em.clear();
 
                 //Destino
-                procesaDestino.setAuxiliaresPK(aDestino.getAuxiliaresPK());
-                procesaDestino.setFecha(ts);
-                procesaDestino.setIdusuario(Integer.parseInt(tbUsuario_.getDato1()));
-                procesaDestino.setSesion(sesionc);
-                procesaDestino.setReferencia(referencia + ts.toString().replace(" ", "").substring(10, 18).replace(":", ""));
-                procesaDestino.setIdorigen(aDestino.getIdorigen());
-                procesaDestino.setIdgrupo(aDestino.getIdgrupo());
-                procesaDestino.setIdsocio(aDestino.getIdsocio());
-                procesaDestino.setCargoabono(1);
-                procesaDestino.setMonto(ejecutar_transferencia.getMonto());
-                procesaDestino.setIva(Double.parseDouble(aDestino.getIva().toString()));
-                procesaDestino.setTipo_amort(Integer.parseInt(String.valueOf(aDestino.getTipoamortizacion())));
-                procesaDestino.setSai_aux("");
+                if (validacion_guardada.getTipotransferencia().equals("BILL_PAYMENT")) {
+                    System.out.println("PAGO SERVICIOSSSSSS");
+                    mensaje = "completed";
+                } else {
 
-                //Guardamos la cuenta destino para la transferencia
-                em.getTransaction().begin();
-                em.persist(procesaDestino);
-                em.getTransaction().commit();
+                    String destinoP = "SELECT * FROM auxiliares WHERE idorigenp=" + opaD.getIdorigenp() + " AND idproducto=" + opaD.getIdproducto() + " AND idauxiliar=" + opaD.getIdauxiliar();
+                    Query queryDestino = em.createNativeQuery(destinoP, Auxiliares.class);
+                    Auxiliares aDestino = (Auxiliares) queryDestino.getSingleResult();
 
-                //Ejecuto la distribucion del monto(Funciona final)
-                String procesar = "SELECT sai_bankingly_aplica_transaccion('" + fechaTr_.substring(0, 10) + "'," + procesaOrigen.getIdusuario() + ",'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')";
-                Query procesa_pago = em.createNativeQuery(procesar);
-                int respuestaProcesada = Integer.parseInt(String.valueOf(procesa_pago.getSingleResult()));
+                    //Obtengo el producto 
+                    Productos prDestino = em.find(Productos.class, aDestino.getAuxiliaresPK().getIdproducto());
 
-                System.out.println("RespuestaProcesada:" + respuestaProcesada);
+                    Procesa_pago_movimientos procesaDestino = new Procesa_pago_movimientos();
 
-                //Si la cuenta a la que se esta transfiriendo es un prestamo
-                if (prDestino.getTipoproducto() == 2) {
-                    //Obtengo los datos(Seguro hipotecario,comisones cobranza,interes ect.)
-                    String distribucion = "SELECT sai_bankingly_detalle_transaccion_aplicada('" + fechaTr_.substring(0, 10) + "'," + procesaOrigen.getIdusuario() + ",'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')";
-                    System.out.println("DistribucionConsulta:" + distribucion);
-                    Query procesa_distribucion = em.createNativeQuery(distribucion);
-                    String distribucionProcesada = String.valueOf(procesa_distribucion.getSingleResult());
-                    System.out.println("Distribucion_Procesada:" + distribucionProcesada);
-                    String ArrayDistribucion[] = distribucionProcesada.split("\\|");
-                    //Retorno: Seguro hipotecario | Comision cobranza | IM | Iva IM | IO | Iva IO | A Capital
-                    //Si es un prestamo tipo amortizacion 5 y tiene referencia de tipoporducto 5012,5011 si tiene seguro hipotecario
-                    //Si es un tipoamortizacion 5 no tiene adelanto de intereses
+                    Procesa_pago_movimientos procesaOrigen = new Procesa_pago_movimientos();
+                    //Obtener los datos para procesar la transaccion
+                    long time = System.currentTimeMillis();
+                    Timestamp timestamp = new Timestamp(time);
+                    Query sesion = em.createNativeQuery("select text(pg_backend_pid())||'-'||trim(to_char(now(),'ddmmyy'))");
+                    String sesionc = String.valueOf(sesion.getSingleResult());
+                    int rn = (int) (Math.random() * 999999 + 1);
+                    //Obtener HH:mm:ss.microsegundos
 
-                    // if(prDestino.getTipoproducto()==5){
-                    /*mensajeBackendResult = "PAGO EXITOSO" + "\n"
+                    String fechaArray[] = timestamp.toString().substring(0, 10).split("-");
+                    String fReal = fechaArray[2] + "/" + fechaArray[1] + "/" + fechaArray[0];
+                    String referencia = String.valueOf(rn) + "" + ejecutar_transferencia.getCuentaorigen().substring(0, 5) + "" + ejecutar_transferencia.getCuentadestino().substring(0, 5) + fReal.replace("/", "");
+
+                    //Leemos fechatrabajo e idusuario
+                    String fechaTrabajo = "SELECT to_char(fechatrabajo,'yyyy-MM-dd HH:mm:ss') FROM ORIGENES LIMIT 1";
+                    Query fechaTrabajo_ = em.createNativeQuery(fechaTrabajo);
+                    String fechaTr_ = String.valueOf(fechaTrabajo_.getSingleResult());
+
+                    TablasPK idusuarioPK = new TablasPK("bankingly_banca_movil", "usuario_banca_movil");
+                    Tablas tbUsuario_ = em.find(Tablas.class, idusuarioPK);
+
+                    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                    LocalDateTime localDate = LocalDateTime.parse(fechaTr_, dtf);
+
+                    //Timestamp hoyT=Timestamp.from(hoy);
+                    //Insertamos a la tabla donde se obtienen los datos a procesar
+                    //Origen
+                    Timestamp ts = Timestamp.valueOf(localDate);
+                    procesaOrigen.setAuxiliaresPK(aOrigen.getAuxiliaresPK());
+                    procesaOrigen.setFecha(ts);
+                    procesaOrigen.setIdusuario(Integer.parseInt(tbUsuario_.getDato1()));
+                    procesaOrigen.setSesion(sesionc);
+                    procesaOrigen.setReferencia(referencia + ts.toString().replace(" ", "").substring(10, 18).replace(":", ""));
+                    procesaOrigen.setIdorigen(aOrigen.getIdorigen());
+                    procesaOrigen.setIdgrupo(aOrigen.getIdgrupo());
+                    procesaOrigen.setIdsocio(aOrigen.getIdsocio());
+                    procesaOrigen.setCargoabono(0);
+                    procesaOrigen.setMonto(ejecutar_transferencia.getMonto());
+                    procesaOrigen.setIva(Double.parseDouble(aOrigen.getIva().toString()));
+                    procesaOrigen.setTipo_amort(Integer.parseInt(String.valueOf(aOrigen.getTipoamortizacion())));
+
+                    procesaOrigen.setSai_aux("");
+
+                    //Guardamos la cuenta origen para la transferencia
+                    em.getTransaction().begin();
+                    em.persist(procesaOrigen);
+                    em.getTransaction().commit();
+                    em.clear();
+
+                    //Destino
+                    procesaDestino.setAuxiliaresPK(aDestino.getAuxiliaresPK());
+                    procesaDestino.setFecha(ts);
+                    procesaDestino.setIdusuario(Integer.parseInt(tbUsuario_.getDato1()));
+                    procesaDestino.setSesion(sesionc);
+                    procesaDestino.setReferencia(referencia + ts.toString().replace(" ", "").substring(10, 18).replace(":", ""));
+                    procesaDestino.setIdorigen(aDestino.getIdorigen());
+                    procesaDestino.setIdgrupo(aDestino.getIdgrupo());
+                    procesaDestino.setIdsocio(aDestino.getIdsocio());
+                    procesaDestino.setCargoabono(1);
+                    procesaDestino.setMonto(ejecutar_transferencia.getMonto());
+                    procesaDestino.setIva(Double.parseDouble(aDestino.getIva().toString()));
+                    procesaDestino.setTipo_amort(Integer.parseInt(String.valueOf(aDestino.getTipoamortizacion())));
+                    procesaDestino.setSai_aux("");
+
+                    //Guardamos la cuenta destino para la transferencia
+                    em.getTransaction().begin();
+                    em.persist(procesaDestino);
+                    em.getTransaction().commit();
+
+                    //Ejecuto la distribucion del monto(Funciona final)
+                    String procesar = "SELECT sai_bankingly_aplica_transaccion('" + fechaTr_.substring(0, 10) + "'," + procesaOrigen.getIdusuario() + ",'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')";
+                    Query procesa_pago = em.createNativeQuery(procesar);
+                    int respuestaProcesada = Integer.parseInt(String.valueOf(procesa_pago.getSingleResult()));
+
+                    System.out.println("RespuestaProcesada:" + respuestaProcesada);
+
+                    //Si la cuenta a la que se esta transfiriendo es un prestamo
+                    if (prDestino.getTipoproducto() == 2) {
+                        //Obtengo los datos(Seguro hipotecario,comisones cobranza,interes ect.)
+                        String distribucion = "SELECT sai_bankingly_detalle_transaccion_aplicada('" + fechaTr_.substring(0, 10) + "'," + procesaOrigen.getIdusuario() + ",'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')";
+                        System.out.println("DistribucionConsulta:" + distribucion);
+                        Query procesa_distribucion = em.createNativeQuery(distribucion);
+                        String distribucionProcesada = String.valueOf(procesa_distribucion.getSingleResult());
+                        System.out.println("Distribucion_Procesada:" + distribucionProcesada);
+                        String ArrayDistribucion[] = distribucionProcesada.split("\\|");
+                        //Retorno: Seguro hipotecario | Comision cobranza | IM | Iva IM | IO | Iva IO | A Capital
+                        //Si es un prestamo tipo amortizacion 5 y tiene referencia de tipoporducto 5012,5011 si tiene seguro hipotecario
+                        //Si es un tipoamortizacion 5 no tiene adelanto de intereses
+
+                        // if(prDestino.getTipoproducto()==5){
+                        /*mensajeBackendResult = "PAGO EXITOSO" + "\n"
                         + "SEGURO HIPOTECARIO    :" + ArrayDistribucion[0] + "\n "
                         + "COMISON COBRANZA      :" + ArrayDistribucion[1] + "\n "
                         + "INTERES MORATORIO     :" + ArrayDistribucion[2] + "\n "
@@ -332,36 +337,37 @@ public abstract class FacadeInstructions<T> {
                                          "CAPITAL               :"+ArrayDistribucion[5]+"\n"+
                                          "ADELANTO DE INTERES   :"+ArrayDistribucion[6]+"\n";
                     }*/
-                    //Query queryLimpiar = em.createNativeQuery("SELECT sai_bankingly_termina_transaccion (NULL,NULL,'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')");
-                    //int clean = Integer.parseInt(String.valueOf(queryLimpiar.getSingleResult()));
-                } else {
-                    //mensajeBackendResult = "TRANSACCION EXITOSA";
-                    System.out.println("Transaccion exitosa");
-                    banderaEstatusTransferencia = true;
-                    //Query queryLimpiar = em.createNativeQuery("SELECT sai_bankingly_termina_transaccion (NULL,NULL,'" + procesaOrigen.getSesion() + "'," + procesaOrigen.getReferencia() + "')");
-                    //int clean=Integer.parseInt(String.valueOf(queryLimpiar.getSingleResult()));
-                }
+                        //Query queryLimpiar = em.createNativeQuery("SELECT sai_bankingly_termina_transaccion (NULL,NULL,'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')");
+                        //int clean = Integer.parseInt(String.valueOf(queryLimpiar.getSingleResult()));
+                    } else {
+                        //mensajeBackendResult = "TRANSACCION EXITOSA";
+                        System.out.println("Transaccion exitosa");
+                        banderaEstatusTransferencia = true;
+                        //Query queryLimpiar = em.createNativeQuery("SELECT sai_bankingly_termina_transaccion (NULL,NULL,'" + procesaOrigen.getSesion() + "'," + procesaOrigen.getReferencia() + "')");
+                        //int clean=Integer.parseInt(String.valueOf(queryLimpiar.getSingleResult()));
+                    }
 
-                if (respuestaProcesada == 2) {
-                    banderaEstatusTransferencia = true;
-                }
-                if (banderaEstatusTransferencia) {
-                    //Aplico la distribucion
+                    if (respuestaProcesada == 2) {
+                        banderaEstatusTransferencia = true;
+                    }
+                    if (banderaEstatusTransferencia) {
+                        //Aplico la distribucion
 
-                    String clean = "SELECT sai_bankingly_termina_transaccion('" + fechaTr_.substring(0, 10) + "'," + procesaOrigen.getIdusuario() + ",'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')";
-                    Query queryL = em.createNativeQuery(clean);
-                    int registrosLimpiados = Integer.parseInt(String.valueOf(queryL.getSingleResult()));
-                    System.out.println("Registros Limpiados con exito:" + registrosLimpiados);
+                        String clean = "SELECT sai_bankingly_termina_transaccion('" + fechaTr_.substring(0, 10) + "'," + procesaOrigen.getIdusuario() + ",'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')";
+                        Query queryL = em.createNativeQuery(clean);
+                        int registrosLimpiados = Integer.parseInt(String.valueOf(queryL.getSingleResult()));
+                        System.out.println("Registros Limpiados con exito:" + registrosLimpiados);
 
-                    em.getTransaction().begin();
-                    validaciones_transferencias_siscoop val = em.find(validaciones_transferencias_siscoop.class, validacion_guardada.getId());
-                    em.remove(val);
-                    em.getTransaction().commit();
+                        em.getTransaction().begin();
+                        validaciones_transferencias_siscoop val = em.find(validaciones_transferencias_siscoop.class, validacion_guardada.getId());
+                        em.remove(val);
+                        em.getTransaction().commit();
 
-                    em.getTransaction().begin();
-                    em.persist(ejecutar_transferencia);
-                    mensaje = "completed";
-                    em.getTransaction().commit();
+                        em.getTransaction().begin();
+                        em.persist(ejecutar_transferencia);
+                        mensaje = "completed";
+                        em.getTransaction().commit();
+                    }
                 }
             } else {
                 mensaje = "ERROR validationId no existe";
@@ -631,8 +637,8 @@ public abstract class FacadeInstructions<T> {
                                         //Valido que la cuenta destino este activa
                                         if (ctaDestino.getEstatus() == 2) {
                                             //Valido que el producto destino no sea un prestamo
-                                          if (productoDestino.getTipoproducto() == 0 || productoDestino.getTipoproducto()==2) {//validar regla que todos los productos puedan recibir tranferencias excepto prestamos
-    //Valido saldo maximo del producto
+                                            if (productoDestino.getTipoproducto() == 0 || productoDestino.getTipoproducto() == 2) {//validar regla que todos los productos puedan recibir tranferencias excepto prestamos
+                                                //Valido saldo maximo del producto
                                                 String vali_maxmin = "";
                                                 String o_d = String.format("%06d", ctaDestino.getIdorigen());
                                                 String g_d = String.format("%02d", ctaDestino.getIdgrupo());
@@ -1097,9 +1103,9 @@ public abstract class FacadeInstructions<T> {
             }
 
         } catch (Exception e) {
-            System.out.println("Error producido en validar permitido:"+e.getMessage());
+            System.out.println("Error producido en validar permitido:" + e.getMessage());
             em.close();
-        }finally{
+        } finally {
             em.close();
         }
 

@@ -29,29 +29,29 @@ public class v_Alertas implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sec_validaciones_tsiscoop")
     @SequenceGenerator(name = "sec_validaciones_tsiscoop", sequenceName = "sec_validaciones_tsiscoop")
     private Integer id;
-    @Column(name="alertcode")
+    @Column(name = "alertcode")
     private String alertCode;
-    @Column(name="enabled")
+    @Column(name = "enabled")
     private boolean enabled;
-    @Column(name="accountid")
+    @Column(name = "accountid")
     private String accountId;
-    @Column(name="customerid")
+    @Column(name = "customerid")
     private String customerid;
-    @Column(name="property")
+    @Column(name = "property")
     private String property;
-    @Column(name="monto")
+    @Column(name = "monto")
     private Double monto;
-    @Column(name="operator")
+    @Column(name = "operator")
     private String operator;
-    @Column(name="ruletype")
+    @Column(name = "ruletype")
     private String ruleType;
-    @Column(name="fechaejecucion")
+    @Column(name = "fechaejecucion")
     private Date fechaejecucion;
-    @Column(name="validationid_generado")
+    @Column(name = "validationid_generado")
     private String validationid_generado;
-    
+
     public v_Alertas() {
-        
+
     }
 
     public v_Alertas(Integer id, String alertCode, boolean enabled, String accountId, String customerid, String property, Double monto, String operator, String ruleType, Date fechaejecucion, String validationid_generado) {
@@ -160,8 +160,5 @@ public class v_Alertas implements Serializable {
     public String toString() {
         return "v_Alertas{" + "id=" + id + ", alertCode=" + alertCode + ", enabled=" + enabled + ", accountId=" + accountId + ", customerid=" + customerid + ", property=" + property + ", monto=" + monto + ", operator=" + operator + ", ruleType=" + ruleType + ", fechaejecucion=" + fechaejecucion + ", validationid_generado=" + validationid_generado + '}';
     }
-    
-    
 
-  
 }

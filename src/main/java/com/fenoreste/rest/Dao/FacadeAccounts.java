@@ -341,14 +341,15 @@ public abstract class FacadeAccounts<T> {
             String fechaTrabajoReal = String.valueOf(queryOrigenes.getSingleResult());
             String fecha[] = fechaTrabajoReal.split("-");
             LocalDate date = LocalDate.of(Integer.parseInt(fecha[0]), Integer.parseInt(fecha[1]), Integer.parseInt(fecha[2]));
-            date = date.plusDays(7);
+            System.out.println("FechaTrabajo: " + date);
+            //date = date.plusDays(7);
             String date_semana = String.valueOf(date);
             if (producto.getTipoproducto() == 1 || producto.getTipoproducto() == 8) {
                 //Corremos sai_auxiliar para obetener datos  
 
                 //Corro SAi para calculo de interes en una semana
                 String sai_interes = "SELECT sai_auxiliar(" + a.getAuxiliaresPK().getIdorigenp() + "," + a.getAuxiliaresPK().getIdproducto() + "," + a.getAuxiliaresPK().getIdauxiliar() + ",'" + date_semana + "')";
-                System.out.println("sasaasas:" + sai_interes);
+                System.out.println("sasaasas: " + sai_interes);
                 Query RsSai = em.createNativeQuery(sai_interes);
                 String sai_aux = RsSai.getSingleResult().toString();
                 String[] parts = sai_aux.split("\\|");
@@ -364,14 +365,21 @@ public abstract class FacadeAccounts<T> {
             } else if (producto.getTipoproducto() == 2) {
                 //Corro SAi para calculo de interes en una semana
                 String sai_interes = "SELECT sai_auxiliar(" + a.getAuxiliaresPK().getIdorigenp() + "," + a.getAuxiliaresPK().getIdproducto() + "," + a.getAuxiliaresPK().getIdauxiliar() + ",'" + date_semana + "')";
-                System.out.println("sasaasas:" + sai_interes);
+                System.out.println("sasaasas: " + sai_interes);
                 Query RsSai = em.createNativeQuery(sai_interes);
                 String sai_aux = RsSai.getSingleResult().toString();
                 String[] parts = sai_aux.split("\\|");
                 List lista = Arrays.asList(parts);
-                dto.setProximoMontoInteres(Double.parseDouble(lista.get(6).toString()));
-                dto.setProximaFechaPago(date_semana);
+                String sai_montototal = "SELECT sai_bankingly_prestamo_cuanto(" + a.getAuxiliaresPK().getIdorigenp() + "," + a.getAuxiliaresPK().getIdproducto() + "," + a.getAuxiliaresPK().getIdauxiliar() + "," + "'" + date_semana + "'" + "," + a.getTipoamortizacion() + "," + "'" + sai_aux + "'" + ")";
+                System.out.println("MONTO TOTAL A CUBRIR: " + sai_montototal);
+                Query sai_mont = em.createNativeQuery(sai_montototal);
+                String sai_prest_cuanto = sai_mont.getSingleResult().toString();
+                String[] sai_pres_parts = sai_prest_cuanto.split("\\|");
+                List lista_saipres = Arrays.asList(sai_pres_parts);
+                dto.setProximoMontoInteres(Double.parseDouble(lista_saipres.get(0).toString()));
+                dto.setProximaFechaPago(lista.get(10).toString());
                 dto.setFechaVencimiento(lista.get(8).toString());
+                dto.setMontoDesembolso(a.getMontoprestado().doubleValue());
             }
 
             dto.setAccountId(accountId);
@@ -438,16 +446,16 @@ public abstract class FacadeAccounts<T> {
         File file = null;
         Productos pr = em.find(Productos.class, opa.getIdproducto());
         String nombre_formato = "";
-        String nombre_archivo="";
+        String nombre_archivo = "";
         if (pr.getTipoproducto() == 1) {
             nombre_formato = "estado_cuenta_dpfs_ind";
-            nombre_archivo="e_cuenta_dpfs_ind_";
+            nombre_archivo = "e_cuenta_dpfs_ind_";
         } else if (pr.getTipoproducto() == 0) {
             nombre_formato = "estado_cuenta_ahorros";
-            nombre_archivo="e_cuenta_ahorros_";
+            nombre_archivo = "e_cuenta_ahorros_";
         } else if (pr.getTipoproducto() == 2) {
             nombre_formato = "estado_cuenta_prestamos";
-            nombre_archivo="e_cuenta_prestamos_";
+            nombre_archivo = "e_cuenta_prestamos_";
         }
         String nombre_txt = nombre_archivo + opa.getIdorigenp() + "" + opa.getIdproducto() + "" + opa.getIdauxiliar() + "_" + String.valueOf(numeroAleatorio) + ".txt";
         System.out.println("nombreTxt:" + nombre_txt);

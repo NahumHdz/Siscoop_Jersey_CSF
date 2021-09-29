@@ -9,25 +9,27 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "validaciones_telefonos_siscoop")
 public class validaciones_telefono_siscoop implements Serializable {
-  private static final long serialVersionUID = 1L;
-  
-  @Id
-  @Column(name = "customerid")
-  private String customerid;
-  
-  @Column(name = "validacion")
-  private String validacion;
-  
-  @Column(name = "telefono")
-  private String telefono;
-  
-  @Column(name = "celular")
-  private String celular;
-  
-  @Column(name = "email")
-  private String email;
-  
-  public validaciones_telefono_siscoop() {}
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @Column(name = "customerid")
+    private String customerid;
+
+    @Column(name = "validacion")
+    private String validacion;
+
+    @Column(name = "telefono")
+    private String telefono;
+
+    @Column(name = "celular")
+    private String celular;
+
+    @Column(name = "email")
+    private String email;
+
+    public validaciones_telefono_siscoop() {
+    }
 
     public validaciones_telefono_siscoop(String validacion, String customerid, String telefono, String celular, String email) {
         this.validacion = validacion;
@@ -81,7 +83,5 @@ public class validaciones_telefono_siscoop implements Serializable {
     public String toString() {
         return "validaciones_telefono_siscoop{" + "validacion=" + validacion + ", customerid=" + customerid + ", telefono=" + telefono + ", celular=" + celular + ", email=" + email + '}';
     }
-  
-  
-}
 
+}

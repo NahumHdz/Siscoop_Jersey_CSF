@@ -323,6 +323,15 @@ public class AccountsResources {
                                 .add("value", dto.getFechaVencimiento())
                                 .add("valueType", "date")
                                 .add("isSensitive", false).build())
+                        .add("expiryDate", Json.createObjectBuilder()
+                                .add("value", dto.getFechaVencimiento())
+                                .add("valueType", "date")
+                                .add("isSensitive", false).build())
+                        .add("loanAmount", Json.createObjectBuilder()
+                                .add("value", dto.getMontoDesembolso())
+                                .addNull("description")
+                                .add("valueType", "decimal")
+                                .add("isSensitive", false).build())
                         .build()).build();
             } else {
                 jsi = Json.createObjectBuilder().add("accountDetails", Json.createObjectBuilder()

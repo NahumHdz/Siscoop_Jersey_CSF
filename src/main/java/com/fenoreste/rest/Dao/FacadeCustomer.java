@@ -5,6 +5,7 @@ import DTO.CustomerContactDetailsDTO;
 import DTO.CustomerDetailsDTO;
 import DTO.CustomerSearchDTO;
 import DTO.ogsDTO;
+import DTO.opaDTO;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Entidades.Auxiliares;
 import com.fenoreste.rest.Entidades.AuxiliaresD;
@@ -24,6 +25,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import javax.persistence.EntityTransaction;
 
@@ -484,80 +486,139 @@ public abstract class FacadeCustomer<T> {
         return saldos;
     }
 
-    public Double[] positionHistory(String customerId, String fecha1, String fecha2) {
+    public List<Double[]> positionHistory1(String customerId, String fecha1, String fecha2) {
         EntityManager em = emf.createEntityManager();
         ogsDTO ogs = Util.ogs(customerId);
-        Double ledGer = 0.0, avalaible = 0.0;
+        Double ledGer = 0.0, avalaible = 0.0,saldo_congelado = 0.0, saldo_disponible = 0.0;
+        Calendar c = Calendar.getInstance();
+        Calendar c1 = Calendar.getInstance();
         try {
-            String c = "SELECT * FROM auxiliares_d ad "
-                    + "INNER JOIN auxiliares a using(idorigenp,idproducto,idauxiliar)"
-                    + " INNER JOIN productos pr USING(idproducto)"
-                    + " WHERE pr.tipoproducto in(0,1) "
-                    + " AND a.idorigen = " + ogs.getIdorigen() + " AND a.idgrupo = " + ogs.getIdgrupo() + " AND a.idsocio = " + ogs.getIdsocio()
-                    + " AND date(ad.fecha) between '" + fecha1 + "' AND '" + fecha2 + "'";
-            System.out.println("Consulta:" + c);
-            Query query = em.createNativeQuery(c, AuxiliaresD.class);
-            List<AuxiliaresD> lista = query.getResultList();
 
-            for (int i = 0; i < lista.size(); i++) {
-                AuxiliaresD ad = lista.get(i);
-                AuxiliaresPK apk = new AuxiliaresPK(ad.getAuxiliaresDPK().getIdorigenp(), ad.getAuxiliaresDPK().getIdproducto(), ad.getAuxiliaresDPK().getIdauxiliar());
-                Auxiliares a = em.find(Auxiliares.class, apk);
-                System.out.println("paso");
-                Productos pr = em.find(Productos.class, a.getAuxiliaresPK().getIdproducto());
-                Double garantiaDPF = 0.0;
-                Double saldoAvalaibleDPF = 0.0;
-                Double saldoLedgerDPF = 0.0;
-                Double garantiaAhorro = 0.0;
-                Double saldoAvalaibleAhorro = 0.0;
-                Double saldoLedgerAhorro = 0.0;
-                if (pr.getTipoproducto() == 1) {
-                    //Se suma fechaactivacion mas plazos para determinar si el producto ya se puede cobrar o aun no
-                    String cc = "SELECT a.fechaactivacion + " + Integer.parseInt(String.valueOf(a.getPlazo())) + " FROM auxiliares a WHERE a.idorigenp="
-                            + a.getAuxiliaresPK().getIdorigenp()
-                            + " AND a.idproducto=" + a.getAuxiliaresPK().getIdproducto()
-                            + " AND a.idauxiliar=" + a.getAuxiliaresPK().getIdauxiliar();
-                    Query query1 = em.createNativeQuery(cc);
-                    String fecha = String.valueOf(query1.getSingleResult()).replace("-", "/");
-                    Date hoy = new Date();
-                    Date fa = stringToDate(fecha);//fecha obtenida
-                    //si la fecha obtenida es igual al dia actual(hoy) o esta antes el dpf ya se puede retirar siempre y cuando no este amparando credito
-                    saldoLedgerDPF = saldoLedgerDPF + Double.parseDouble(a.getSaldo().toString());
-                    if (fa == hoy || fa.before(hoy)) {
-                        //si el dpf tiene amparado credito
-                        if (Integer.parseInt(a.getGarantia().toString()) > 0) {
-                            garantiaDPF = garantiaDPF + Double.parseDouble(a.getGarantia().toString());
-                            saldoAvalaibleDPF = saldoAvalaibleDPF + (Double.parseDouble(a.getSaldo().toString()) - garantiaDPF);
-                        } else {
-                            saldoAvalaibleDPF = Double.parseDouble(a.getSaldo().toString());
-                        }
-                        //Si el dpf aun no se puede retirar
-                    }
+            //Buscamos la lista lista de auxiliares para el socio que esta ingresando
+            String consulta_lista_auxiliares = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tps USING(idproducto) INNER JOIN productos pr USING(idproducto)"
+                    + " WHERE a.idorigen=" + ogs.getIdorigen()
+                    + " AND idgrupo=" + ogs.getIdgrupo()
+                    + " AND idsocio=" + ogs.getIdsocio()
+                    + " AND a.estatus=2 AND pr.tipoproducto IN(0)";
+            System.out.println("Consulta:" + consulta_lista_auxiliares);
+            Query queryA = em.createNativeQuery(consulta_lista_auxiliares, Auxiliares.class);
+            List<Auxiliares> listaAuxiliares = queryA.getResultList();
 
-                } else if (pr.getTipoproducto() == 0) {
-                    saldoLedgerAhorro = saldoLedgerAhorro + Double.parseDouble(a.getSaldo().toString());
-                    if (Double.parseDouble(a.getGarantia().toString()) > 0) {
-                        garantiaAhorro = garantiaAhorro + Double.parseDouble(a.getGarantia().toString());
-                        saldoAvalaibleAhorro = saldoAvalaibleAhorro + (Double.parseDouble(a.getSaldo().toString()) - garantiaAhorro);
-                    } else {
-                        saldoAvalaibleAhorro = saldoAvalaibleAhorro + Double.parseDouble(a.getSaldo().toString());
-                    }
-                }
-                ledGer = ledGer + (saldoLedgerDPF + saldoLedgerAhorro);
-                avalaible = avalaible + (saldoAvalaibleDPF + saldoAvalaibleAhorro);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+            Date fechaInicio = sdf.parse(fecha1);
+            Date fechaFinal = sdf.parse(fecha2);
+            List<Date> listaFechas = getListaEntreFechas(fechaInicio, fechaFinal);
+            List<String> listaOpas = new ArrayList<>();
+            double saldo_ec_anterior=0.0; double saldo_al_dia_actual=0.0;
+            double saldo_sin_mov=0.0;
+            //corremos la lista de todos los productos
+            int x = 0;
+            for (x = 0; x < listaAuxiliares.size(); x++) {
+                Auxiliares a = listaAuxiliares.get(x);
+                String opa = String.format("%06d", a.getAuxiliaresPK().getIdorigenp()) + "" + String.format("%05d", a.getAuxiliaresPK().getIdproducto()) + "" + String.format("%08d", a.getAuxiliaresPK().getIdauxiliar());
+                listaOpas.add(opa);
             }
+            boolean b=false;
+            for (int i = 0; i < listaFechas.size(); i++) {
+                double saldo_actual=0.0;
+                Date fe = listaFechas.get(i);
+                String fechaString = sdf.format(fe);
+                //opaDTO opa = null;
+                //System.out.println("idorigenp:" + opa.getIdorigenp() + ",idproducto:" + opa.getIdproducto() + ",idauxiliar:" + opa.getIdauxiliar());
+                for (int y = 0; y < listaOpas.size(); y++) {
+                    
+                    opaDTO opa = Util.opa(listaOpas.get(y));
+                    String fecha_mov = fechaString;
+                    String fecha_string_mov = fecha_mov.substring(0, 10).replace("-", "/");
 
+                    Date date_mov = sdf.parse(fecha_string_mov);
+                    //Date now = c.getTime();
+                    c.setTime(date_mov);
+                    c.add(Calendar.DAY_OF_MONTH, -1);
+                    c1.setTime(date_mov);
+                    c1.add(Calendar.MONTH, -2);
+                    Date fecha_mant = c1.getTime();
+                    Date fecha_ant = c.getTime();
+                    String fecha_mov_anterior = dateToString(fecha_ant);
+
+                    //Obtengo el sado del movimiento anterior 
+                    String busqueda = "SELECT * FROM auxiliares_d WHERE idorigenp=" + opa.getIdorigenp()
+                            + " AND idproducto=" + opa.getIdproducto()
+                            + " AND idauxiliar=" + opa.getIdauxiliar()
+                            + " AND date(fecha) BETWEEN '" + dateToString(fecha_mant) + "' AND '" + fecha_mov_anterior + "' ORDER BY saldoec DESC LIMIT 1";
+                    
+                    //System.out.println("busqueda:"+busqueda);
+
+                    Query querycv = em.createNativeQuery(busqueda, AuxiliaresD.class);
+                    AuxiliaresD add = (AuxiliaresD) querycv.getSingleResult();
+                   
+                   
+                    //Busco todo los mvimientos en auxiliareS_d
+                    String busqueda_movimientos = "SELECT (CASE WHEN sum(monto)>0 THEN sum(monto) ELSE 0 END) as monto FROM auxiliares_d "
+                            + " WHERE idorigenp=" + opa.getIdorigenp()
+                            + " AND idproducto=" + opa.getIdproducto()
+                            + " AND idauxiliar=" + opa.getIdauxiliar()
+                            + " AND date(fecha)='" + fechaString + "'";
+                    
+                    saldo_ec_anterior=add.getSaldoec().doubleValue();
+                   // System.out.println("" + busqueda_movimientos);
+                    Query queryAuxiliares_d = em.createNativeQuery(busqueda_movimientos);
+                    double saldoTotal = Double.parseDouble(String.valueOf(queryAuxiliares_d.getSingleResult()));
+                    if(saldoTotal>0){ 
+                        b=true;
+                        System.out.println("entro el saldo disponible es:"+saldo_disponible);
+                        //System.out.println("busqueda:"+busqueda_movimientos);
+                        System.out.println("el saldo ec del movimiento anterior es:"+add.getSaldoec());
+                        
+                        saldo_actual=saldo_disponible+saldo_ec_anterior+saldoTotal;
+                        //saldo_congelado=saldo_congelado+saldo_disponible;
+                        System.out.println("si hubo movimientos en la fecha y se incremento el saldo anterior era:"+saldo_ec_anterior+" ahora el nuevo saldo es:"+saldo_actual); 
+                    }else{
+                        System.out.println("ledger entro con :"+ledGer);
+                        ledGer=saldo_ec_anterior;
+                        
+                        
+                    }
+                    
+                    if(b){
+                    saldo_disponible=saldo_actual;
+                    saldo_actual=0.0;  
+                    }
+                    
+                    
+                }
+                 
+                 if(b){
+                     saldo_congelado=saldo_congelado+saldo_disponible;
+                     System.out.println(" el dia "+fechaString+" el saldo disponible fue de:"+saldo_congelado);
+                 }else{
+                     saldo_sin_mov=saldo_sin_mov+ledGer;
+                     System.out.println(" el dia "+fechaString+" el saldo disponible fue de:"+saldo_sin_mov);
+                    ledGer=0.0
+                            ;
+                 }                 
+                 b=false;
+               
+            }
+           
+            System.out.println("FechaInicio:" + fechaInicio + ",fechaFinal:" + fechaFinal);
         } catch (Exception e) {
-            e.getStackTrace();
-            System.out.println("Error:" + e.getMessage());
-        } finally {
-            em.close();
+
         }
-        Double saldos[] = new Double[2];
-        saldos[0] = ledGer;
-        saldos[1] = avalaible;
-        System.out.println("Saldos:" + saldos[1]);
-        return saldos;
+        return null;
+    }
+    
+    public List<Date> getListaEntreFechas(Date fechaInicio, Date fechaFin) {
+        Calendar c1 = Calendar.getInstance();
+        c1.setTime(fechaInicio);
+        Calendar c2 = Calendar.getInstance();
+        c2.setTime(fechaFin);
+        List<Date> listaFechas = new ArrayList<Date>();
+        while (!c1.after(c2)) {
+            listaFechas.add(c1.getTime());
+            c1.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        return listaFechas;
     }
 
     public String dateToString(Date cadena) {

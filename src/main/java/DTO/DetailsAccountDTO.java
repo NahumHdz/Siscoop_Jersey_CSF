@@ -24,11 +24,12 @@ public class DetailsAccountDTO {
     private double proximoMontoInteres;
     private String proximaFechaPago;
     private String fechaVencimiento;
+    private double montoDesembolso;
 
     public DetailsAccountDTO() {
     }
 
-    public DetailsAccountDTO(String accountId, String accountNumber, String displayAccountNumber, String accountType, String currencyCode, String productCode, String status, String sucursal, String openedDate, double tasa, double proximoMontoInteres, String proximaFechaPago, String fechaVencimiento) {
+    public DetailsAccountDTO(String accountId, String accountNumber, String displayAccountNumber, String accountType, String currencyCode, String productCode, String status, String sucursal, String openedDate, double tasa, double proximoMontoInteres, String proximaFechaPago, String fechaVencimiento, double montoDesembolso) {
         this.accountId = accountId;
         this.accountNumber = accountNumber;
         this.displayAccountNumber = displayAccountNumber;
@@ -42,6 +43,7 @@ public class DetailsAccountDTO {
         this.proximoMontoInteres = proximoMontoInteres;
         this.proximaFechaPago = proximaFechaPago;
         this.fechaVencimiento = fechaVencimiento;
+        this.montoDesembolso = montoDesembolso;
     }
 
     public String getAccountId() {
@@ -146,6 +148,14 @@ public class DetailsAccountDTO {
 
     public void setFechaVencimiento(String fechaVencimiento) {
         this.fechaVencimiento = fechaVencimiento;
+    }
+
+    public double getMontoDesembolso() {
+        return montoDesembolso;
+    }
+
+    public void setMontoDesembolso(double montoDesembolso) {
+        this.montoDesembolso = montoDesembolso;
     }
 
 }

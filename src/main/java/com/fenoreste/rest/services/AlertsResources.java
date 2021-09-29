@@ -18,7 +18,6 @@ import org.json.JSONObject;
  */
 @Path("api/alert")
 public class AlertsResources {
-
     @POST
     @Path("/subscription/set/validate")
     @Produces({MediaType.APPLICATION_JSON + ";charset=utf-8"})
@@ -29,30 +28,59 @@ public class AlertsResources {
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
+        if (cadena.contains("null")) {
+            cadena = cadena.replace("null", "nulo");
+        }
         JSONObject jsonRecibido = new JSONObject(cadena);
         System.out.println("JsonSubscriptionValidate:" + jsonRecibido);
         AlertsDAO dao = new AlertsDAO();
 
-        try {
-            String AlercustomerId_ = jsonRecibido.getString("customerId");
-            String Alertcode_ = jsonRecibido.getString("alertCode");
-            boolean AlertEnabled_ = jsonRecibido.getBoolean("enabled");
-            String AlertAccountId_ = jsonRecibido.getString("accountId");
-            JSONArray rules_ = jsonRecibido.getJSONArray("rules");
-            String AlertRulesProperty = "";
-            double AlertRulesAmount_ = 0.0;
-            String AlertsRulesOperator_ = "";
-            String AlertsRulesType_ = "";
-            for (int i = 0; i < rules_.length(); i++) {
-                JSONObject rule = rules_.getJSONObject(i);
-                AlertRulesProperty = rule.getString("property");
-                AlertRulesAmount_ = rule.getDouble("value");
-                AlertsRulesOperator_ = rule.getString("operator");
-                AlertsRulesType_ = rule.getString("ruleType");
-            }
-            String validationId = dao.validateAlert(AlercustomerId_, Alertcode_, AlertEnabled_, AlertAccountId_, AlertRulesProperty, AlertRulesAmount_, AlertsRulesOperator_,AlertsRulesType_);
-            
+        String AlercustomerId_ = "", Alertcode_ = "", AlertAccountId_ = "";
+        JSONArray rules_ = null;
+        double rulesMonto = 0.0;
+        boolean AlertEnabled_ = false;
+        String validationId = "";
 
+        try {
+            Alertcode_ = jsonRecibido.getString("alertCode");
+            if (Alertcode_.toUpperCase().contains("BALANCE_ABOVE") || Alertcode_.toUpperCase().contains("BALANCE_BELOW")) {
+                AlercustomerId_ = jsonRecibido.getString("customerId");
+                Alertcode_ = jsonRecibido.getString("alertCode");
+                AlertEnabled_ = jsonRecibido.getBoolean("enabled");
+                AlertAccountId_ = jsonRecibido.getString("accountId");
+                rules_ = jsonRecibido.getJSONArray("rules");
+                JSONObject amount = rules_.getJSONObject(0);
+                rulesMonto = amount.getDouble("value");
+                System.out.println("llego aqui");
+
+                validationId = dao.validateAlert(AlercustomerId_, Alertcode_, AlertEnabled_, AlertAccountId_, rulesMonto, 0);
+
+            } else if (Alertcode_.toUpperCase().contains("LOAN_PAYMENT_DUE") || Alertcode_.toUpperCase().contains("TIME_DEPOSIT_MATURING")) {
+                AlercustomerId_ = jsonRecibido.getString("customerId");
+                Alertcode_ = jsonRecibido.getString("alertCode");
+                AlertEnabled_ = jsonRecibido.getBoolean("enabled");
+                AlertAccountId_ = jsonRecibido.getString("accountId");
+
+                validationId = dao.validateAlert(AlercustomerId_, Alertcode_, AlertEnabled_, AlertAccountId_, 0.0, 0);
+
+            } else if (Alertcode_.toUpperCase().contains("MONETARY_TRANSACTION_INSTRUCTION")) {
+                AlercustomerId_ = jsonRecibido.getString("customerId");
+                Alertcode_ = jsonRecibido.getString("alertCode");
+                AlertEnabled_ = jsonRecibido.getBoolean("enabled");
+
+                //AlertAccountId_ = jsonRecibido.getString("accountId"); 
+                validationId = dao.validateAlert(AlercustomerId_, Alertcode_, AlertEnabled_, AlertAccountId_, 0.0, 1);
+
+            } else if (Alertcode_.toUpperCase().contains("LAST_RECURRING_TRANSACTION")) {
+                AlercustomerId_ = jsonRecibido.getString("customerId");
+                Alertcode_ = jsonRecibido.getString("alertCode");
+                AlertEnabled_ = jsonRecibido.getBoolean("enabled");
+                AlertAccountId_ = jsonRecibido.getString("accountId");
+
+                validationId = dao.validateAlert(AlercustomerId_, Alertcode_, AlertEnabled_, AlertAccountId_, 0.0, 1);
+            }
+
+            //String validationId = dao.validateAlert(AlercustomerId_, Alertcode_, AlertEnabled_, AlertAccountId_, AlertRulesProperty, AlertRulesAmount_, AlertsRulesOperator_, AlertsRulesType_);
             com.github.cliftonlabs.json_simple.JsonObject json = new com.github.cliftonlabs.json_simple.JsonObject();
             json.put("validationId", validationId);
             json.put("fees", null);
@@ -71,6 +99,7 @@ public class AlertsResources {
     @Produces({MediaType.APPLICATION_JSON + ";charset=utf-8"})
     @Consumes({MediaType.APPLICATION_JSON + ";charset=utf-8"})
     public Response alertExecute(String cadena, @HeaderParam("authorization") String authString) {
+        System.out.println("CADENA: " + cadena);
         Security scr = new Security();
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
