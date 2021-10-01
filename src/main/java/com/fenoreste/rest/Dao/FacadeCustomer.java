@@ -493,14 +493,13 @@ public abstract class FacadeCustomer<T> {
         Calendar c = Calendar.getInstance();
         Calendar c1 = Calendar.getInstance();
         try {
-
             //Buscamos la lista lista de auxiliares para el socio que esta ingresando
             String consulta_lista_auxiliares = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tps USING(idproducto) INNER JOIN productos pr USING(idproducto)"
                     + " WHERE a.idorigen=" + ogs.getIdorigen()
-                    + " AND idgrupo=" + ogs.getIdgrupo()
-                    + " AND idsocio=" + ogs.getIdsocio()
-                    + " AND a.estatus=2 AND pr.tipoproducto IN(0)";
-            System.out.println("Consulta:" + consulta_lista_auxiliares);
+                    + " AND a.idgrupo=" + ogs.getIdgrupo()
+                    + " AND a.idsocio=" + ogs.getIdsocio()
+                    + " AND a.estatus=2 AND pr.tipoproducto IN (0)";
+            System.out.println("Consulta: " + consulta_lista_auxiliares);
             Query queryA = em.createNativeQuery(consulta_lista_auxiliares, Auxiliares.class);
             List<Auxiliares> listaAuxiliares = queryA.getResultList();
 
@@ -541,28 +540,28 @@ public abstract class FacadeCustomer<T> {
                     Date fecha_ant = c.getTime();
                     String fecha_mov_anterior = dateToString(fecha_ant);
 
-                    //Obtengo el sado del movimiento anterior 
+                    //Obtengo el saldo del movimiento anterior 
                     String busqueda = "SELECT * FROM auxiliares_d WHERE idorigenp=" + opa.getIdorigenp()
                             + " AND idproducto=" + opa.getIdproducto()
                             + " AND idauxiliar=" + opa.getIdauxiliar()
-                            + " AND date(fecha) BETWEEN '" + dateToString(fecha_mant) + "' AND '" + fecha_mov_anterior + "' ORDER BY saldoec DESC LIMIT 1";
-                    
-                    //System.out.println("busqueda:"+busqueda);
+                            + " AND date(fecha) BETWEEN '" + dateToString(fecha_mant) + "' AND '" + fecha_mov_anterior + "' ORDER BY fecha DESC LIMIT 1";
+                    System.out.println("BUSQUEDA: " + busqueda);
 
                     Query querycv = em.createNativeQuery(busqueda, AuxiliaresD.class);
                     AuxiliaresD add = (AuxiliaresD) querycv.getSingleResult();
-                   
-                   
-                    //Busco todo los mvimientos en auxiliareS_d
-                    String busqueda_movimientos = "SELECT (CASE WHEN sum(monto)>0 THEN sum(monto) ELSE 0 END) as monto FROM auxiliares_d "
+
+                    //Busco todo los movimientos en auxiliareS_d
+                    String busqueda_movimientos = "SELECT (CASE WHEN sum(monto)>0 THEN sum(monto) ELSE 0 END) as monto FROM auxiliares_d"
                             + " WHERE idorigenp=" + opa.getIdorigenp()
                             + " AND idproducto=" + opa.getIdproducto()
                             + " AND idauxiliar=" + opa.getIdauxiliar()
                             + " AND date(fecha)='" + fechaString + "'";
+                    System.out.println("BUSQUEDA MOVIMIENTO: " + busqueda_movimientos);
+                    Query queryAuxiliares_d = em.createNativeQuery(busqueda_movimientos);
                     
                     saldo_ec_anterior=add.getSaldoec().doubleValue();
-                   // System.out.println("" + busqueda_movimientos);
-                    Query queryAuxiliares_d = em.createNativeQuery(busqueda_movimientos);
+                    System.out.println("SALDO COMIENZO: " + saldo_ec_anterior);
+                    
                     double saldoTotal = Double.parseDouble(String.valueOf(queryAuxiliares_d.getSingleResult()));
                     if(saldoTotal>0){ 
                         b=true;
@@ -574,31 +573,27 @@ public abstract class FacadeCustomer<T> {
                         //saldo_congelado=saldo_congelado+saldo_disponible;
                         System.out.println("si hubo movimientos en la fecha y se incremento el saldo anterior era:"+saldo_ec_anterior+" ahora el nuevo saldo es:"+saldo_actual); 
                     }else{
-                        System.out.println("ledger entro con :"+ledGer);
+                        System.out.println("ledger entro con: " + ledGer);
                         ledGer=saldo_ec_anterior;
-                        
-                        
                     }
                     
                     if(b){
                     saldo_disponible=saldo_actual;
-                    saldo_actual=0.0;  
+                    saldo_actual=0.0;
                     }
-                    
-                    
+
                 }
-                 
-                 if(b){
-                     saldo_congelado=saldo_congelado+saldo_disponible;
-                     System.out.println(" el dia "+fechaString+" el saldo disponible fue de:"+saldo_congelado);
-                 }else{
-                     saldo_sin_mov=saldo_sin_mov+ledGer;
-                     System.out.println(" el dia "+fechaString+" el saldo disponible fue de:"+saldo_sin_mov);
-                    ledGer=0.0
-                            ;
-                 }                 
-                 b=false;
-               
+                
+                if(b) {
+                    saldo_congelado=saldo_congelado+saldo_disponible;
+                    System.out.println(" el dia "+fechaString+" el saldo disponible fue de:"+saldo_congelado);
+                } else {
+                    saldo_sin_mov=saldo_sin_mov+ledGer;
+                    System.out.println(" el dia "+fechaString+" el saldo disponible fue de:"+saldo_sin_mov);
+                    ledGer=0.0;
+                }
+                b=false;
+
             }
            
             System.out.println("FechaInicio:" + fechaInicio + ",fechaFinal:" + fechaFinal);
