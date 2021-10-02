@@ -484,14 +484,15 @@ public abstract class FacadeCustomer<T> {
         return saldos;
     }
 
-    public void positionHistory0(String customerId, String fecha1, String fecha2) {
+    public List<String[]> positionHistory0(String customerId, String fecha1, String fecha2) {
         EntityManager em = emf.createEntityManager();
         ogsDTO ogs = Util.ogs(customerId);
-        double ec_saldo_anterior = 0.0, v1 = 0.0, v2 = 0.0, v3 = 0.0, v4 = 0.0, v5 = 0.0, v6 = 0.0,v7=0.0,v8;
+        double ec_saldo_anterior = 0.0, v1 = 0.0, v2 = 0.0, v3 = 0.0, v4 = 0.0, v5 = 0.0, v6 = 0.0, v7 = 0.0, v8 = 0.8;
         int c0 = 00, c01 = 0, c2 = 0, c3 = 0;
         //Estas variables se usan para obtener un arreglo entre 2 fechas
         Calendar c = Calendar.getInstance();
         Calendar c1 = Calendar.getInstance();
+        List<String[]> lista_d = new ArrayList();
         try {
             //Buscamos la lista lista de auxiliares para el socio que esta ingresando
             String consulta_lista_auxiliares = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tps USING(idproducto) INNER JOIN productos pr USING(idproducto)"
@@ -521,6 +522,7 @@ public abstract class FacadeCustomer<T> {
             //Corremos el arrelgo de fechas
             for (int i = 0; i < listaFechas.size(); i++) {
 
+                String arr[] = new String[3];
                 //Obtenemos la fecha en cierta posicion del arreglo
                 Date fecha_intermedio = listaFechas.get(i);
                 String fechaString = sdf.format(fecha_intermedio);
@@ -568,11 +570,11 @@ public abstract class FacadeCustomer<T> {
                             + " AND idproducto=" + opa.getIdproducto()
                             + " AND idauxiliar=" + opa.getIdauxiliar()
                             + " AND date(fecha) BETWEEN '" + dateToString(fecha_mant) + "' AND '" + fecha_mov_anterior + "' ORDER BY fecha DESC LIMIT 1";
-                    Query monto_ad=null;
+                    boolean b = false;
+                    Query monto_ad = null;
                     try {
                         Query querycv = em.createNativeQuery(busqueda, AuxiliaresD.class);
                         AuxiliaresD add = (AuxiliaresD) querycv.getSingleResult();
-
                         //Busco todo los movimientos en auxiliareS_d para la fecha en el arreglo de fechas
                         String busqueda_movimientos = "SELECT case when sum(case when cargoabono=0 then -monto else monto end)!=0 then sum(case when cargoabono=0 then -monto else monto end) else 0 end  as monto FROM auxiliares_d"
                                 + " WHERE idorigenp=" + opa.getIdorigenp()
@@ -580,24 +582,27 @@ public abstract class FacadeCustomer<T> {
                                 + " AND idauxiliar=" + opa.getIdauxiliar()
                                 + " AND date(fecha)='" + fechaString + "'";
 
-                         monto_ad= em.createNativeQuery(busqueda_movimientos);
-                         v6=Double.parseDouble(String.valueOf(monto_ad.getSingleResult()));
-                         ec_saldo_anterior = add.getSaldoec().doubleValue();
-
+                        monto_ad = em.createNativeQuery(busqueda_movimientos);
+                        v7 = Double.parseDouble(String.valueOf(monto_ad.getSingleResult()));
+                        ec_saldo_anterior = add.getSaldoec().doubleValue();
+                        b = true;
                     } catch (Exception e) {
-                        
                     }
 
                     // System.out.println("el saldo ec anteriror del producto:" + add.getAuxiliaresDPK().getIdproducto() + " es:" + ec_saldo_anterior + " la fecha es:" + add.getAuxiliaresDPK().getFecha());
-                    c0 = c0 + 1;
                     if (c0 > 2) {
-                        v4 = v4 + v6;
+                        if (b) {
+                            v4 = v4 + Double.parseDouble(String.valueOf(monto_ad.getSingleResult()));
+                        }
 
                     } else {
+                        if (b) {
+                            v1 = v1 + ec_saldo_anterior + Double.parseDouble(String.valueOf(monto_ad.getSingleResult()));
+                            v2 = v2 + v1;
+                            v1 = 0.0;
+                            c0 = c0 + 1;
+                        }
 
-                        v1 = v1 + ec_saldo_anterior + Double.parseDouble(String.valueOf(monto_ad.getSingleResult()));
-                        v2 = v2 + v1;
-                        v1 = 0.0;
                     }
 
                 }//Termina el recorrido de los opas
@@ -606,10 +611,15 @@ public abstract class FacadeCustomer<T> {
                 }
 
                 System.out.println("entonces en la fecha " + fecha_intermedio + " el saldo disponible fue de:" + v4 + " el saldo actual:" + saldo_al_dia);
+                arr[0] = String.valueOf(v4);
+                arr[1] = String.valueOf(saldo_al_dia);
+                arr[2] = fechaString;
+                lista_d.add(arr);
             }//termina el recorrido de fechas
         } catch (Exception e) {
             System.out.println("Error en postionHistory:" + e.getMessage());
         }
+        return lista_d;
     }
 
     public List<Double[]> positionHistory1(String customerId, String fecha1, String fecha2) {

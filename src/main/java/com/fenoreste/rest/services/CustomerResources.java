@@ -397,21 +397,37 @@ public class CustomerResources {
         javax.json.JsonObject json1 = null;
         JsonArrayBuilder jsona = Json.createArrayBuilder();
         try {
-            if (!balanceLedger.equals("") && !balanceAvalaible.equals("")) {
-                dao.positionHistory0(customerId, fecha1.trim().replace("-", "/"), fecha2.trim().replace("-", "/"));
+            
+            List<String[]> listad = dao.positionHistory0(customerId, fecha1.trim().replace("-", "/"), fecha2.trim().replace("-", "/"));
+            for (int i = 0; i < listad.size(); i++) {
+                String arrs[] = new String[3];
+                arrs = listad.get(i);
+                
+                javax.json.JsonObject clientes1 = Json.createObjectBuilder()
+                                                      .add("balanceType", "ledger")
+                                                      .add("amount", Json.createObjectBuilder()
+                                                                         .add("amount", Double.parseDouble(arrs[1]))
+                                                                         .add("currencyCode", "MXN")
+                                                                         .build())
+                                                      .build();
+                javax.json.JsonObject clientes2 = Json.createObjectBuilder()
+                                                      .add("balanceType", "available")
+                                                      .add("amount", Json.createObjectBuilder()
+                                                                         .add("amount", Double.parseDouble(arrs[0]))
+                                                                         .add("currencyCode", "MXN")
+                                                                         .build())
+                                                      .build();
+                jsona.add(Json.createObjectBuilder().add("currencyCode", "MXN").add("balances", Json.createArrayBuilder().add((JsonValue) clientes1).add((JsonValue) clientes2)).add("positionDate", arrs[2].replace("/","-")));
             }
-            javax.json.JsonObject clientes1 = Json.createObjectBuilder().add("balanceType", "ledger").add("amount", (JsonValue) Json.createObjectBuilder().add("amount", arr[0].doubleValue()).add("currencyCode", "MXN").build()).build();
-            javax.json.JsonObject clientes2 = Json.createObjectBuilder().add("balanceType", "available").add("amount", (JsonValue) Json.createObjectBuilder().add("amount", arr[1].doubleValue()).add("currencyCode", "MXN").build()).build();
-            json1 = Json.createObjectBuilder().add("records", jsona.add(Json.createObjectBuilder().add("currencyCode", "MXN").add("balances", Json.createArrayBuilder().add((JsonValue) clientes1).add((JsonValue) clientes2)).add("positionDate", dao.dateToString(new Date()).replace("/", "-")))).build();
-            String status = "";
-            datosOk.put("status","comple");
+            json1 = Json.createObjectBuilder().add("records",jsona).build();
+            
             return Response.status(Response.Status.OK).entity(json1).build();
         } catch (Exception e) {
+            System.out.println("cayo aquiii:"+e.getMessage());
             dao.cerrar();
-             return Response.status(Response.Status.OK).entity(json1).build();
         } finally {
             dao.cerrar();
         }
-        //return null;
+        return null;
     }
 }
