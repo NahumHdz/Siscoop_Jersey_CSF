@@ -38,7 +38,6 @@ public class InstructionsResources {
         }
         JSONObject jrecibido = new JSONObject(cadena);
         String customerId = "";
-        System.out.println("siiiiiiiiiiiiiiiiii");
         JSONArray filters = jrecibido.getJSONArray("filters");
         System.out.println("JSONFilters:" + filters);
 
@@ -253,6 +252,7 @@ public class InstructionsResources {
 
             //Es una transferencia a mis cuentas propias
             if (identificadorTransferencia == 1) {
+                System.out.println("ennnnnnnnnntrooooooooooooooooooooooooooooooooooooooooooooooo");
                 dto = dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto, comentario, propCuenta, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
                 //dto = dao.validateMonetaryInstruction(customerId,cuentaOrigen, cuentaDestino, monto, "Pago de servicios:" + comentario, "Codigo recibo:" + value, fechaEjecucion, tipoEjecucion,identificadorTransferencia);
                 jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())

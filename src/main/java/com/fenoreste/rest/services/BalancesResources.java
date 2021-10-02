@@ -27,7 +27,7 @@ public class BalancesResources {
   @Consumes({MediaType.APPLICATION_JSON})
   public Response balances(String cadena,@HeaderParam("authorization") String authString){
     Security scr=new Security();
-      System.out.println("Requestttttt Balanceeeee:"+cadena);
+      System.out.println("Request Balanceeeee:"+cadena);
      if(!scr.isUserAuthenticated(authString)){
             return Response.status(Response.Status.UNAUTHORIZED).build();
      }
