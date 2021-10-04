@@ -8,7 +8,6 @@ package com.fenoreste.rest.Dao;
 import DTO.ogsDTO;
 import DTO.opaDTO;
 import com.fenoreste.rest.Entidades.e_Alerts;
-import com.fenoreste.rest.Entidades.tipos_cuenta_siscoop;
 import com.fenoreste.rest.Entidades.v_Alertas;
 import com.fenoreste.rest.Util.AbstractFacade;
 import com.fenoreste.rest.Util.Utilidades;
@@ -316,6 +315,9 @@ public abstract class FacadeAlerts<T> {
         emf.close();
     }
 
+    
+    
+    
     private static boolean consumoCallBack(String alertCode, String customerId, String accountNumber, String accountType, Double amount) {
         boolean banderaCallBack = false;
         pruebas();
@@ -335,7 +337,7 @@ public abstract class FacadeAlerts<T> {
         JSONObject json = new JSONObject();
         json.put("alertCode", alertCode);
         json.put("originatorCode", "OMNIA");
-        json.put("eventDate", now + "Z");
+        json.put("eventDate", now + "Z");//Fecha en la que se debe ejecutar
         json.put("customerId", customerId.trim());
         json.put("accountNumber", accountNumber.trim());
         json.put("accountType", accountType.trim().toUpperCase());
