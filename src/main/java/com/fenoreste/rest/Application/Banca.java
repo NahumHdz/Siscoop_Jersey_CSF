@@ -1,6 +1,10 @@
 package com.fenoreste.rest.Application;
 
+import com.fenoreste.rest.Util.TimerBeepClock;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.Application;
 
 @javax.ws.rs.ApplicationPath("gateway")
@@ -14,16 +18,18 @@ public class Banca extends Application {
         return resources;
     }
 
-/*    public void horaEjecutaAlerta() {
+  public void horaEjecutaAlerta() {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         Runnable task = new TimerBeepClock();
         int initialDelay = 1;
         int periodicDelay = 1;
         scheduler.scheduleAtFixedRate(task, initialDelay, periodicDelay, TimeUnit.SECONDS);
 
-    }*/
+    }
 
     private void addRestResourceClasses(Set<Class<?>> resources) {
+        resources.add(com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.class);
+        resources.add(com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider.class);
         resources.add(com.fenoreste.rest.services.AccountsResources.class);
         resources.add(com.fenoreste.rest.services.AlertsResources.class);
         resources.add(com.fenoreste.rest.services.BalancesResources.class);
@@ -38,5 +44,6 @@ public class Banca extends Application {
         resources.add(com.fenoreste.rest.services.SPEI.ResourcesSPEI.class);
         resources.add(com.fenoreste.rest.services.TimeResources.class);
         resources.add(com.fenoreste.rest.services.ValidateBeneficiary.class);
+        resources.add(org.glassfish.jersey.server.wadl.internal.WadlResource.class);
     }
 }

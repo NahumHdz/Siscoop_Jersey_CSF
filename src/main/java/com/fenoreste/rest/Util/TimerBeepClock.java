@@ -31,8 +31,8 @@ public class TimerBeepClock implements Runnable {
     public void run() {
         Toolkit.getDefaultToolkit().beep();
         SimpleDateFormat dateFormatLocal = new SimpleDateFormat("HH:mm:ss a");
-        String hora = dateFormatLocal.format(new Date());
-        //eliminamos todos los PDF a las 4:00AM
+        String hora = dateFormatLocal.format(new Date());        
+        System.out.println("Horaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:"+hora);
         if (hora.replace(" ", "").equals("04:00:00AM")) {
             ejecutarAlerta();
         }
@@ -42,7 +42,9 @@ public class TimerBeepClock implements Runnable {
         EntityManagerFactory emf = AbstractFacade.conexion();
         EntityManager em = emf.createEntityManager();
         String uri = "https://cnmuat.siscoop.mx:9943/alertsengine/api/alerts/event/create";
-        String output = "";
+        
+        String output="";
+        
         try {
             String listaAlertas = "SELECT * FROM e_alertas WHERE enabled=true";
             Query query = em.createNativeQuery(listaAlertas, e_Alerts.class);
@@ -53,11 +55,31 @@ public class TimerBeepClock implements Runnable {
             String customerId = ealer.getCustomerid();
             String accountType = ealer.getAccountId();
             Double amount = ealer.getMonto();
+      
+            System.out.println("Total de registros:"+ListaAlertas.size());
+            
+            
+            
+            
+            for(int i=0;i<ListaAlertas.size();i++){
+                e_Alerts e=ListaAlertas.get(i);
+                //Tu tabla temporar vas a insertarle este registros
+                
+
+            }
+            
+            
+            
+            
+            
+            
             for (int i = 0; i < ListaAlertas.size(); i++) {
                 LocalDateTime now = LocalDateTime.now();
+                e_Alerts alerta=ListaAlertas.get(i);
+                
                 String numbers = accountNumber.substring(accountNumber.length() - 4);
                 JSONObject json = new JSONObject();
-                json.put("alertCode", alertCode);
+                json.put("alertCode",alerta.getAlertCode());
                 json.put("originatorCode", "OMNIA");
                 json.put("eventDate", now + "Z");
                 json.put("customerId", customerId.trim());
@@ -113,6 +135,9 @@ public class TimerBeepClock implements Runnable {
                     System.out.println("El codigo fue 200OK");
                 }
                 conn.disconnect();
+                
+                
+                //AQui haces update a la alerta y pones estatus true
             }
         } catch (Exception e) {
             em.close();
@@ -123,6 +148,9 @@ public class TimerBeepClock implements Runnable {
             emf.close();
             
         }
+        
+        
+        
 
     }
 

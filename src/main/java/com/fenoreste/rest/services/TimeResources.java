@@ -24,7 +24,7 @@ import org.json.JSONObject;
  */
 @Path("/api/timedeposit")
 public class TimeResources {
-  
+
     @POST
     @Path("/create/validate")
     @Produces({MediaType.APPLICATION_JSON})
@@ -42,7 +42,7 @@ public class TimeResources {
             String dia = Integer.toString(c1.get(5));
             String mes = Integer.toString(c1.get(2) + 1);
             String annio = Integer.toString(c1.get(1));
-            String BusinessDate = String.format("%04d",Integer.parseInt(annio)) +"-" + String.format("%02d",Integer.parseInt(mes)) + "-" + String.format("%02d",Integer.parseInt(dia));
+            String BusinessDate = String.format("%04d", Integer.parseInt(annio)) + "-" + String.format("%02d", Integer.parseInt(mes)) + "-" + String.format("%02d", Integer.parseInt(dia));
             javax.json.JsonObject found = Json.createObjectBuilder()
                     .add("validationId", "0988888")
                     .add("fees", Json.createArrayBuilder())
@@ -58,8 +58,7 @@ public class TimeResources {
         }
         return null;
     }
-    
-    
+
     @POST
     @Path("/create/execute")
     @Produces({MediaType.APPLICATION_JSON})
@@ -69,16 +68,8 @@ public class TimeResources {
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
-        String accountId = "";
         AccountsDAO dao = new AccountsDAO();
-        JSONObject jsonRecibido = new JSONObject(cadena);
         try {
-            Calendar c1 = Calendar.getInstance();
-            String dia = Integer.toString(c1.get(5));
-            String mes = Integer.toString(c1.get(2) + 1);
-            String annio = Integer.toString(c1.get(1));
-            String BusinessDate = String.format("%04d",Integer.parseInt(annio)) +"-" + String.format("%02d",Integer.parseInt(mes)) + "-" + String.format("%02d",Integer.parseInt(dia));
-            String dt = null;
             javax.json.JsonObject found = Json.createObjectBuilder()
                     .add("status", "completed")
                     .add("executionId", "ABCDEFGHISDFSFS")
@@ -86,16 +77,17 @@ public class TimeResources {
                     .add("accountNumber", "6464564645")
                     .add("displayAccountNumber", "345734983")
                     .build();
+            
             return Response.status(Response.Status.OK).entity(found).build();
         } catch (Exception e) {
-            System.out.println("Error:" + e.getMessage());
+            System.out.println("Error en executar la creacion de cuenta inversion:" + e.getMessage());
         } finally {
             dao.cerrar();
         }
         return null;
     }
-    
-      @POST
+
+    @POST
     @Path("/redeem/validate")
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
@@ -111,14 +103,14 @@ public class TimeResources {
         String dia = Integer.toString(c1.get(5));
         String mes = Integer.toString(c1.get(2) + 1);
         String annio = Integer.toString(c1.get(1));
-        String diaa = String.format("%04d",Integer.parseInt(annio)) + "/" + String.format("%02d",Integer.parseInt(mes)) + "/" + String.format("%02d",Integer.parseInt(dia));
+        String diaa = String.format("%04d", Integer.parseInt(annio)) + "/" + String.format("%02d", Integer.parseInt(mes)) + "/" + String.format("%02d", Integer.parseInt(dia));
         try {
             String dt = null;
-            
+
             javax.json.JsonObject found = Json.createObjectBuilder()
                     .add("validationId", "76GHJAWERT6V")
                     .add("fees", Json.createArrayBuilder())
-                    .add("executionDate", diaa.replace("/","-"))
+                    .add("executionDate", diaa.replace("/", "-"))
                     .add("netAmount", Json.createObjectBuilder()
                             .add("amount", 2000)
                             .add("currencyCode", "MXN")
@@ -136,14 +128,14 @@ public class TimeResources {
                             .add("currencyCode", "MXN")
                             .build())
                     .build();
-            System.out.println("Found:"+found);
+            System.out.println("Found:" + found);
             return Response.status(Response.Status.OK).entity(found).build();
         } catch (Exception e) {
             System.out.println("ErrorReemValidate:" + e.getMessage());
         } finally {
             dao.cerrar();
         }
-          System.out.println("aquiiii");
+        System.out.println("aquiiii");
         return null;
     }
 

@@ -4,8 +4,6 @@
  * and open the template in the editor.
  */
 package com.fenoreste.rest.callback;
-
-import static com.fenoreste.rest.Dao.FacadeAlerts.pruebas;
 import com.fenoreste.rest.Util.AbstractFacade;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -13,7 +11,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDateTime;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,7 +41,8 @@ public class EjecucionAlerta {
         
         //Formamo el request peticion para callcback
         
-        EntityManagerFactory emf=AbstractFacade.conexion();
+        
+        
         
         try {
             String numbers = accountNumber.substring(accountNumber.length() - 4);
