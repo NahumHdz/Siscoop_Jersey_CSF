@@ -510,15 +510,15 @@ public abstract class FacadeInstructions<T> {
                                                 //Valido que realmente el producto destino pertenezca al mismo socio(porque es entre mis cuentas 
                                                 if (ctaOrigen.getIdorigen() == ctaDestino.getIdorigen() && ctaOrigen.getIdgrupo() == ctaDestino.getIdgrupo() && ctaOrigen.getIdsocio() == ctaDestino.getIdsocio()) {
                                                     //valido el minimo y maximo permitido para una transferencia
-                                                    if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
-                                                        if (MaxPordia(opaOrigen, montoTransferencia)) {
+                                                    /*if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
+                                                        if (MaxPordia(opaOrigen, montoTransferencia)) {*/
                                                             mensage = "validado con exito";
-                                                        } else {
+                                                        /*} else {
                                                             mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
                                                         }
                                                     } else {
                                                         mensage = "EL MONTO QUE INTENTA TRANSFERIR ES:" + minMax(montoTransferencia) + " AL PERMITIDO";
-                                                    }
+                                                    }*/
                                                 } else {
                                                     mensage = "PRODUCTO DESTINO NO PERTENECE AL MISMO SOCIO";
                                                 }
@@ -651,15 +651,15 @@ public abstract class FacadeInstructions<T> {
                                                     System.out.println("SI SE PUEDE REALIZAR TRANSFERENCIA A TERCERO");
 
                                                     //valido el minimo y maximo permitido para una transferencia
-                                                    if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
-                                                        if (MaxPordia(opaOrigen, montoTransferencia)) {
+                                                    /*if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
+                                                        if (MaxPordia(opaOrigen, montoTransferencia)) {*/
                                                             mensage = "validado con exito";
-                                                        } else {
+                                                        /*} else {
                                                             mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
                                                         }
                                                     } else {
                                                         mensage = "EL MONTO QUE INTENTA TRANSFERIR ES:" + minMax(montoTransferencia) + " AL PERMITIDO";
-                                                    }
+                                                    }*/
                                                 } else {
                                                     mensage = vali_maxmin.replace("-", "");
                                                     System.out.println("NO SE PUEDE REALIZAR TRANSFERENCIA A TERCERO");
@@ -775,15 +775,15 @@ public abstract class FacadeInstructions<T> {
                                                     Double Saldo_Destino = Double.valueOf(String.valueOf(ctaDestino.getSaldo()));
                                                     if (montoTransferencia <= Saldo_Destino) {
                                                         //valido el minimo y maximo permitido para una transferencia
-                                                        if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
-                                                            if (MaxPordia(opaOrigen, montoTransferencia)) {
+                                                        /*if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
+                                                            if (MaxPordia(opaOrigen, montoTransferencia)) {*/
                                                                 mensage = "validado con exito";
-                                                            } else {
+                                                            /*} else {
                                                                 mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
                                                             }
                                                         } else {
                                                             mensage = "EL MONTO QUE INTENTA TRANSFERIR ES: " + minMax(montoTransferencia) + " AL PERMITIDO";
-                                                        }
+                                                        }*/
                                                     } else {
                                                         mensage = "EL MONTO DE TRANSFERENCIA ES MAYOR AL SALDO DEL PRESTAMO";
                                                     }
@@ -866,15 +866,15 @@ public abstract class FacadeInstructions<T> {
                             //verifico que el saldo del producto origen es mayor o igual a lo que se intenta transferir
                             if (saldo >= TotalPagoServicio) {
                                 //valido el minimo y maximo permitido para una transferencia
-                                if (minMax(TotalPagoServicio).toUpperCase().contains("VALIDO")) {
-                                    if (MaxPordia(opaOrigen, TotalPagoServicio)) {
+                                /*if (minMax(TotalPagoServicio).toUpperCase().contains("VALIDO")) {
+                                    if (MaxPordia(opaOrigen, TotalPagoServicio)) {*/
                                         mensage = "validado con exito";
-                                    } else {
+                                    /*} else {
                                         mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
                                     }
                                 } else {
                                     mensage = "EL MONTO QUE INTENTA TRANSFERIR ES:" + minMax(TotalPagoServicio) + " AL PERMITIDO";
-                                }
+                                }*/
                             } else {
                                 mensage = "FONDOS INSUFICIENTES PARA COMPLETAR LA TRANSACCION";
                             }

@@ -177,7 +177,9 @@ public abstract class FacadeAlerts<T> {
                         System.out.println("EXECUTE MONTO: " + exe_monto + " | " + "VALIDATE MONTO: " + val_monto);
                         if (exe_monto == val_monto) {
                             System.out.println("EL MONTO ES IGUAL (IF)");
-                            mensaje = "La alerta ya esta registrada con estatus completado";
+                            //mensaje = "La alerta ya esta registrada con estatus completado";
+                            System.out.println("La alerta ya esta registrada con estatus completado");
+                            bandera = true;
                         } else {
                             System.out.println("EL MONTO ES DIFERENTE (IF)");
                             em.getTransaction().begin();
@@ -208,7 +210,9 @@ public abstract class FacadeAlerts<T> {
                         }
                     }
                 } else if (alertaEjecutada.isEnabled() == alertaValida.isEnabled()) {
-                    mensaje = "La alerta ya esta registrada con estatus completado";
+                    //mensaje = "La alerta ya esta registrada con estatus completado";
+                    System.out.println("La alerta ya esta registrada con estatus completado");
+                    bandera = true;
                 } else {
                     em.getTransaction().begin();
                     alertaEjecutada.setEnabled(alertaValida.isEnabled());

@@ -47,11 +47,12 @@ public class TimerBeepClock implements Runnable {
             String listaAlertas = "SELECT * FROM e_alertas WHERE enabled=true";
             Query query = em.createNativeQuery(listaAlertas, e_Alerts.class);
             List<e_Alerts> ListaAlertas = query.getResultList();
+            e_Alerts ealer = (e_Alerts) query.getSingleResult();
             String accountNumber = "";
-            String alertCode = "";
-            String customerId = "";
-            String accountType = "";
-            Double amount = 0.0;
+            String alertCode = ealer.getAlertCode();
+            String customerId = ealer.getCustomerid();
+            String accountType = ealer.getAccountId();
+            Double amount = ealer.getMonto();
             for (int i = 0; i < ListaAlertas.size(); i++) {
                 LocalDateTime now = LocalDateTime.now();
                 String numbers = accountNumber.substring(accountNumber.length() - 4);
