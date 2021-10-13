@@ -5,6 +5,7 @@
  */
 package com.fenoreste.rest.Util;
 
+import com.fenoreste.rest.Entidades.Ejecutar_Alerts;
 import com.fenoreste.rest.Entidades.e_Alerts;
 import java.awt.Toolkit;
 import java.io.BufferedReader;
@@ -59,12 +60,18 @@ public class TimerBeepClock implements Runnable {
             System.out.println("Total de registros:"+ListaAlertas.size());
             
             
-            
+            Ejecutar_Alerts ej_al = null;
             
             for(int i=0;i<ListaAlertas.size();i++){
                 e_Alerts e=ListaAlertas.get(i);
-                //Tu tabla temporar vas a insertarle este registros
-                
+                //Tu tabla temporal vas a insertarle este registros
+                ej_al.setId(e.getId());
+                ej_al.setAlertCode(e.getAlertCode());
+                ej_al.setEnabled(e.isEnabled());
+                ej_al.setAccountId(e.getAccountId());
+                ej_al.setCustomerid(e.getCustomerid());
+                ej_al.setMonto(e.getMonto());
+                ej_al.setFechaejecucion(e.getFechaejecucion());
 
             }
             
