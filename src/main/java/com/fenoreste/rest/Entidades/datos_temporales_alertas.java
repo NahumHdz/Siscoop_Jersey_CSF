@@ -6,14 +6,11 @@
 package com.fenoreste.rest.Entidades;
 
 import java.io.Serializable;
-import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
 /**
  *
  * @author Elliot
@@ -24,7 +21,6 @@ import javax.persistence.Table;
  * and open the template in the editor.
  */
 
-
 @Entity
 @Table(name = "datos_temporales_alertas")
 public class datos_temporales_alertas implements Serializable {
@@ -32,19 +28,19 @@ public class datos_temporales_alertas implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     private Integer id;
-    @Column(name="alertcode")
+    @Column(name = "alertcode")
     private String alertCode;
-    @Column(name="accountid")
+    @Column(name = "accountid")
     private String accountId;
-    @Column(name="customerid")
+    @Column(name = "customerid")
     private String customerId;
-    @Column(name="monto")
+    @Column(name = "monto")
     private Double monto;
-    @Column(name="producttype")
+    @Column(name = "producttype")
     private String accountType;
-    
+
     public datos_temporales_alertas() {
-        
+
     }
 
     public datos_temporales_alertas(Integer id, String alertCode, String accountId, String customerId, Double monto, String accountType) {
@@ -108,7 +104,5 @@ public class datos_temporales_alertas implements Serializable {
     public String toString() {
         return "datos_temporales_alertas{" + "id=" + id + ", alertCode=" + alertCode + ", accountId=" + accountId + ", customerId=" + customerId + ", monto=" + monto + ", accountType=" + accountType + '}';
     }
-     
-    
-    
+
 }

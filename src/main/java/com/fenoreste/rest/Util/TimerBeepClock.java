@@ -18,8 +18,11 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -56,18 +59,27 @@ public class TimerBeepClock implements Runnable {
             Query query = em.createNativeQuery(listaAlertas, e_Alerts.class);
             List<e_Alerts> ListaAlertas = query.getResultList();
             String accountNumber = "";
-           
+
             //En la tabla que se usa para guardar datos temporales preparamos las alertas
             datos_temporales_alertas datos_a_procesar = new datos_temporales_alertas();
+
+            //Obtenemos la fecha de trabajo
+            String fechaTrabajo = "SELECT date(fechatrabajo) FROM origenes limit 1";
+            Query queryOrigenes = em.createNativeQuery(fechaTrabajo);
+            String fechaTrabajoReal = String.valueOf(queryOrigenes.getSingleResult());
+            String fecha[] = fechaTrabajoReal.split("-");
+            LocalDate fecha_trab = LocalDate.of(Integer.parseInt(fecha[0]), Integer.parseInt(fecha[1]), Integer.parseInt(fecha[2]));
+            System.out.println("FechaTrabajo: " + fecha_trab);
+
             /*Corremos la lista de alertas que se han encontradas registradas y con estatus false
-              y vamo a validar que cumplan con el codigo que traen para ver si ya de debe ejecutar*/
+              y vamo a validar que cumplan con el codigo que traen para ver si ya se debe ejecutar*/
             for (int i = 0; i < ListaAlertas.size(); i++) {
                 //en cada vuelta generamos un random
                 int numero = (int) (Math.random() * 100 + 1);
                 //Obtenemos el registro de alerta de la lista
                 e_Alerts alerta_validada = ListaAlertas.get(i);
-                //Balance Below(saldo por debajo)
-                if (alerta_validada.getAlertCode().toUpperCase().contains("BELOW")) {
+                //Balance BALANCE_BELOW (saldo por debajo)
+                if (alerta_validada.getAlertCode().toUpperCase().contains("BALANCE_BELOW")) {
                     //Obtenemos el saldo de la cuenta que esta solicitando ejecutar la alerta
                     opaDTO opa = util.opa(accountNumber);
                     AuxiliaresPK aux_pk = new AuxiliaresPK(opa.getIdorigenp(), opa.getIdproducto(), opa.getIdauxiliar());
@@ -82,9 +94,67 @@ public class TimerBeepClock implements Runnable {
                         tipos_cuenta_siscoop productos_banca = em.find(tipos_cuenta_siscoop.class, opa.getIdproducto());
                         datos_a_procesar.setAccountType(productos_banca.getProducttypename());
 
-                        em.getTransaction().begin();//Abres la transaccion 
+                        em.getTransaction().begin();//Abres la transaccion
                         em.persist(datos_a_procesar);//Procesas datos
-                        em.getTransaction().commit();//Cierras la transaccion                           
+                        em.getTransaction().commit();//Cierras la transaccion
+                    }
+                } //Balance BALANCE_ABOVE (saldo por encima)
+                else if (alerta_validada.getAlertCode().toUpperCase().contains("BALANCE_ABOVE")) {
+                    //Obtenemos el saldo de la cuenta que esta solicitando ejecutar la alerta
+                    opaDTO opa = util.opa(accountNumber);
+                    AuxiliaresPK aux_pk = new AuxiliaresPK(opa.getIdorigenp(), opa.getIdproducto(), opa.getIdauxiliar());
+                    Auxiliares a = em.find(Auxiliares.class, aux_pk);
+                    if (a.getSaldo().doubleValue() > alerta_validada.getMonto()) {
+                        datos_a_procesar.setId(numero);
+                        datos_a_procesar.setCustomerId(alerta_validada.getCustomerid());
+                        datos_a_procesar.setAccountId(alerta_validada.getAccountId());
+                        datos_a_procesar.setAlertCode(alerta_validada.getAlertCode());
+                        datos_a_procesar.setMonto(alerta_validada.getMonto());
+                        //Buscamos el tipo de cuenta
+                        tipos_cuenta_siscoop productos_banca = em.find(tipos_cuenta_siscoop.class, opa.getIdproducto());
+                        datos_a_procesar.setAccountType(productos_banca.getProducttypename());
+
+                        em.getTransaction().begin();//Abres la transaccion
+                        em.persist(datos_a_procesar);//Procesas datos
+                        em.getTransaction().commit();//Cierras la transaccion
+                    }
+                } //Balance LOAN_PAYMENT_DUE (3 dias antes del vencimiento de pago de crédito)
+                else if (alerta_validada.getAlertCode().toUpperCase().contains("LOAN_PAYMENT_DUE")) {
+                    //Obtenemos el saldo de la cuenta que esta solicitando ejecutar la alerta
+                    opaDTO opa = util.opa(accountNumber);
+                    AuxiliaresPK aux_pk = new AuxiliaresPK(opa.getIdorigenp(), opa.getIdproducto(), opa.getIdauxiliar());
+                    Auxiliares a = em.find(Auxiliares.class, aux_pk);
+
+                    String sai_auxiliar = "SELECT sai_auxiliar(" + opa.getIdorigenp() + "," + opa.getIdproducto() + "," + opa.getIdauxiliar() + ",'" + fecha_trab + "')";
+                    Query RsSai = em.createNativeQuery(sai_auxiliar);
+                    String sai_aux = RsSai.getSingleResult().toString();
+                    String[] parts = sai_aux.split("\\|");
+                    List list = Arrays.asList(parts);
+                    SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy");
+                    Date fecha_sig_abon = formato.parse(list.get(10).toString());
+
+                    String fecha_res = "";
+
+                    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                    LocalDateTime localDate = LocalDateTime.parse(fecha_sig_abon + " 00:00:00", dtf);//asi conviertes un string a local date time
+                    fecha_res = String.valueOf(localDate.plusDays(-3));//asi le restas un mes
+
+                    Date fecha_resta = formato.parse(fecha_res);
+                    Date fecha_trabajo = formato.parse(fecha_trab.toString());
+
+                    if (fecha_trabajo == fecha_resta) {
+                        datos_a_procesar.setId(numero);
+                        datos_a_procesar.setCustomerId(alerta_validada.getCustomerid());
+                        datos_a_procesar.setAccountId(alerta_validada.getAccountId());
+                        datos_a_procesar.setAlertCode(alerta_validada.getAlertCode());
+                        datos_a_procesar.setMonto(alerta_validada.getMonto());
+                        //Buscamos el tipo de cuenta
+                        tipos_cuenta_siscoop productos_banca = em.find(tipos_cuenta_siscoop.class, opa.getIdproducto());
+                        datos_a_procesar.setAccountType(productos_banca.getProducttypename());
+
+                        em.getTransaction().begin();//Abres la transaccion
+                        em.persist(datos_a_procesar);//Procesas datos
+                        em.getTransaction().commit();//Cierras la transaccion
                     }
                 }
             }
@@ -227,4 +297,3 @@ public class TimerBeepClock implements Runnable {
         scheduler.scheduleAtFixedRate(task, initialDelay, periodicDelay,TimeUnit.SECONDS);
     }*/
 }
-
