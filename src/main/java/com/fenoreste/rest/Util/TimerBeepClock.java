@@ -41,8 +41,9 @@ public class TimerBeepClock implements Runnable {
         Toolkit.getDefaultToolkit().beep();
         SimpleDateFormat dateFormatLocal = new SimpleDateFormat("HH:mm:ss a");
         String hora = dateFormatLocal.format(new Date());
+        System.out.println("horaaaaaaaaaaaaaaaaa:"+hora);
         //eliminamos todos los PDF a las 4:00AM
-        if (hora.replace(" ", "").equals("04:00:00AM")) {
+        if (hora.replace(" ", "").equals("10:00:00AM")) {
             ejecutarAlerta();
         }
     }
@@ -241,14 +242,13 @@ public class TimerBeepClock implements Runnable {
                 }
 
             }
-        } catch (Exception e) {
+        } catch (Exception e) {            
             em.close();
             emf.close();
             System.out.println("Error al conectar a :" + e.getMessage());
         } finally {
             em.close();
             emf.close();
-
         }
 
     }
