@@ -39,11 +39,11 @@ public class TimerBeepClock implements Runnable {
 
     public void run() {
         Toolkit.getDefaultToolkit().beep();
-        SimpleDateFormat dateFormatLocal = new SimpleDateFormat("HH:mm:ss a");
+        SimpleDateFormat dateFormatLocal = new SimpleDateFormat("HH:mm a");
         String hora = dateFormatLocal.format(new Date());
         System.out.println("horaaaaaaaaaaaaaaaaa:"+hora);
         //eliminamos todos los PDF a las 4:00AM
-        if (hora.replace(" ", "").equals("10:00:00AM")) {
+        if (hora.replace(" ", "").equals("10:35AM")) {
             ejecutarAlerta();
         }
     }
@@ -212,7 +212,7 @@ public class TimerBeepClock implements Runnable {
                     currency.put("valueType", "string");
                     json.put("currency", currency);
 
-                    System.out.println("json:" + json.toString());
+                    System.out.println("json_enviando_alert:" + json.toString());
 
                     System.out.println("Conectando ws de callBack.....");
                     URL url = new URL(uri);

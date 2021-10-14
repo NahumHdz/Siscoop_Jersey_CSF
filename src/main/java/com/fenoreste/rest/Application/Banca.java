@@ -14,12 +14,11 @@ public class Banca extends Application {
     public Set<Class<?>> getClasses() {
         Set<Class<?>> resources = new java.util.HashSet<>();
         addRestResourceClasses(resources);
-        //hora();
+        horaEjecutaAlerta();
         return resources;
     }
 
   public void horaEjecutaAlerta() {
-        System.out.println("Se Ejecuto el metodo");
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         Runnable task = new TimerBeepClock();
         int initialDelay = 1;
