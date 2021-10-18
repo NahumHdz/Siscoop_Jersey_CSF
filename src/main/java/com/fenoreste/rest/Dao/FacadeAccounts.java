@@ -246,7 +246,7 @@ public abstract class FacadeAccounts<T> {
         return fechaDate;
     }
 
-    public List<AuxiliaresD> History(String accountId, String initialDate, String finalDate, int pageSize, int pageStartIndex) {
+    public List<AuxiliaresD> History(String accountId, List<String> fechas, List<String> montos, String transactionType, int count, int pageSize, int pageStartIndex) {
         EntityManager em = emf.createEntityManager();
         List<transferencias_completadas_siscoop> dtoFacade = new ArrayList<>();
         List<AuxiliaresD> aux = new ArrayList<>();
@@ -254,11 +254,45 @@ public abstract class FacadeAccounts<T> {
         List<AuxiliaresD> listaContador = null;
         try {
             int inicio_busqueda = pageStartIndex * pageSize;
-            String consulta = "SELECT * FROM auxiliares_d WHERE idorigenp = " + opa.getIdorigenp()
-                    + " AND idproducto = " + opa.getIdproducto() + " AND idauxiliar = " + opa.getIdauxiliar()
-                    + " AND date(fecha) between '" + initialDate.trim() + "' AND '" + finalDate.trim() + "' ORDER BY fecha desc";
-            System.out.println("CONSULTA: " + consulta);
-            Query query = em.createNativeQuery(consulta, AuxiliaresD.class);
+            String con = "SELECT * FROM auxiliares_d WHERE ";
+            String sulta = "";
+            String complemento_transaction_type = "";
+            //Por si el socio es curioso y marco todos los filtros
+            if (fechas.size() > 0 && montos.size() > 0 && !transactionType.equals("") && count > 0) {
+                if (transactionType.equals("A")) {
+                    complemento_transaction_type = " cargoabono in(0,1)";
+                } else if (transactionType.equals("C")) {
+                    complemento_transaction_type = " cargoabono=0";
+                } else if (transactionType.equals("D")) {
+                    complemento_transaction_type = " cargoabono=1";
+                }
+                sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
+                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
+                        + " AND " + complemento_transaction_type
+                        + " ORDER BY fecha desc LIMIT " + count;
+                //Si solo esta marcado fecha,monto,transactionType
+            } else if (fechas.size() > 0 && montos.size() > 0 && !transactionType.equals("")) {
+                if (transactionType.equals("A")) {
+                    complemento_transaction_type = " cargoabono in(0,1)";
+                } else if (transactionType.equals("C")) {
+                    complemento_transaction_type = " cargoabono=0";
+                } else if (transactionType.equals("D")) {
+                    complemento_transaction_type = " cargoabono=1";
+                }
+                sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
+                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
+                        + " AND " + complemento_transaction_type;
+            }else if(){
+                
+            }
+            System.out.println("CONSULTA: " + con + sulta);
+            Query query = em.createNativeQuery(con + sulta, AuxiliaresD.class);
             listaContador = query.getResultList();
             System.out.println("TOTAL REGISTROS H: " + listaContador.size());
 
