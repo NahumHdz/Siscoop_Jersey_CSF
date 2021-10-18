@@ -10,6 +10,7 @@ import com.fenoreste.rest.Entidades.AuxiliaresD;
 import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;
 import com.github.cliftonlabs.json_simple.JsonObject;
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
@@ -201,6 +202,7 @@ public class AccountsResources {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response History(String cadena, @HeaderParam("authorization") String authString) {
         Security scr = new Security();
+
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
@@ -208,10 +210,10 @@ public class AccountsResources {
         int pageSize = 0, pageStartIndex = 0;
         AccountsDAO dao = new AccountsDAO();
         JSONObject jsonRecibido = new JSONObject(cadena);
-        List<String>lista_montos=new ArrayList<>();
-        List<String>lista_fechas=new ArrayList<>();
-        String transaction_type="";
-        int count=0;
+        List<String> lista_montos = new ArrayList<>();
+        List<String> lista_fechas = new ArrayList<>();
+        String transaction_type = "";
+        int count = 0;
         try {
             JSONArray listaFil = jsonRecibido.getJSONArray("filters");
             System.out.println("ListaFil:" + listaFil);
@@ -227,18 +229,18 @@ public class AccountsResources {
                 finalDate = js1.getString("value");
                 System.out.println("id:" + initialDate + ",fd:" + finalDate);*/
                 JSONObject json_pos_i = listaFil.getJSONObject(i);
-                if(json_pos_i.getString("property").contains("executionDate")){
-                   lista_fechas.add(json_pos_i.getString("value"));
-                }else if(json_pos_i.getString("property").contains("amount")){
-                   lista_montos.add(String.valueOf(json_pos_i.getInt("value")));
-                }else if(json_pos_i.getString("property").contains("transactionType")){
-                   transaction_type = json_pos_i.getString("value");
-                }else if(json_pos_i.getString("property").contains("count")){
-                   count=Integer.parseInt(String.valueOf(json_pos_i.getInt("value")));
+                if (json_pos_i.getString("property").contains("executionDate")) {
+                    lista_fechas.add(json_pos_i.getString("value"));
+                } else if (json_pos_i.getString("property").contains("amount")) {
+                    lista_montos.add(String.valueOf(json_pos_i.getInt("value")));
+                } else if (json_pos_i.getString("property").contains("transactionType")) {
+                    transaction_type = json_pos_i.getString("value");
+                } else if (json_pos_i.getString("property").contains("count")) {
+                    count = Integer.parseInt(String.valueOf(json_pos_i.getInt("value")));
                 }
             }
-            List<AuxiliaresD> lista = dao.History(accountId,lista_fechas,lista_montos,transaction_type,count, pageSize, pageStartIndex);
-            List<AuxiliaresD> lista_size = dao.History_Size(accountId, initialDate, finalDate);
+            List<AuxiliaresD> lista = dao.History(accountId, lista_fechas, lista_montos, transaction_type, count, pageSize, pageStartIndex);
+            //List<AuxiliaresD> lista_size = dao.History_Size(accountId, initialDate, finalDate);
             JsonObject create = null;
             JsonArrayBuilder listaJson = Json.createArrayBuilder();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
@@ -247,27 +249,27 @@ public class AccountsResources {
             Date fechaDate = null;
             String fe = "";
             double monto = 0.0;
-            String referencia="";
+            String referencia = "";
             for (int j = 0; j < lista.size(); j++) {
                 AuxiliaresD ax = lista.get(j);
-                fechaDate=formato.parse(String.valueOf(ax.getAuxiliaresDPK().getFecha()).substring(0,10));
+                fechaDate = formato.parse(String.valueOf(ax.getAuxiliaresDPK().getFecha()).substring(0, 10));
                 fe = sdf.format(fechaDate);
 
                 System.out.println("Fe:" + fe + " " + ax.getCargoabono() + " " + ax.getMonto());
-                ZonedDateTime zonedDateTime = ZonedDateTime.parse(fe.replace("/","-")+ "T00:00:00.000-07:00");
+                ZonedDateTime zonedDateTime = ZonedDateTime.parse(fe.replace("/", "-") + "T00:00:00.000-07:00");
                 String feR = String.valueOf(zonedDateTime);
                 //System.out.println("DTOCtaOrigen:" + dto.getCuentaorigen());
-                referencia = ax.getIdorigenc()+"-"+ax.getPeriodo()+"-"+ax.getIdtipo()+"-"+ ax.getIdpoliza();
+                referencia = ax.getIdorigenc() + "-" + ax.getPeriodo() + "-" + ax.getIdtipo() + "-" + ax.getIdpoliza();
                 //Pintamos los saldos + y -s 
                 if (ax.getCargoabono() == 0) {
                     monto = -ax.getMonto().doubleValue();
                 } else if (ax.getCargoabono() == 1) {
                     monto = ax.getMonto().doubleValue();
                 }
-                javax.json.JsonObject jsi = Json.createObjectBuilder().add("transactionId", referencia).add("amount", Json.createObjectBuilder().add("amount", monto).add("currencyCode", "MXN").build()).add("postingDate",feR).add("valueDate", fe.replace("/","-")).add("runningBalance", Json.createObjectBuilder().add("amount", ax.getSaldoec()).add("currencyCode", "MXN").build()).add("description", ax.getTicket()).add("originatorReferenceId", referencia).add("originatorCode", referencia).add("description2", Json.createObjectBuilder().add("value", referencia).add("valueType", "string").add("isSensitive", false).build()).build();
+                javax.json.JsonObject jsi = Json.createObjectBuilder().add("transactionId", referencia.replace("-", "")).add("amount", Json.createObjectBuilder().add("amount", monto).add("currencyCode", "MXN").build()).add("postingDate", feR).add("valueDate", fe.replace("/", "-")).add("runningBalance", Json.createObjectBuilder().add("amount", ax.getSaldoec()).add("currencyCode", "MXN").build()).add("description", ax.getTicket()).add("originatorReferenceId", referencia).add("originatorCode", referencia.replace("-", "")).add("description2", Json.createObjectBuilder().add("value", referencia.replace("-", "")).add("valueType", "string").add("isSensitive", false).build()).build();
                 listaJson.add(jsi);
             }
-            javax.json.JsonObject Found = Json.createObjectBuilder().add("totalRecords", lista_size.size()).add("queryId", "").add("transactions", listaJson).build();
+            javax.json.JsonObject Found = Json.createObjectBuilder().add("totalRecords", lista.size()).add("queryId", "").add("transactions", listaJson).build();
             return Response.status(Response.Status.OK).entity(Found).build();
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());
@@ -394,7 +396,9 @@ public class AccountsResources {
             customerId = jsonR.getString("customerId");
             productType = jsonR.getString("productCode");
 
-            javax.json.JsonObject json = Json.createObjectBuilder().add("validationId", "LK890007")
+            String validationId = RandomAlfa();
+
+            javax.json.JsonObject json = Json.createObjectBuilder().add("validationId", validationId)
                     .add("fees", Json.createArrayBuilder())
                     .add("executionDate", "2021-05-12")
                     .build();
@@ -469,6 +473,24 @@ public class AccountsResources {
             System.out.println("Error:" + e.getMessage());
         }
         return Response.status(Response.Status.OK).entity(json).build();
+    }
+
+    public String RandomAlfa() {
+        String CHAR_LOWER = "abcdefghijklmnopqrstuvwxyz";
+        String CHAR_UPPER = CHAR_LOWER.toUpperCase();
+        String NUMBER = "0123456789";
+
+        String DATA_FOR_RANDOM_STRING = CHAR_LOWER + CHAR_UPPER + NUMBER;
+        SecureRandom random = new SecureRandom();
+
+        String cadena = "";
+        for (int i = 0; i < 15; i++) {
+            int rndCharAt = random.nextInt(DATA_FOR_RANDOM_STRING.length());
+            char rndChar = DATA_FOR_RANDOM_STRING.charAt(rndCharAt);
+            cadena = cadena + rndChar;
+        }
+        System.out.println("Cadena:" + cadena);
+        return cadena;
     }
 
 }

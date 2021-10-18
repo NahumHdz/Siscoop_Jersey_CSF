@@ -33,6 +33,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -274,7 +275,8 @@ public abstract class FacadeAccounts<T> {
                         + " AND " + complemento_transaction_type
                         + " ORDER BY fecha desc LIMIT " + count;
                 //Si solo esta marcado fecha,monto,transactionType
-            } else if (fechas.size() > 0 && montos.size() > 0 && !transactionType.equals("")) {
+            } else if (fechas.size() > 0 && montos.size() > 0 && !transactionType.equals("") && count == 0) {
+                
                 if (transactionType.equals("A")) {
                     complemento_transaction_type = " cargoabono in(0,1)";
                 } else if (transactionType.equals("C")) {
@@ -288,9 +290,100 @@ public abstract class FacadeAccounts<T> {
                         + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
                         + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
                         + " AND " + complemento_transaction_type;
-            }else if(){
-                
+            } else if (fechas.size() > 0 && montos.size() > 0 && transactionType.equals("") && count == 0) {//Si solo esta marcado fechas y montos
+                System.out.println("Fechas y montos");
+                sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
+                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1));
+            } else if (fechas.size() > 0 && montos.size() == 0 && transactionType.equals("") && count == 0) {//Si solo fechas
+                System.out.println("entroooooooooooooo aqui");
+                sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'";
+            } else if (fechas.size() > 0 && montos.size() == 0 && !transactionType.equals("") && count > 0) {//Si solo vienen fechas,tipo transaccion y contador
+                System.out.println("Fechas,tipo transaccion y count");
+                if (transactionType.equals("A")) {
+                    complemento_transaction_type = " cargoabono in(0,1)";
+                } else if (transactionType.equals("C")) {
+                    complemento_transaction_type = " cargoabono=0";
+                } else if (transactionType.equals("D")) {
+                    complemento_transaction_type = " cargoabono=1";
+                }
+                sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND " + complemento_transaction_type
+                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "' ORDER BY fecha ASC LIMIT " + count;
+            } else if (fechas.size() > 0 && montos.size() == 0 && !transactionType.equals("") && count == 0) {//Si solo viene fecha,tipos de transacccion
+                if (transactionType.equals("A")) {
+                    complemento_transaction_type = " cargoabono in(0,1)";
+                } else if (transactionType.equals("C")) {
+                    complemento_transaction_type = " cargoabono=0";
+                } else if (transactionType.equals("D")) {
+                    complemento_transaction_type = " cargoabono=1";
+                }
+                sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND " + complemento_transaction_type
+                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'";
+
+            } else if (fechas.size() > 0 && montos.size() == 0 && transactionType.equals("") && count > 0) {//Solo fecha y contador
+                System.out.println("aquiiiiiiiiiiiiiiiiiiiiiiiii");  
+                sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND " + complemento_transaction_type
+                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "' ORDER BY fecha ASC LIMIT " + count;
+            } else if (fechas.size() == 0 && montos.size() > 0 && !transactionType.equals("") && count > 0) {//Si solo montos,tipo de transaccion y contador de operacions
+                System.out.println("aquiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
+                if (transactionType.equals("A")) {
+                    complemento_transaction_type = " cargoabono in(0,1)";
+                } else if (transactionType.equals("C")) {
+                    complemento_transaction_type = " cargoabono=0";
+                } else if (transactionType.equals("D")) {
+                    complemento_transaction_type = " cargoabono=1";
+                }
+                sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND " + complemento_transaction_type
+                        + " AND monto between  " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1)) + " ORDER BY fecha ASC LIMIT " + count;
+             
+            } else if (fechas.size() == 0 && montos.size() > 0 && transactionType.equals("") && count > 0) {//Si solo montos y tipo de transaccion
+                sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND " + complemento_transaction_type
+                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1));
+            } else if (fechas.size() == 0 && montos.size() > 0 && transactionType.equals("") && count > 0) { //Si solo montos y contador de operaciones
+                sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1)) + " ORDER BY fecha ASC LIMIT " + count;
+
+            } else if (fechas.size() == 0 && montos.size() == 0 && transactionType.equals("") && count == 0) {//solo monto
+                sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1));
+            }else if(fechas.size() == 0 && montos.size() ==0 && !transactionType.equals("") && count > 0 ){//Solo tipo de transaccion y contador
+                if (transactionType.equals("A")) {
+                    complemento_transaction_type = " cargoabono in(0,1)";
+                } else if (transactionType.equals("C")) {
+                    complemento_transaction_type = " cargoabono=0";
+                } else if (transactionType.equals("D")) {
+                    complemento_transaction_type = " cargoabono=1";
+                }
+                  sulta = " idorigenp = " + opa.getIdorigenp()
+                        + " AND idproducto = " + opa.getIdproducto()
+                        + " AND idauxiliar = " + opa.getIdauxiliar()
+                        + " AND " + complemento_transaction_type + " ORDER BY fecha ASC LIMIT  "+count;
             }
+
             System.out.println("CONSULTA: " + con + sulta);
             Query query = em.createNativeQuery(con + sulta, AuxiliaresD.class);
             listaContador = query.getResultList();
@@ -306,10 +399,11 @@ public abstract class FacadeAccounts<T> {
         } finally {
             em.close();
         }
+        System.out.println("aux:"+aux);
         return aux;
     }
 
-    public List<AuxiliaresD> History_Size(String accountId, String initialDate, String finalDate) {
+    public List<AuxiliaresD> Histbbory_Size(String accountId, String initialDate, String finalDate) {
         EntityManager em = emf.createEntityManager();
         List<AuxiliaresD> aux = new ArrayList<>();
         opaDTO opa = Util.opa(accountId);
@@ -318,7 +412,8 @@ public abstract class FacadeAccounts<T> {
                     + " AND idproducto = " + opa.getIdproducto() + " AND idauxiliar = " + opa.getIdauxiliar()
                     + " AND date(fecha) between '" + initialDate.trim() + "' AND '" + finalDate.trim() + "' ORDER BY fecha desc";
             System.out.println("CONSULTA: " + consulta);
-            Query query = em.createNativeQuery(consulta, AuxiliaresD.class);
+            Query query = em.createNativeQuery(consulta, AuxiliaresD.class
+            );
             aux = query.getResultList();
             System.out.println("TOTAL REGISTROS H_S: " + aux.size());
         } catch (Exception e) {
@@ -328,7 +423,26 @@ public abstract class FacadeAccounts<T> {
         }
         return aux;
     }
+    
+      public String RandomAlfa() {
+        String CHAR_LOWER = "abcdefghijklmnopqrstuvwxyz";
+        String CHAR_UPPER = CHAR_LOWER.toUpperCase();
+        String NUMBER = "0123456789";
 
+        String DATA_FOR_RANDOM_STRING = CHAR_LOWER + CHAR_UPPER + NUMBER;
+        SecureRandom random = new SecureRandom();
+
+        String cadena = "";
+        for (int i = 0; i < 15; i++) {
+            int rndCharAt = random.nextInt(DATA_FOR_RANDOM_STRING.length());
+            char rndChar = DATA_FOR_RANDOM_STRING.charAt(rndCharAt);
+            cadena = cadena + rndChar;
+        }
+        System.out.println("Cadena:" + cadena);
+        return cadena;
+    }
+
+      
     public DetailsAccountDTO detailsAccount(String accountId) {
         EntityManager em = emf.createEntityManager();
         DetailsAccountDTO dto = new DetailsAccountDTO();
@@ -337,10 +451,12 @@ public abstract class FacadeAccounts<T> {
             String consulta = "SELECT * FROM auxiliares a WHERE "
                     + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
             System.out.println("Consulta:" + consulta);
-            Query query = em.createNativeQuery(consulta, Auxiliares.class);
+            Query query = em.createNativeQuery(consulta, Auxiliares.class
+            );
             Auxiliares a = (Auxiliares) query.getSingleResult();
             System.out.println("a:" + a);
-            tipos_cuenta_siscoop tps = em.find(tipos_cuenta_siscoop.class, a.getAuxiliaresPK().getIdproducto());
+            tipos_cuenta_siscoop tps = em.find(tipos_cuenta_siscoop.class,
+                     a.getAuxiliaresPK().getIdproducto());
             System.out.println("tps:" + tps);
             String e = "";
             if (a.getEstatus() == 0) {
@@ -368,7 +484,8 @@ public abstract class FacadeAccounts<T> {
                     e,
                     sucursal,
                     String.valueOf(a.getFechaactivacion()));*/
-            Productos producto = em.find(Productos.class, a.getAuxiliaresPK().getIdproducto());
+            Productos producto = em.find(Productos.class,
+                     a.getAuxiliaresPK().getIdproducto());
 
             String fechaTrabajo = "SELECT date(fechatrabajo) FROM origenes limit 1";
             Query queryOrigenes = em.createNativeQuery(fechaTrabajo);
@@ -442,10 +559,12 @@ public abstract class FacadeAccounts<T> {
         try {
             String consulta = "SELECT * FROM auxiliares a WHERE "
                     + " a.idorigenp = " + opa.getIdorigenp() + " AND a.idproducto = " + opa.getIdproducto() + " AND a.idauxiliar = " + opa.getIdauxiliar();
-            Query query = em.createNativeQuery(consulta, Auxiliares.class);
+            Query query = em.createNativeQuery(consulta, Auxiliares.class
+            );
             Auxiliares a = (Auxiliares) query.getSingleResult();
             PersonasPK pk = new PersonasPK(a.getIdorigen(), a.getIdgrupo(), a.getIdsocio());
-            Persona p = em.find(Persona.class, pk);
+            Persona p = em.find(Persona.class,
+                     pk);
             System.out.println("p:" + p);
             nombre = p.getNombre() + " " + p.getAppaterno() + " " + p.getApmaterno();
         } catch (Exception e) {
@@ -458,7 +577,8 @@ public abstract class FacadeAccounts<T> {
         EntityManager em = emf.createEntityManager();
         tipos_cuenta_siscoop tip = null;
         try {
-            tip = em.find(tipos_cuenta_siscoop.class, idproducto);
+            tip = em.find(tipos_cuenta_siscoop.class,
+                     idproducto);
         } catch (Exception e) {
             System.out.println("Error al buscar tipo cuenta siscoop:" + e.getMessage());
         }
@@ -478,7 +598,8 @@ public abstract class FacadeAccounts<T> {
         int numeroAleatorio = (int) (Math.random() * 9 + 1);
         EntityManager em = emf.createEntityManager();
         File file = null;
-        Productos pr = em.find(Productos.class, opa.getIdproducto());
+        Productos pr = em.find(Productos.class,
+                 opa.getIdproducto());
         String nombre_formato = "";
         String nombre_archivo = "";
         if (pr.getTipoproducto() == 1) {

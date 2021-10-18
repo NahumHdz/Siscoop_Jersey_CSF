@@ -39,11 +39,11 @@ public class TimerBeepClock implements Runnable {
 
     public void run() {
         Toolkit.getDefaultToolkit().beep();
-        SimpleDateFormat dateFormatLocal = new SimpleDateFormat("HH:mm a");
+        SimpleDateFormat dateFormatLocal = new SimpleDateFormat("HH:mm:ss a");
         String hora = dateFormatLocal.format(new Date());
-        System.out.println("horaaaaaaaaaaaaaaaaa:"+hora);
+        //System.out.println("horaaaaaaaaaaaaaaaaa:"+hora);
         //eliminamos todos los PDF a las 4:00AM
-        if (hora.replace(" ", "").equals("10:35AM")) {
+        if (hora.replace(" ", "").equals("10:35:00AM")) {
             ejecutarAlerta();
         }
     }
