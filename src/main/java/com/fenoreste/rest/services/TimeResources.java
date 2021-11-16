@@ -7,6 +7,7 @@ package com.fenoreste.rest.services;
 
 import com.fenoreste.rest.Auth.Security;
 import com.fenoreste.rest.Dao.AccountsDAO;
+import com.github.cliftonlabs.json_simple.JsonObject;
 import java.util.Calendar;
 import javax.json.Json;
 import javax.ws.rs.Consumes;
@@ -35,8 +36,16 @@ public class TimeResources {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
         String accountId = "";
+        JsonObject Error = new JsonObject();
         AccountsDAO dao = new AccountsDAO();
         JSONObject jsonRecibido = new JSONObject(cadena);
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             Calendar c1 = Calendar.getInstance();
             String dia = Integer.toString(c1.get(5));
@@ -44,7 +53,7 @@ public class TimeResources {
             String annio = Integer.toString(c1.get(1));
             String BusinessDate = String.format("%04d", Integer.parseInt(annio)) + "-" + String.format("%02d", Integer.parseInt(mes)) + "-" + String.format("%02d", Integer.parseInt(dia));
             javax.json.JsonObject found = Json.createObjectBuilder()
-                    .add("validationId", "0988888")
+                    .add("validationId", dao.RandomAlfa().toUpperCase() /*"0988888"*/)
                     .add("fees", Json.createArrayBuilder())
                     .add("executionDate", BusinessDate)
                     .add("interestRate", 5.00)
@@ -53,8 +62,6 @@ public class TimeResources {
             return Response.status(Response.Status.OK).entity(found).build();
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());
-        } finally {
-            dao.cerrar();
         }
         return null;
     }
@@ -68,7 +75,15 @@ public class TimeResources {
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
+        JsonObject Error = new JsonObject();
         AccountsDAO dao = new AccountsDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             javax.json.JsonObject found = Json.createObjectBuilder()
                     .add("status", "completed")
@@ -77,12 +92,10 @@ public class TimeResources {
                     .add("accountNumber", "6464564645")
                     .add("displayAccountNumber", "345734983")
                     .build();
-            
+
             return Response.status(Response.Status.OK).entity(found).build();
         } catch (Exception e) {
             System.out.println("Error en executar la creacion de cuenta inversion:" + e.getMessage());
-        } finally {
-            dao.cerrar();
         }
         return null;
     }
@@ -97,7 +110,16 @@ public class TimeResources {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
         String accountId = "";
+
+        JsonObject Error = new JsonObject();
         AccountsDAO dao = new AccountsDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         JSONObject jsonRecibido = new JSONObject(cadena);
         Calendar c1 = Calendar.getInstance();
         String dia = Integer.toString(c1.get(5));
@@ -132,8 +154,6 @@ public class TimeResources {
             return Response.status(Response.Status.OK).entity(found).build();
         } catch (Exception e) {
             System.out.println("ErrorReemValidate:" + e.getMessage());
-        } finally {
-            dao.cerrar();
         }
         System.out.println("aquiiii");
         return null;
@@ -149,7 +169,15 @@ public class TimeResources {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
         String accountId = "";
+        JsonObject Error = new JsonObject();
         AccountsDAO dao = new AccountsDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         JSONObject jsonRecibido = new JSONObject(cadena);
         Calendar c1 = Calendar.getInstance();
         String dia = Integer.toString(c1.get(5));
@@ -165,8 +193,6 @@ public class TimeResources {
             return Response.status(Response.Status.OK).entity(found).build();
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());
-        } finally {
-            dao.cerrar();
         }
         return null;
     }

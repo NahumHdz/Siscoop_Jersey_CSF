@@ -34,16 +34,14 @@ import org.json.JSONObject;
  */
 public abstract class FacadeAlerts<T> {
 
-    private static EntityManagerFactory emf;
-
     public FacadeAlerts(Class<T> entityClass) {
-        emf = AbstractFacade.conexion();
+
     }
 
     Utilidades Util = new Utilidades();
 
     public String validateAlert(String customerId, String alertCode, boolean enabled, String accountId, Double monto, int tipoalerta) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         boolean bandera = false;
         System.out.println("CustomerId:" + customerId + ",AlertCode:" + alertCode + "enabled:" + enabled + "accountId:" + accountId + "monto:" + monto);
         try {
@@ -147,7 +145,7 @@ public abstract class FacadeAlerts<T> {
     }
 
     public String executeAlert(String validationId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         boolean bandera = false;
         String mensaje = "";
         try {
@@ -231,6 +229,7 @@ public abstract class FacadeAlerts<T> {
                 executeAlerts.setOperator(alertaValida.getOperator());
                 executeAlerts.setProperty(alertaValida.getProperty());
                 executeAlerts.setRuleType(alertaValida.getRuleType());
+                executeAlerts.setAlert_enviado(false);
                 //tipos_cuenta_siscoop tps = em.find(tipos_cuenta_siscoop.class, Integer.parseInt(alertaValida.getAccountId().substring(6, 11)));
                 //consumoCallBack(alertaValida.getAlertCode(), alertaValida.getCustomerid(), alertaValida.getAccountId(), tps.getProducttypename(), alertaValida.getMonto());
                 em.getTransaction().begin();
@@ -286,7 +285,7 @@ public abstract class FacadeAlerts<T> {
     }
 
     public boolean buscarDatosCuenta(String customerId, String accountId, int tipoalerta) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         boolean bandera = false;
         opaDTO opa = null;
         ogsDTO ogs = Util.ogs(customerId);
@@ -315,13 +314,9 @@ public abstract class FacadeAlerts<T> {
         return bandera;
     }
 
-    public void cerrar() {
+    /*public void cerrar() {
         emf.close();
-    }
-
-    
-    
-    
+    }*/
     private static boolean consumoCallBack(String alertCode, String customerId, String accountNumber, String accountType, Double amount) {
         boolean banderaCallBack = false;
         pruebas();
@@ -457,5 +452,21 @@ public abstract class FacadeAlerts<T> {
         if (hora.toUpperCase().replace(" ", "").equals("22:00PM")) {
 
         }
+    }
+
+    public boolean actividad_horario() {
+        EntityManager em = AbstractFacade.conexion();
+        boolean bandera_ = false;
+        try {
+            if (Util.actividad(em)) {
+                bandera_ = true;
+            }
+        } catch (Exception e) {
+            System.out.println("ERROR AL VERIFICAR EL HORARIO DE ACTIVIDAD");
+        } finally {
+            em.close();
+        }
+
+        return bandera_;
     }
 }

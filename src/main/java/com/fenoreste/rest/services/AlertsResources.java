@@ -2,6 +2,7 @@ package com.fenoreste.rest.services;
 
 import com.fenoreste.rest.Auth.Security;
 import com.fenoreste.rest.Dao.AlertsDAO;
+import com.github.cliftonlabs.json_simple.JsonObject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -18,6 +19,7 @@ import org.json.JSONObject;
  */
 @Path("api/alert")
 public class AlertsResources {
+
     @POST
     @Path("/subscription/set/validate")
     @Produces({MediaType.APPLICATION_JSON + ";charset=utf-8"})
@@ -33,7 +35,14 @@ public class AlertsResources {
         }
         JSONObject jsonRecibido = new JSONObject(cadena);
         System.out.println("JsonSubscriptionValidate:" + jsonRecibido);
+        JsonObject Error = new JsonObject();
         AlertsDAO dao = new AlertsDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
 
         String AlercustomerId_ = "", Alertcode_ = "", AlertAccountId_ = "";
         JSONArray rules_ = null;
@@ -89,8 +98,6 @@ public class AlertsResources {
         } catch (Exception e) {
             System.out.println("Error al convertir json:" + e.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
-        } finally {
-            dao.cerrar();
         }
     }
 
@@ -106,7 +113,15 @@ public class AlertsResources {
         }
         JSONObject jsonRecibido = new JSONObject(cadena);
         System.out.println("SubscriptionAlertExecute:" + jsonRecibido);
+        JsonObject Error = new JsonObject();
         AlertsDAO dao = new AlertsDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             String validationId = jsonRecibido.getString("validationId");
             String estatus = dao.executeAlert(validationId);
@@ -115,8 +130,6 @@ public class AlertsResources {
             return Response.status(Response.Status.OK).entity(json).build();
         } catch (Exception e) {
             System.out.println("Error al convertir json:" + e.getMessage());
-        } finally {
-            dao.cerrar();
         }
         return null;
     }

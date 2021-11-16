@@ -38,12 +38,20 @@ public class CustomerResources {
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
+        JsonObject Error = new JsonObject();
         CustomerDAO datos = new CustomerDAO();
         JsonObject JsonSocios = new JsonObject();
         JsonObject Not_Found = new JsonObject();
         JSONObject mainObject = new JSONObject(cadena);
         String cif = "";
         String valueFirstName = "", valueLastName = "";
+
+        if (!datos.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         if (cadena.contains("firstName")) {
             for (int i = 0; i < mainObject.length(); i++) {
                 JSONArray fi = mainObject.getJSONArray("filters");
@@ -79,10 +87,7 @@ public class CustomerResources {
             return Response.status(Response.Status.NO_CONTENT).entity(Not_Found.toString()).build();
         } catch (Exception e) {
             System.out.println("Error general:" + e.getMessage());
-            datos.cerrar();
             return null;
-        } finally {
-            datos.cerrar();
         }
     }
 
@@ -99,6 +104,13 @@ public class CustomerResources {
         JsonObject Not_Found = new JsonObject();
         JsonObject Error = new JsonObject();
         JsonObject JsonSocios = new JsonObject();
+
+        if (!datos.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             JSONObject jsonE = new JSONObject(cadena);
             String customerId = jsonE.getString("customerId");
@@ -110,10 +122,7 @@ public class CustomerResources {
             Not_Found.put("Error", "socios no encontrados");
             return Response.status(Response.Status.NO_CONTENT).entity(JsonSocios).build();
         } catch (Exception e) {
-            datos.cerrar();
             return null;
-        } finally {
-            datos.cerrar();
         }
     }
 
@@ -132,6 +141,13 @@ public class CustomerResources {
         JsonObject MiddleContacts = new JsonObject();
         JSONObject datosEntrada = new JSONObject(cadena);
         String ogs = datosEntrada.getString("customerId");
+
+        if (!datos.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             List<CustomerContactDetailsDTO> listaContacto = datos.ContactDetails(ogs);
             JsonArray json = new JsonArray();
@@ -158,10 +174,7 @@ public class CustomerResources {
             Error.put("Error", "Datos no encontrados");
             return Response.status(Response.Status.NO_CONTENT).entity(Error).build();
         } catch (Exception e) {
-            datos.cerrar();
             return null;
-        } finally {
-            datos.cerrar();
         }
     }
 
@@ -180,6 +193,14 @@ public class CustomerResources {
         JsonArrayBuilder arrayCuentas = Json.createArrayBuilder();
         JsonObject Not_Found = new JsonObject();
         JsonObject Error = null;
+        JsonObject Error_H = new JsonObject();
+
+        if (!datos.actividad_horario()) {
+            Error_H.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error_H);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error_H).build();
+        }
+
         try {
             JSONObject mainObject = new JSONObject(cadena);
             String cif = mainObject.getString("customerId");
@@ -198,10 +219,7 @@ public class CustomerResources {
             return Response.status(Response.Status.NOT_FOUND).entity(Not_Found).build();
         } catch (Exception e) {
             Error.put("title", "parametros incorrectos");
-            datos.cerrar();
             return null;
-        } finally {
-            datos.cerrar();
         }
     }
 
@@ -218,7 +236,15 @@ public class CustomerResources {
         JsonObject jsito = new JsonObject();
         JSONObject datosEntrada = new JSONObject(cadena);
         String customerId = datosEntrada.getString("customerId").trim();
+        JsonObject Error = new JsonObject();
         CustomerDAO dao = new CustomerDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         boolean bandera = dao.findCustomer(customerId);
         List<String> lista = new ArrayList();
         lista.add("Single-user Template");
@@ -235,9 +261,6 @@ public class CustomerResources {
             return Response.status(Response.Status.NO_CONTENT).entity(datosOk).build();
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());
-            dao.cerrar();
-        } finally {
-            dao.cerrar();
         }
         return null;
     }
@@ -267,7 +290,15 @@ public class CustomerResources {
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());
         }
+        JsonObject Error = new JsonObject();
         CustomerDAO dao = new CustomerDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             String cadenas = dao.validateSetContactDetails(customerId, cel, email);
             if (cadenas.equals("")) {
@@ -277,11 +308,8 @@ public class CustomerResources {
             datosOk.put("validationId", cadenas.toUpperCase());
             return Response.status(Response.Status.OK).entity(datosOk).build();
         } catch (Exception e) {
-            dao.cerrar();
             System.out.println("Error general");
             return null;
-        } finally {
-            dao.cerrar();
         }
     }
 
@@ -302,17 +330,23 @@ public class CustomerResources {
             validationId = datosEntrada.getString("validationId");
         } catch (Exception e) {
             datosError.put("Error", validationId + " No es parametro reconocido");
-            return Response.status(Response.Status.BAD_GATEWAY).entity(datosError).build();
+            //return Response.status(Response.Status.BAD_GATEWAY).entity(datosError).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(datosError).build();
         }
+        JsonObject Error = new JsonObject();
         CustomerDAO dao = new CustomerDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             String status = dao.executeSetContactDetails(validationId);
             datosOk.put("status", status);
             return Response.status(Response.Status.OK).entity(datosOk).build();
         } catch (Exception e) {
-            dao.cerrar();
-        } finally {
-            dao.cerrar();
         }
         return null;
     }
@@ -337,13 +371,22 @@ public class CustomerResources {
             balanceLedger = (String) lista.get(1);
         } catch (Exception e) {
             datosError.put("Error", "Request Json Failed");
-            return Response.status(Response.Status.BAD_GATEWAY).entity(datosError).build();
+            //return Response.status(Response.Status.BAD_GATEWAY).entity(datosError).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(datosError).build();
         }
+        JsonObject Error = new JsonObject();
         CustomerDAO dao = new CustomerDAO();
         Double[] arr = new Double[2];
         javax.json.JsonObject json1 = null;
         JsonArrayBuilder jsona = Json.createArrayBuilder();
         System.out.println("Json:" + json1);
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             if (!balanceLedger.equals("") && !balanceAvalaible.equals("")) {
                 arr = dao.position(customerId);
@@ -355,9 +398,6 @@ public class CustomerResources {
             datosOk.put("status", status);
             return Response.status(Response.Status.OK).entity(json1).build();
         } catch (Exception e) {
-            dao.cerrar();
-        } finally {
-            dao.cerrar();
         }
         return null;
     }
@@ -390,43 +430,49 @@ public class CustomerResources {
         } catch (Exception e) {
             datosError.put("Error:", "Request Json Failed");
             System.out.println("Error:" + e.getMessage());
-            return Response.status(Response.Status.BAD_GATEWAY).entity(datosError).build();
+            //return Response.status(Response.Status.BAD_GATEWAY).entity(datosError).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(datosError).build();
         }
+        JsonObject Error = new JsonObject();
         CustomerDAO dao = new CustomerDAO();
         Double[] arr = new Double[2];
         javax.json.JsonObject json1 = null;
         JsonArrayBuilder jsona = Json.createArrayBuilder();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
-            
+
             List<String[]> listad = dao.positionHistory0(customerId, fecha1.trim().replace("-", "/"), fecha2.trim().replace("-", "/"));
             for (int i = 0; i < listad.size(); i++) {
                 String arrs[] = new String[3];
                 arrs = listad.get(i);
-                
+
                 javax.json.JsonObject clientes1 = Json.createObjectBuilder()
-                                                      .add("balanceType", "ledger")
-                                                      .add("amount", Json.createObjectBuilder()
-                                                                         .add("amount", Double.parseDouble(arrs[1]))
-                                                                         .add("currencyCode", "MXN")
-                                                                         .build())
-                                                      .build();
+                        .add("balanceType", "ledger")
+                        .add("amount", Json.createObjectBuilder()
+                                .add("amount", Double.parseDouble(arrs[1]))
+                                .add("currencyCode", "MXN")
+                                .build())
+                        .build();
                 javax.json.JsonObject clientes2 = Json.createObjectBuilder()
-                                                      .add("balanceType", "available")
-                                                      .add("amount", Json.createObjectBuilder()
-                                                                         .add("amount", Double.parseDouble(arrs[0]))
-                                                                         .add("currencyCode", "MXN")
-                                                                         .build())
-                                                      .build();
-                jsona.add(Json.createObjectBuilder().add("currencyCode", "MXN").add("balances", Json.createArrayBuilder().add((JsonValue) clientes1).add((JsonValue) clientes2)).add("positionDate", arrs[2].replace("/","-")));
+                        .add("balanceType", "available")
+                        .add("amount", Json.createObjectBuilder()
+                                .add("amount", Double.parseDouble(arrs[0]))
+                                .add("currencyCode", "MXN")
+                                .build())
+                        .build();
+                jsona.add(Json.createObjectBuilder().add("currencyCode", "MXN").add("balances", Json.createArrayBuilder().add((JsonValue) clientes1).add((JsonValue) clientes2)).add("positionDate", arrs[2].replace("/", "-")));
             }
-            json1 = Json.createObjectBuilder().add("records",jsona).build();
-            
+            json1 = Json.createObjectBuilder().add("records", jsona).build();
+
             return Response.status(Response.Status.OK).entity(json1).build();
         } catch (Exception e) {
-            System.out.println("cayo aquiii:"+e.getMessage());
-            dao.cerrar();
-        } finally {
-            dao.cerrar();
+            System.out.println("cayo aquiii:" + e.getMessage());
         }
         return null;
     }

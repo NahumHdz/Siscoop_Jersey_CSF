@@ -6,6 +6,7 @@
 package com.fenoreste.rest.Dao;
 
 import DTO.AccountHoldersDTO;
+import DTO.Auxiliares_dDTO;
 import DTO.DetailsAccountDTO;
 import DTO.HoldsDTO;
 import DTO.opaDTO;
@@ -31,7 +32,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
@@ -42,10 +42,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
-import org.joda.time.format.DateTimeFormat;
-import org.xhtmlrenderer.pdf.ITextRenderer;
 
 /**
  *
@@ -53,16 +50,14 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
  */
 public abstract class FacadeAccounts<T> {
 
-    private static EntityManagerFactory emf;
-
     public FacadeAccounts(Class<T> entityClass) {
-        emf = AbstractFacade.conexion();
+
     }
 
     Utilidades Util = new Utilidades();
 
     public List<AccountHoldersDTO> validateInternalAccount(String accountId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         opaDTO opa = Util.opa(accountId);
 
         System.out.println("AccountIDDDDDDDDDDDDD:" + accountId);
@@ -93,7 +88,7 @@ public abstract class FacadeAccounts<T> {
     }
 
     public List<String> validateBeneficiary(String accountId, String accountType) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         int o = Integer.parseInt(accountId.substring(0, 6));
         int p = Integer.parseInt(accountId.substring(6, 11));
         int a = Integer.parseInt(accountId.substring(11, 19));
@@ -122,7 +117,7 @@ public abstract class FacadeAccounts<T> {
     }
 
     public String statements(String accountId, String initialDate, String finalDate, int pageSize, int pageStartIndex) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         File file = null;
         try {
             file = crear_llenar_txt(accountId, initialDate, finalDate);
@@ -172,7 +167,7 @@ public abstract class FacadeAccounts<T> {
     }
 
     public List<HoldsDTO> holds(String accountId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         List<HoldsDTO> listaDTO = new ArrayList<HoldsDTO>();
         opaDTO opa = Util.opa(accountId);
         try {
@@ -194,6 +189,7 @@ public abstract class FacadeAccounts<T> {
                     Query query1 = em.createNativeQuery(consulta2);
                     List<Object[]> listarf = query1.getResultList();
                     String fbloqueo = "";
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                     Productos pr = em.find(Productos.class, a.getAuxiliaresPK().getIdproducto());
                     System.out.println("io");
                     System.out.println("lista:" + listarf);
@@ -208,10 +204,12 @@ public abstract class FacadeAccounts<T> {
                                 String ff = "2021-03-30 00:00:00";
                                 Timestamp tss = Timestamp.valueOf(ff);
                                 System.out.println("cadena:" + tss);
-                                fbloqueo = String.valueOf(aa.getFechaactivacion());
+                                fbloqueo = sdf.format(aa.getFechaactivacion());
+                                //fbloqueo = String.valueOf(aa.getFechaactivacion());
                             } else if (aa.getEstatus() < 2) {
                                 System.out.println("salio del if");
-                                fbloqueo = String.valueOf(aa.getFechaape());
+                                //fbloqueo = String.valueOf(aa.getFechaape());
+                                fbloqueo = sdf.format(aa.getFechaape());
                             }
                             HoldsDTO dto = new HoldsDTO(accountId,
                                     Double.parseDouble(a.getGarantia().toString()),
@@ -247,10 +245,11 @@ public abstract class FacadeAccounts<T> {
         return fechaDate;
     }
 
-    public List<AuxiliaresD> History(String accountId, List<String> fechas, List<String> montos, String transactionType, int count, int pageSize, int pageStartIndex) {
-        EntityManager em = emf.createEntityManager();
+    public List<Auxiliares_dDTO> History(String accountId, List<String> fechas, List<String> montos, String transactionType, int count, int pageSize, int pageStartIndex) {
+        EntityManager em = AbstractFacade.conexion();
         List<transferencias_completadas_siscoop> dtoFacade = new ArrayList<>();
         List<AuxiliaresD> aux = new ArrayList<>();
+        List<Auxiliares_dDTO> listaDTO = new ArrayList<>();
         opaDTO opa = Util.opa(accountId);
         List<AuxiliaresD> listaContador = null;
         try {
@@ -273,10 +272,10 @@ public abstract class FacadeAccounts<T> {
                         + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
                         + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
                         + " AND " + complemento_transaction_type
-                        + " ORDER BY fecha desc LIMIT " + count;
+                        + " ORDER BY fecha DESC LIMIT " + count;
                 //Si solo esta marcado fecha,monto,transactionType
             } else if (fechas.size() > 0 && montos.size() > 0 && !transactionType.equals("") && count == 0) {
-                
+
                 if (transactionType.equals("A")) {
                     complemento_transaction_type = " cargoabono in(0,1)";
                 } else if (transactionType.equals("C")) {
@@ -289,20 +288,23 @@ public abstract class FacadeAccounts<T> {
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
                         + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
-                        + " AND " + complemento_transaction_type;
+                        + " AND " + complemento_transaction_type
+                        + " ORDER BY fecha DESC";
             } else if (fechas.size() > 0 && montos.size() > 0 && transactionType.equals("") && count == 0) {//Si solo esta marcado fechas y montos
                 System.out.println("Fechas y montos");
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
-                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1));
+                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
+                        + " ORDER BY fecha DESC";
             } else if (fechas.size() > 0 && montos.size() == 0 && transactionType.equals("") && count == 0) {//Si solo fechas
                 System.out.println("entroooooooooooooo aqui");
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
-                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'";
+                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
+                        + " ORDER BY fecha DESC";
             } else if (fechas.size() > 0 && montos.size() == 0 && !transactionType.equals("") && count > 0) {//Si solo vienen fechas,tipo transaccion y contador
                 System.out.println("Fechas,tipo transaccion y count");
                 if (transactionType.equals("A")) {
@@ -316,7 +318,7 @@ public abstract class FacadeAccounts<T> {
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND " + complemento_transaction_type
-                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "' ORDER BY fecha ASC LIMIT " + count;
+                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "' ORDER BY fecha DESC LIMIT " + count;
             } else if (fechas.size() > 0 && montos.size() == 0 && !transactionType.equals("") && count == 0) {//Si solo viene fecha,tipos de transacccion
                 if (transactionType.equals("A")) {
                     complemento_transaction_type = " cargoabono in(0,1)";
@@ -329,15 +331,16 @@ public abstract class FacadeAccounts<T> {
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND " + complemento_transaction_type
-                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'";
+                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
+                        + " ORDER BY fecha DESC";
 
             } else if (fechas.size() > 0 && montos.size() == 0 && transactionType.equals("") && count > 0) {//Solo fecha y contador
-                System.out.println("aquiiiiiiiiiiiiiiiiiiiiiiiii");  
+                System.out.println("aquiiiiiiiiiiiiiiiiiiiiiiiii");
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND " + complemento_transaction_type
-                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "' ORDER BY fecha ASC LIMIT " + count;
+                        + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "' ORDER BY fecha DESC LIMIT " + count;
             } else if (fechas.size() == 0 && montos.size() > 0 && !transactionType.equals("") && count > 0) {//Si solo montos,tipo de transaccion y contador de operacions
                 System.out.println("aquiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
                 if (transactionType.equals("A")) {
@@ -351,26 +354,28 @@ public abstract class FacadeAccounts<T> {
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND " + complemento_transaction_type
-                        + " AND monto between  " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1)) + " ORDER BY fecha ASC LIMIT " + count;
-             
+                        + " AND monto between  " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1)) + " ORDER BY fecha DESC LIMIT " + count;
+
             } else if (fechas.size() == 0 && montos.size() > 0 && transactionType.equals("") && count > 0) {//Si solo montos y tipo de transaccion
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND " + complemento_transaction_type
-                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1));
+                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
+                        + " ORDER BY fecha DESC";
             } else if (fechas.size() == 0 && montos.size() > 0 && transactionType.equals("") && count > 0) { //Si solo montos y contador de operaciones
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
-                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1)) + " ORDER BY fecha ASC LIMIT " + count;
+                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1)) + " ORDER BY fecha DESC LIMIT " + count;
 
             } else if (fechas.size() == 0 && montos.size() == 0 && transactionType.equals("") && count == 0) {//solo monto
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
-                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1));
-            }else if(fechas.size() == 0 && montos.size() ==0 && !transactionType.equals("") && count > 0 ){//Solo tipo de transaccion y contador
+                        + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
+                        + " ORDER BY fecha DESC";
+            } else if (fechas.size() == 0 && montos.size() == 0 && !transactionType.equals("") && count > 0) {//Solo tipo de transaccion y contador
                 if (transactionType.equals("A")) {
                     complemento_transaction_type = " cargoabono in(0,1)";
                 } else if (transactionType.equals("C")) {
@@ -378,10 +383,10 @@ public abstract class FacadeAccounts<T> {
                 } else if (transactionType.equals("D")) {
                     complemento_transaction_type = " cargoabono=1";
                 }
-                  sulta = " idorigenp = " + opa.getIdorigenp()
+                sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
-                        + " AND " + complemento_transaction_type + " ORDER BY fecha ASC LIMIT  "+count;
+                        + " AND " + complemento_transaction_type + " ORDER BY fecha DESC LIMIT  " + count;
             }
 
             System.out.println("CONSULTA: " + con + sulta);
@@ -393,18 +398,45 @@ public abstract class FacadeAccounts<T> {
             query.setMaxResults(pageSize);
             aux = query.getResultList();
 
+            for (int y = 0; y < aux.size(); y++) {
+                Auxiliares_dDTO adto = new Auxiliares_dDTO();
+                adto.setAuxiliaresDPK(aux.get(y).getAuxiliaresDPK());
+                adto.setCargoabono(aux.get(y).getCargoabono());
+                adto.setMonto(aux.get(y).getMonto());
+                adto.setMontoio(aux.get(y).getMontoio());
+                adto.setMontoim(aux.get(y).getMontoim());
+                adto.setMontoiva(aux.get(y).getMontoiva());
+                adto.setIdorigenc(aux.get(y).getIdorigenc());
+                adto.setPeriodo(aux.get(y).getPeriodo());
+                adto.setIdtipo(aux.get(y).getIdtipo());
+                adto.setIdpoliza(aux.get(y).getIdpoliza());
+                adto.setTipomov(aux.get(y).getTipomov());
+                adto.setSaldoec(aux.get(y).getSaldoec());
+                adto.setTransaccion(aux.get(y).getTransaccion());
+                adto.setMontoivaim(aux.get(y).getMontoivaim());
+                adto.setEfectivo(aux.get(y).getEfectivo());
+                adto.setDiasvencidos(aux.get(y).getDiasvencidos());
+                adto.setMontovencido(aux.get(y).getMontovencido());
+                adto.setTicket(aux.get(y).getTicket());
+                adto.setMontoidnc(aux.get(y).getMontoidnc());
+                adto.setMontoieco(aux.get(y).getMontoieco());
+                adto.setMontoidncm(aux.get(y).getMontoidncm());
+                adto.setMontoiecom(aux.get(y).getMontoiecom());
+                adto.setTotal_lista(listaContador.size());
+                listaDTO.add(adto);
+            }
             //lista = query.getResultList();
         } catch (Exception e) {
             System.out.println("Error al leer transacciones:" + e.getMessage());
         } finally {
             em.close();
         }
-        System.out.println("aux:"+aux);
-        return aux;
+
+        return listaDTO;
     }
 
     public List<AuxiliaresD> Histbbory_Size(String accountId, String initialDate, String finalDate) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         List<AuxiliaresD> aux = new ArrayList<>();
         opaDTO opa = Util.opa(accountId);
         try {
@@ -423,8 +455,8 @@ public abstract class FacadeAccounts<T> {
         }
         return aux;
     }
-    
-      public String RandomAlfa() {
+
+    public String RandomAlfa() {
         String CHAR_LOWER = "abcdefghijklmnopqrstuvwxyz";
         String CHAR_UPPER = CHAR_LOWER.toUpperCase();
         String NUMBER = "0123456789";
@@ -442,9 +474,8 @@ public abstract class FacadeAccounts<T> {
         return cadena;
     }
 
-      
     public DetailsAccountDTO detailsAccount(String accountId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         DetailsAccountDTO dto = new DetailsAccountDTO();
         opaDTO opa = Util.opa(accountId);
         try {
@@ -456,7 +487,7 @@ public abstract class FacadeAccounts<T> {
             Auxiliares a = (Auxiliares) query.getSingleResult();
             System.out.println("a:" + a);
             tipos_cuenta_siscoop tps = em.find(tipos_cuenta_siscoop.class,
-                     a.getAuxiliaresPK().getIdproducto());
+                    a.getAuxiliaresPK().getIdproducto());
             System.out.println("tps:" + tps);
             String e = "";
             if (a.getEstatus() == 0) {
@@ -485,7 +516,7 @@ public abstract class FacadeAccounts<T> {
                     sucursal,
                     String.valueOf(a.getFechaactivacion()));*/
             Productos producto = em.find(Productos.class,
-                     a.getAuxiliaresPK().getIdproducto());
+                    a.getAuxiliaresPK().getIdproducto());
 
             String fechaTrabajo = "SELECT date(fechatrabajo) FROM origenes limit 1";
             Query queryOrigenes = em.createNativeQuery(fechaTrabajo);
@@ -495,6 +526,7 @@ public abstract class FacadeAccounts<T> {
             System.out.println("FechaTrabajo: " + date);
             //date = date.plusDays(7);
             String date_semana = String.valueOf(date);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             if (producto.getTipoproducto() == 1 || producto.getTipoproducto() == 8) {
                 //Corremos sai_auxiliar para obetener datos  
 
@@ -541,7 +573,9 @@ public abstract class FacadeAccounts<T> {
             dto.setProductCode(String.valueOf(a.getAuxiliaresPK().getIdproducto()));
             dto.setStatus(e);
             dto.setSucursal(sucursal);
-            dto.setOpenedDate(String.valueOf(String.valueOf(a.getFechaactivacion())));
+            String Fe_Ac = sdf.format(a.getFechaactivacion());
+            dto.setOpenedDate(Fe_Ac);
+            //dto.setOpenedDate(String.valueOf(String.valueOf(a.getFechaactivacion())));
             dto.setTasa(a.getTasaio().doubleValue());
 
         } catch (Exception e) {
@@ -553,7 +587,7 @@ public abstract class FacadeAccounts<T> {
     }
 
     public String Holders(String accountId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         String nombre = "";
         opaDTO opa = Util.opa(accountId);
         try {
@@ -564,7 +598,7 @@ public abstract class FacadeAccounts<T> {
             Auxiliares a = (Auxiliares) query.getSingleResult();
             PersonasPK pk = new PersonasPK(a.getIdorigen(), a.getIdgrupo(), a.getIdsocio());
             Persona p = em.find(Persona.class,
-                     pk);
+                    pk);
             System.out.println("p:" + p);
             nombre = p.getNombre() + " " + p.getAppaterno() + " " + p.getApmaterno();
         } catch (Exception e) {
@@ -574,11 +608,11 @@ public abstract class FacadeAccounts<T> {
     }
 
     public String accountType(int idproducto) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         tipos_cuenta_siscoop tip = null;
         try {
             tip = em.find(tipos_cuenta_siscoop.class,
-                     idproducto);
+                    idproducto);
         } catch (Exception e) {
             System.out.println("Error al buscar tipo cuenta siscoop:" + e.getMessage());
         }
@@ -596,10 +630,10 @@ public abstract class FacadeAccounts<T> {
     public File crear_llenar_txt(String accountId, String initialDate, String finalDate) {
         opaDTO opa = Util.opa(accountId);
         int numeroAleatorio = (int) (Math.random() * 9 + 1);
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         File file = null;
         Productos pr = em.find(Productos.class,
-                 opa.getIdproducto());
+                opa.getIdproducto());
         String nombre_formato = "";
         String nombre_archivo = "";
         if (pr.getTipoproducto() == 1) {
@@ -652,7 +686,10 @@ public abstract class FacadeAccounts<T> {
             FileReader fr = new FileReader(file);
             BufferedReader br = new BufferedReader(fr);
             String linea;
+            String linea_contenedor = "";
+
             while ((linea = br.readLine()) != null) {
+
                 if (linea.contains("/usr/local/saicoop/img_estado_cuenta_ahorros/")) {
                     String cade = ruta();
                     System.out.println("Cade:" + cade.replace("\\", "/"));
@@ -662,8 +699,26 @@ public abstract class FacadeAccounts<T> {
                     System.out.println("si tele");
                     linea = linea.replace(" & ", " y ");
                 }
-                out.write(linea);
+                ////cambio en el contenedor de html para ajustar al convetir a pdf
+                if (linea.contains(".contenedor")) {
+                    linea_contenedor = linea_contenedor + linea;
+                }
+                if (linea.contains("height:") && linea_contenedor.contains(".contenedor")) {
+                    String[] lineas = linea.split(":");
+                    String linea_despues_de_2puntos = lineas[1].replace(" ", "");
+                    linea_despues_de_2puntos = ": auto;";
+                    String linea_reconstruida = lineas[0] + linea_despues_de_2puntos;
+                    linea = linea_reconstruida;
+                }
+                if (linea.contains(" width:") && linea_contenedor.contains(".contenedor")) {
+                    String[] lineas = linea.split(":");
+                    String linea_despues_de_2puntos = lineas[1].replace(" ", "");
+                    linea_despues_de_2puntos = ": auto;";
+                    String linea_reconstruida = lineas[0] + linea_despues_de_2puntos;
+                    linea = linea_reconstruida;
+                }
 
+                out.write(linea);
             }
             out.close();
         } catch (Exception e) {
@@ -701,7 +756,7 @@ public abstract class FacadeAccounts<T> {
     }
 
     public boolean validarCuenta(String accountId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         opaDTO opa = Util.opa(accountId);
         try {
             String consulta = "SELECT count(*) FROM auxiliares a WHERE "
@@ -722,7 +777,23 @@ public abstract class FacadeAccounts<T> {
 
     }
 
-    public void cerrar() {
-        emf.close();
+    public boolean actividad_horario() {
+        EntityManager em = AbstractFacade.conexion();
+        boolean bandera_ = false;
+        try {
+            if (Util.actividad(em)) {
+                bandera_ = true;
+            }
+        } catch (Exception e) {
+            System.out.println("ERROR AL VERIFICAR EL HORARIO DE ACTIVIDAD");
+        } finally {
+            em.close();
+        }
+
+        return bandera_;
     }
+
+    /*public void cerrar() {
+        emf.close();
+    }*/
 }

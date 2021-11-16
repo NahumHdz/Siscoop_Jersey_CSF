@@ -17,22 +17,26 @@ import javax.persistence.criteria.Root;
  * @author root
  */
 public abstract class AbstractFacade<T> {
-    private EntityManager em;
+
+    //private EntityManager em;
+    EntityManager em;
     private final Class<T> entityClass;
 
     public AbstractFacade(Class<T> entityClass) {
         this.entityClass = entityClass;
     }
-    public static EntityManagerFactory conexion() {
-    	System.out.println("Llegando a abstract");
-        Fichero_Configuraciones  datos = new Fichero_Configuraciones();
-        EntityManagerFactory emf=null;
-        JPAUtil jpa=new JPAUtil();
-        emf=jpa.getEntityManagerFactory(datos.getHost(),datos.getDatabase());
-        return emf;
-    }
-    
 
+    public static EntityManager conexion() {
+        System.out.println("Llegando a abstract");
+        Fichero_Configuraciones datos = new Fichero_Configuraciones();
+        EntityManager em = null;
+        JPAUtil jpa = new JPAUtil();
+        em = jpa.getEntityManager(datos.getHost(), datos.getDatabase());
+        System.out.println("em:"+em);
+        return em;
+    }
+
+    /*
     public int inserta(T entity) {
         EntityManagerFactory emf=conexion();
         em = emf.createEntityManager();  
@@ -126,5 +130,5 @@ public abstract class AbstractFacade<T> {
        em.close();
        return conteo;
     }
-
+     */
 }

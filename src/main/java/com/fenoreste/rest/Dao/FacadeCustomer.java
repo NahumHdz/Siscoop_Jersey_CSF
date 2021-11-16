@@ -29,18 +29,16 @@ import java.util.Date;
 
 public abstract class FacadeCustomer<T> {
 
-    private static EntityManagerFactory emf;
+    public FacadeCustomer(Class<T> entityClass) {
+
+    }
 
     List<Object[]> lista = null;
 
     Utilidades Util = new Utilidades();
 
-    public FacadeCustomer(Class<T> entityClass) {
-        emf = AbstractFacade.conexion();
-    }
-
     public List<CustomerSearchDTO> search(String ogs, String nombre, String appaterno) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         List<CustomerSearchDTO> listaC = new ArrayList<CustomerSearchDTO>();
         CustomerSearchDTO client = null;
         try {
@@ -106,7 +104,7 @@ public abstract class FacadeCustomer<T> {
     }
 
     public CustomerDetailsDTO details(String ogs) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         List<CustomerDetailsDTO> listaC = new ArrayList<CustomerDetailsDTO>();
         CustomerDetailsDTO client = new CustomerDetailsDTO();
         try {
@@ -117,13 +115,15 @@ public abstract class FacadeCustomer<T> {
             Persona p = em.find(Persona.class, pk);
             String name = "", customerType = "";
             name = p.getNombre() + " " + p.getAppaterno() + " " + p.getApmaterno();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String birthDate=sdf.format(p.getFechanacimiento());
             if (p.getRazonSocial() == null) {
                 customerType = "individual";
             } else {
                 customerType = "grupal";
             }
             client.setNationalId(p.getCurp());
-            client.setBirthDate(p.getFechanacimiento().toString().replace("/", "-"));
+            client.setBirthDate(birthDate.replace("/","-"));
             client.setCustomerId(ogs);
             client.setName(name);
             client.setCustomerType("individual");
@@ -139,7 +139,7 @@ public abstract class FacadeCustomer<T> {
     }
 
     public List<CustomerContactDetailsDTO> ContactDetails(String ogs) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         Query query = null;
         List<Object[]> ListaObjetos = null;
         ogsDTO id_ogs = Util.ogs(ogs);
@@ -189,7 +189,7 @@ public abstract class FacadeCustomer<T> {
     }
 
     public List<CustomerAccountDTO> Accounts(String customerId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         ogsDTO ogs = Util.ogs(customerId);
         Query query = null;
         String consulta = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tp USING(idproducto) WHERE "
@@ -262,7 +262,7 @@ public abstract class FacadeCustomer<T> {
 
     public boolean findCustomer(String ogs) {
         boolean bandera = false;
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         ogsDTO id_ogs = Util.ogs(ogs);
         try {
             Query query = em.createNativeQuery("SELECT * FROM personas WHERE "
@@ -271,13 +271,16 @@ public abstract class FacadeCustomer<T> {
                 bandera = true;
             }
         } catch (Exception e) {
-            cerrar();
+            //cerrar();
+            em.close();
+        } finally {
+            em.close();
         }
         return bandera;
     }
 
     public String validateSetContactDetails(String customerId, String phone1, String email) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         String CHAR_LOWER = "abcdefghijklmnopqrstuvwxyz";
         String CHAR_UPPER = CHAR_LOWER.toUpperCase();
         String NUMBER = "0123456789";
@@ -357,7 +360,7 @@ public abstract class FacadeCustomer<T> {
     }
 
     public String executeSetContactDetails(String validationId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         String estatus = "";
         try {
             String consulta = "SELECT * FROM validaciones_telefonos_siscoop WHERE validacion='" + validationId + "'";
@@ -377,7 +380,7 @@ public abstract class FacadeCustomer<T> {
     }
 
     public Double[] position(String customerId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         ogsDTO ogs = Util.ogs(customerId);
         double saldo_congelado = 0.0;
         double saldo_disponible = 0.0;
@@ -485,7 +488,7 @@ public abstract class FacadeCustomer<T> {
     }
 
     public List<String[]> positionHistory0(String customerId, String fecha1, String fecha2) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         ogsDTO ogs = Util.ogs(customerId);
         double ec_saldo_anterior = 0.0, v1 = 0.0, v2 = 0.0, v3 = 0.0, v4 = 0.0, v5 = 0.0, v6 = 0.0, v7 = 0.0, v8 = 0.8;
         int c0 = 00, c01 = 0, c2 = 0, c3 = 0;
@@ -623,7 +626,7 @@ public abstract class FacadeCustomer<T> {
     }
 
     public List<Double[]> positionHistory1(String customerId, String fecha1, String fecha2) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         ogsDTO ogs = Util.ogs(customerId);
         Double ledGer = 0.0, avalaible = 0.0, saldo_congelado = 0.0, saldo_disponible = 0.0;
         Calendar c = Calendar.getInstance();
@@ -772,8 +775,23 @@ public abstract class FacadeCustomer<T> {
         return fechaDate;
     }
 
-    public void cerrar() {
-        emf.close();
+    public boolean actividad_horario() {
+        EntityManager em = AbstractFacade.conexion();
+        boolean bandera_ = false;
+        try {
+            if (Util.actividad(em)) {
+                bandera_ = true;
+            }
+        } catch (Exception e) {
+            System.out.println("ERROR AL VERIFICAR EL HORARIO DE ACTIVIDAD");
+        } finally {
+            em.close();
+        }
+
+        return bandera_;
     }
 
+    /*public void cerrar() {
+        emf.close();
+    }*/
 }

@@ -7,13 +7,15 @@ package com.fenoreste.rest.Util;
 
 import DTO.ogsDTO;
 import DTO.opaDTO;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 /**
  *
  * @author nahum
  */
 public class Utilidades {
-    
+
     public ogsDTO ogs(String cadena_ogs) {
         ogsDTO ogs = new ogsDTO();
         try {
@@ -25,7 +27,7 @@ public class Utilidades {
         }
         return ogs;
     }
-    
+
     public opaDTO opa(String cadena_opa) {
         opaDTO opa = new opaDTO();
         try {
@@ -36,5 +38,19 @@ public class Utilidades {
             System.out.println("Error: " + e.getMessage());
         }
         return opa;
+    }
+
+    public boolean actividad(EntityManager em) {
+        boolean bandera = false;
+
+        try {
+            String actividad = "SELECT sai_bankingly_servicio_activo_inactivo()";
+            Query query = em.createNativeQuery(actividad);
+            bandera = (boolean) query.getSingleResult();
+        } catch (Exception e) {
+            System.out.println("ERROR AL RECUPERAR EL TIEMPO DE ACTIVIDAD: " + e.getMessage());
+        }
+        System.out.println("BANDERA HORARIO: " + bandera);
+        return bandera;
     }
 }

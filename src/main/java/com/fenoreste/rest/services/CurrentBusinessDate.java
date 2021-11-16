@@ -25,6 +25,7 @@ import javax.ws.rs.core.Response;
  */
 @Path("/api/currentbusinessdate")
 public class CurrentBusinessDate {
+
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
@@ -37,17 +38,16 @@ public class CurrentBusinessDate {
         String dia = Integer.toString(c1.get(5));
         String mes = Integer.toString(c1.get(2) + 1);
         String annio = Integer.toString(c1.get(1));
-        if(dia.length()==1 ){
-            dia="0"+dia;
+        if (dia.length() == 1) {
+            dia = "0" + dia;
         }
-        if(mes.length()==1 ){
-            mes="0"+mes;
+        if (mes.length() == 1) {
+            mes = "0" + mes;
         }
-        String BusinessDate = annio+ "-" + mes + "-" + dia;
+        String BusinessDate = annio + "-" + mes + "-" + dia;
         JsonObject json = new JsonObject();
         json.put("currentBusinessDate", BusinessDate);
         return Response.status(Response.Status.OK).entity(json).build();
-    }  
-    
+    }
 
 }

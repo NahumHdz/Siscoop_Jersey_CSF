@@ -7,6 +7,7 @@ package com.fenoreste.rest.services;
 
 import com.fenoreste.rest.Auth.Security;
 import com.fenoreste.rest.Dao.AccountsDAO;
+import com.github.cliftonlabs.json_simple.JsonObject;
 import java.util.List;
 import javax.json.Json;
 import javax.json.JsonValue;
@@ -34,7 +35,16 @@ public class ValidateBeneficiary {
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
+
+        JsonObject Error = new JsonObject();
         AccountsDAO acDao = new AccountsDAO();
+
+        if (!acDao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         String accountId = "";
         System.out.println("Cadena:" + cadena);
         String accountType = "";
@@ -55,12 +65,10 @@ public class ValidateBeneficiary {
             System.out.println("AccountNumber:" + accountId + "\n accounType:" + accountType + "\n name:" + nameb + "\n address:" + address);
             List<String> lista = acDao.validateBeneficiary(accountId, accountType.toUpperCase());
             javax.json.JsonObject create = null;
-            create = Json.createObjectBuilder().add("beneficiaryAccount",Json.createObjectBuilder().add("accountNumber", lista.get(2)).add("accountType", lista.get(1)).add("accountSchemaType", "internal").build()).add("beneficiary",Json.createObjectBuilder().add("name", lista.get(0)).add("countryCode", "MX").build()).build();
+            create = Json.createObjectBuilder().add("beneficiaryAccount", Json.createObjectBuilder().add("accountNumber", lista.get(2)).add("accountType", lista.get(1)).add("accountSchemaType", "internal").build()).add("beneficiary", Json.createObjectBuilder().add("name", lista.get(0)).add("countryCode", "MX").build()).build();
             return Response.status(Response.Status.OK).entity(create).build();
         } catch (Exception e) {
             System.out.println("Error al obtener objetos Json:" + e.getMessage());
-        } finally {
-            acDao.cerrar();
         }
         return null;
     }

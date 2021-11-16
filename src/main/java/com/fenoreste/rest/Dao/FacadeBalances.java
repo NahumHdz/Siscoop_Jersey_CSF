@@ -28,17 +28,16 @@ import javax.persistence.Query;
  */
 public abstract class FacadeBalances<T> {
 
-    private static EntityManagerFactory emf;
-    List<Object[]> lista = null;
-    
-    Utilidades Util = new Utilidades();
-    
     public FacadeBalances(Class<T> entityClass) {
-        emf = AbstractFacade.conexion();
+
     }
 
-    public ArrayList<BalancesDTO> balances(String[]accountsId) {
-        EntityManager em = emf.createEntityManager();
+    List<Object[]> lista = null;
+
+    Utilidades Util = new Utilidades();
+
+    public ArrayList<BalancesDTO> balances(String[] accountsId) {
+        EntityManager em = AbstractFacade.conexion();
         System.out.println("length:" + accountsId.length);
         String op = "", aa = "";
         Double Ledger = 0.0;
@@ -86,8 +85,8 @@ public abstract class FacadeBalances<T> {
 
                 } else if (pr.getTipoproducto() == 0) {
                     if (pr.getNombre().toUpperCase().contains("NAVI")) {
-                        Ledger=a.getSaldo().doubleValue();
-                        Avalaible=0.0;
+                        Ledger = a.getSaldo().doubleValue();
+                        Avalaible = 0.0;
                     } else {
                         if (Double.parseDouble(a.getGarantia().toString()) > 0) {
                             garantia = garantia + Double.parseDouble(a.getGarantia().toString());
@@ -149,7 +148,23 @@ public abstract class FacadeBalances<T> {
         return fechaDate;
     }
 
-    public void cerrar() {
-        emf.close();
+    public boolean actividad_horario() {
+        EntityManager em = AbstractFacade.conexion();
+        boolean bandera_ = false;
+        try {
+            if (Util.actividad(em)) {
+                bandera_ = true;
+            }
+        } catch (Exception e) {
+            System.out.println("ERROR AL VERIFICAR EL HORARIO DE ACTIVIDAD");
+        } finally {
+            em.close();
+        }
+
+        return bandera_;
     }
+
+    /*public void cerrar() {
+        emf.close();
+    }*/
 }

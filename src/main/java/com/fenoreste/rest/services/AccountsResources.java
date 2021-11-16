@@ -2,14 +2,13 @@ package com.fenoreste.rest.services;
 
 import com.fenoreste.rest.Auth.Security;
 import DTO.AccountHoldersDTO;
+import DTO.Auxiliares_dDTO;
 import DTO.DetailsAccountDTO;
 import DTO.HoldsDTO;
 import com.fenoreste.rest.Dao.AccountsDAO;
 import com.fenoreste.rest.Dao.TransfersDAO;
 import com.fenoreste.rest.Entidades.AuxiliaresD;
-import com.fenoreste.rest.Entidades.transferencias_completadas_siscoop;
 import com.github.cliftonlabs.json_simple.JsonObject;
-import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -53,18 +52,23 @@ public class AccountsResources {
             System.out.println("Error:" + e.getMessage());
         }
         System.out.println("accountId:" + accountId);
+        JsonObject Error = new JsonObject();
         TransfersDAO dao = new TransfersDAO();
         String msj = "";
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
 
             listaHolders = dao.accountHolders(accountId);
             jsonb.put("holders", listaHolders);
             return Response.status(Response.Status.OK).entity(jsonb).build();
         } catch (Exception e) {
-            dao.cerrar();
             System.out.println("Error en response:" + e.getMessage());
-        } finally {
-            dao.cerrar();
         }
         return null;
     }
@@ -80,8 +84,17 @@ public class AccountsResources {
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
+
+        JsonObject Error = new JsonObject();
         AccountsDAO acDao = new AccountsDAO();
         String accountId = "";
+
+        if (!acDao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         System.out.println("Cadena:" + cadena);
         try {
             JSONObject jsonRecibido = new JSONObject(cadena);
@@ -100,10 +113,7 @@ public class AccountsResources {
             }
 
         } catch (Exception e) {
-            acDao.cerrar();
             System.out.println("Error al obtener objetos Json:" + e.getMessage());
-        } finally {
-            acDao.cerrar();
         }
         return null;
     }
@@ -115,19 +125,28 @@ public class AccountsResources {
     public Response statements(String cadena, @HeaderParam("authorization") String authString) {
 
         Security scr = new Security();
-        System.out.println("cadena:" + cadena);
+        System.out.println("CADENA: " + cadena);
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
+
+        JsonObject Error = new JsonObject();
         AccountsDAO acDao = new AccountsDAO();
         String accountId = "";
         int pageSize = 0;
         int pageStartIndex = 0;
+
+        if (!acDao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             JSONObject jsonRecibido = new JSONObject(cadena);
             JSONArray listaFil = jsonRecibido.getJSONArray("filters");
             System.out.println("ListaFil:" + listaFil);
-            System.out.println("Cadenaaaaa:" + cadena);
+            //System.out.println("Cadenaaaaa:" + cadena);
             String id = "";
             String fd = "";
             for (int i = 0; i < listaFil.length(); i++) {
@@ -151,8 +170,6 @@ public class AccountsResources {
             return Response.status(Response.Status.OK).entity(Found).build();
         } catch (Exception e) {
             System.out.println("Error al obtener objetos Json:" + e.getMessage());
-        } finally {
-            acDao.cerrar();
         }
         return null;
     }
@@ -168,7 +185,14 @@ public class AccountsResources {
         }
         JSONObject jsonre = new JSONObject(cadena);
         String accountId = "";
+        JsonObject Error = new JsonObject();
         AccountsDAO dao = new AccountsDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
 
         try {
             accountId = jsonre.getString("accountId");
@@ -191,8 +215,6 @@ public class AccountsResources {
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());
             return null;
-        } finally {
-            dao.cerrar();
         }
     }
 
@@ -208,12 +230,21 @@ public class AccountsResources {
         }
         String accountId = "", initialDate = "", finalDate = "";
         int pageSize = 0, pageStartIndex = 0;
+
+        JsonObject Error = new JsonObject();
         AccountsDAO dao = new AccountsDAO();
         JSONObject jsonRecibido = new JSONObject(cadena);
         List<String> lista_montos = new ArrayList<>();
         List<String> lista_fechas = new ArrayList<>();
         String transaction_type = "";
         int count = 0;
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             JSONArray listaFil = jsonRecibido.getJSONArray("filters");
             System.out.println("ListaFil:" + listaFil);
@@ -239,7 +270,8 @@ public class AccountsResources {
                     count = Integer.parseInt(String.valueOf(json_pos_i.getInt("value")));
                 }
             }
-            List<AuxiliaresD> lista = dao.History(accountId, lista_fechas, lista_montos, transaction_type, count, pageSize, pageStartIndex);
+
+            List<Auxiliares_dDTO> lista = dao.History(accountId, lista_fechas, lista_montos, transaction_type, count, pageSize, pageStartIndex);
             //List<AuxiliaresD> lista_size = dao.History_Size(accountId, initialDate, finalDate);
             JsonObject create = null;
             JsonArrayBuilder listaJson = Json.createArrayBuilder();
@@ -250,12 +282,15 @@ public class AccountsResources {
             String fe = "";
             double monto = 0.0;
             String referencia = "";
+            int to_reg = 0;
             for (int j = 0; j < lista.size(); j++) {
-                AuxiliaresD ax = lista.get(j);
-                fechaDate = formato.parse(String.valueOf(ax.getAuxiliaresDPK().getFecha()).substring(0, 10));
-                fe = sdf.format(fechaDate);
-
+                to_reg = lista.get(j).getTotal_lista();
+                Auxiliares_dDTO ax = lista.get(j);
+                /*fechaDate = formato.parse(String.valueOf(ax.getAuxiliaresDPK().getFecha()).substring(0, 10));
+                fe = sdf.format(fechaDate);*/
+                fe = sdf.format(ax.getAuxiliaresDPK().getFecha());
                 System.out.println("Fe:" + fe + " " + ax.getCargoabono() + " " + ax.getMonto());
+
                 ZonedDateTime zonedDateTime = ZonedDateTime.parse(fe.replace("/", "-") + "T00:00:00.000-07:00");
                 String feR = String.valueOf(zonedDateTime);
                 //System.out.println("DTOCtaOrigen:" + dto.getCuentaorigen());
@@ -268,13 +303,13 @@ public class AccountsResources {
                 }
                 javax.json.JsonObject jsi = Json.createObjectBuilder().add("transactionId", referencia.replace("-", "")).add("amount", Json.createObjectBuilder().add("amount", monto).add("currencyCode", "MXN").build()).add("postingDate", feR).add("valueDate", fe.replace("/", "-")).add("runningBalance", Json.createObjectBuilder().add("amount", ax.getSaldoec()).add("currencyCode", "MXN").build()).add("description", ax.getTicket()).add("originatorReferenceId", referencia).add("originatorCode", referencia.replace("-", "")).add("description2", Json.createObjectBuilder().add("value", referencia.replace("-", "")).add("valueType", "string").add("isSensitive", false).build()).build();
                 listaJson.add(jsi);
+
             }
-            javax.json.JsonObject Found = Json.createObjectBuilder().add("totalRecords", lista.size()).add("queryId", "").add("transactions", listaJson).build();
+
+            javax.json.JsonObject Found = Json.createObjectBuilder().add("totalRecords", to_reg).add("queryId", "").add("transactions", listaJson).build();
             return Response.status(Response.Status.OK).entity(Found).build();
         } catch (Exception e) {
-            System.out.println("Error:" + e.getMessage());
-        } finally {
-            dao.cerrar();
+            System.out.println("Error: " + e.getMessage());
         }
         return null;
     }
@@ -288,9 +323,18 @@ public class AccountsResources {
         if (!scr.isUserAuthenticated(authString)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
+
         String accountId = "";
+        JsonObject Error = new JsonObject();
         AccountsDAO dao = new AccountsDAO();
         JSONObject jsonRecibido = new JSONObject(cadena);
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             accountId = jsonRecibido.getString("accountId");
             DetailsAccountDTO dto = dao.detailsAccount(accountId);
@@ -319,7 +363,7 @@ public class AccountsResources {
                                 .add("description", "IBAN")
                                 .add("isSensitive", true)
                                 .add("valueType", "string")
-                                .add("value", "******" + dto.getAccountId().substring(15, 19))
+                                .add("value", dto.getAccountId().substring(0, 2) + "***************" + dto.getAccountId().substring(17, 19))
                                 .build())
                         .add("interestRate", Json.createObjectBuilder()
                                 .add("value", dto.getTasa())
@@ -370,15 +414,13 @@ public class AccountsResources {
                                 .add("description", "IBAN")
                                 .add("isSensitive", true)
                                 .add("valueType", "string")
-                                .add("value", "******" + dto.getAccountId().substring(15, 19))
+                                .add("value", dto.getAccountId().substring(0, 2) + "***************" + dto.getAccountId().substring(17, 19))
                                 .build())).build();
             }
 
             return Response.status(Response.Status.OK).entity(jsi).build();
         } catch (Exception e) {
             System.out.println("Error:" + e.getMessage());
-        } finally {
-            dao.cerrar();
         }
         return null;
     }

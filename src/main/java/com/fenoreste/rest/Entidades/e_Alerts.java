@@ -14,6 +14,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
 /**
  *
  * @author Elliot
@@ -24,7 +25,6 @@ import javax.persistence.Table;
  * and open the template in the editor.
  */
 
-
 @Entity
 @Table(name = "e_alertas")
 public class e_Alerts implements Serializable {
@@ -34,30 +34,32 @@ public class e_Alerts implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sec_validaciones_tsiscoop")
     @SequenceGenerator(name = "sec_validaciones_tsiscoop", sequenceName = "sec_validaciones_tsiscoop")
     private Integer id;
-    @Column(name="alertcode")
+    @Column(name = "alertcode")
     private String alertCode;
-    @Column(name="enabled")
+    @Column(name = "enabled")
     private boolean enabled;
-    @Column(name="accountid")
+    @Column(name = "accountid")
     private String accountId;
-    @Column(name="customerid")
+    @Column(name = "customerid")
     private String customerid;
-    @Column(name="property")
+    @Column(name = "property")
     private String property;
-    @Column(name="monto")
+    @Column(name = "monto")
     private Double monto;
-    @Column(name="operator")
+    @Column(name = "operator")
     private String operator;
-    @Column(name="ruletype")
+    @Column(name = "ruletype")
     private String ruleType;
-    @Column(name="fechaejecucion")
+    @Column(name = "fechaejecucion")
     private Date fechaejecucion;
-    
+    @Column(name = "alert_enviado")
+    private boolean alert_enviado;
+
     public e_Alerts() {
-        
+
     }
 
-    public e_Alerts(Integer id, String alertCode, boolean enabled, String accountId, String customerid, String property, Double monto, String operator, String ruleType, Date fechaejecucion) {
+    public e_Alerts(Integer id, String alertCode, boolean enabled, String accountId, String customerid, String property, Double monto, String operator, String ruleType, Date fechaejecucion, boolean alert_enviado) {
         this.id = id;
         this.alertCode = alertCode;
         this.enabled = enabled;
@@ -68,6 +70,7 @@ public class e_Alerts implements Serializable {
         this.operator = operator;
         this.ruleType = ruleType;
         this.fechaejecucion = fechaejecucion;
+        this.alert_enviado = alert_enviado;
     }
 
     public Integer getId() {
@@ -150,13 +153,17 @@ public class e_Alerts implements Serializable {
         this.fechaejecucion = fechaejecucion;
     }
 
-    @Override
-    public String toString() {
-        return "e_Alerts{" + "id=" + id + ", alertCode=" + alertCode + ", enabled=" + enabled + ", accountId=" + accountId + ", customerid=" + customerid + ", property=" + property + ", monto=" + monto + ", operator=" + operator + ", ruleType=" + ruleType + ", fechaejecucion=" + fechaejecucion + '}';
+    public boolean isAlert_enviado() {
+        return alert_enviado;
     }
 
-    
+    public void setAlert_enviado(boolean alert_enviado) {
+        this.alert_enviado = alert_enviado;
+    }
 
-        
-    
+    @Override
+    public String toString() {
+        return "e_Alerts{" + "id=" + id + ", alertCode=" + alertCode + ", enabled=" + enabled + ", accountId=" + accountId + ", customerid=" + customerid + ", property=" + property + ", monto=" + monto + ", operator=" + operator + ", ruleType=" + ruleType + ", fechaejecucion=" + fechaejecucion + ", alert_enviado=" + alert_enviado + '}';
+    }
+
 }

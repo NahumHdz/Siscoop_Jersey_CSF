@@ -44,16 +44,14 @@ import javax.persistence.Query;
  */
 public abstract class FacadeInstructions<T> {
 
-    private static EntityManagerFactory emf;
-
     Utilidades util = new Utilidades();
 
     public FacadeInstructions(Class<T> entityClass) {
-        emf = AbstractFacade.conexion();//Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);    
+
     }
 
     public List<MonetaryInstructionDTO> monetaryInistruction(String customerId, String fechaInicio, String fechaFinal) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         List<MonetaryInstructionDTO> listaMonetary = new ArrayList<>();
 
         try {
@@ -99,7 +97,7 @@ public abstract class FacadeInstructions<T> {
         String mensageDinamico = "";
 
         validateMonetaryInstructionDTO validateMonetary = new validateMonetaryInstructionDTO();
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         //String[] fees = new String[0];
         String validationId = "";
 
@@ -169,7 +167,7 @@ public abstract class FacadeInstructions<T> {
     }
 
     public String executeMonetaryInstruction(String validationId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         String mensaje = "";
         try {
             //Buscamos la validacion guardada no ejecutada con el id que se nos proporciona
@@ -367,6 +365,12 @@ public abstract class FacadeInstructions<T> {
                         em.persist(ejecutar_transferencia);
                         mensaje = "completed";
                         em.getTransaction().commit();
+
+                        ////////ENVIO ALERTA
+                        System.out.println("aqui termina biennnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn");
+                        System.out.println("OGSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS: " + validacion_guardada.getCustomerId());
+                        System.out.println("OPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: " + validacion_guardada.getCuentaorigen());
+
                     }
                 }
             } else {
@@ -385,7 +389,7 @@ public abstract class FacadeInstructions<T> {
     }
 
     public transferencias_completadas_siscoop detailsMonetary(String validationId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         transferencias_completadas_siscoop transferencia = null;
         try {
             String consulta = "SELECT * FROM e_transferenciassiscoop WHERE id='" + validationId + "'";
@@ -402,7 +406,7 @@ public abstract class FacadeInstructions<T> {
     }
 
     public List<AccountHoldersDTO> accountHolders(String accountId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         List<AccountHoldersDTO> listaDTO = new ArrayList<AccountHoldersDTO>();
         opaDTO opa = util.opa(accountId);
         try {
@@ -445,7 +449,7 @@ public abstract class FacadeInstructions<T> {
 
     //Validar Trasnferencia entre mis cuentas
     private String validarTransferenciaEntreMisCuentas(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         opaDTO opa_orig = util.opa(opaOrigen);
         opaDTO opa_dest = util.opa(opaDestino);
         String cuentaOrigen = "SELECT * FROM auxiliares a "
@@ -512,8 +516,8 @@ public abstract class FacadeInstructions<T> {
                                                     //valido el minimo y maximo permitido para una transferencia
                                                     /*if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
                                                         if (MaxPordia(opaOrigen, montoTransferencia)) {*/
-                                                            mensage = "validado con exito";
-                                                        /*} else {
+                                                    mensage = "validado con exito";
+                                                    /*} else {
                                                             mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
                                                         }
                                                     } else {
@@ -574,7 +578,7 @@ public abstract class FacadeInstructions<T> {
 
     //Validar Transferencia a terceros dentro de la entidad
     private String validarTransferenciasATercerosDE(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         opaDTO opa_orig = util.opa(opaOrigen);
         opaDTO opa_dest = util.opa(opaDestino);
 
@@ -653,8 +657,8 @@ public abstract class FacadeInstructions<T> {
                                                     //valido el minimo y maximo permitido para una transferencia
                                                     /*if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
                                                         if (MaxPordia(opaOrigen, montoTransferencia)) {*/
-                                                            mensage = "validado con exito";
-                                                        /*} else {
+                                                    mensage = "validado con exito";
+                                                    /*} else {
                                                             mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
                                                         }
                                                     } else {
@@ -710,7 +714,7 @@ public abstract class FacadeInstructions<T> {
 
     //Validar pago de prestamo propio
     private String validarPagoPrestamo(String socio, String opaOrigen, Double montoTransferencia, String opaDestino) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         opaDTO opa_orig = util.opa(opaOrigen);
         opaDTO opa_dest = util.opa(opaDestino);
         String cuentaOrigen = "SELECT * FROM auxiliares a "
@@ -777,8 +781,8 @@ public abstract class FacadeInstructions<T> {
                                                         //valido el minimo y maximo permitido para una transferencia
                                                         /*if (minMax(montoTransferencia).toUpperCase().contains("VALIDO")) {
                                                             if (MaxPordia(opaOrigen, montoTransferencia)) {*/
-                                                                mensage = "validado con exito";
-                                                            /*} else {
+                                                        mensage = "validado con exito";
+                                                        /*} else {
                                                                 mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
                                                             }
                                                         } else {
@@ -835,7 +839,7 @@ public abstract class FacadeInstructions<T> {
 
     //Validar pago de servicio(solo se valida la cuenta origen)
     private String validarPagoServicio(String socio, String opaOrigen, Double TotalPagoServicio) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         opaDTO opa_orig = util.opa(opaOrigen);
         String cuentaOrigen = "SELECT * FROM auxiliares a "
                 + " WHERE a.idorigenp = " + opa_orig.getIdorigenp() + " AND a.idproducto = " + opa_orig.getIdproducto() + " AND a.idauxiliar = " + opa_orig.getIdauxiliar();
@@ -868,8 +872,8 @@ public abstract class FacadeInstructions<T> {
                                 //valido el minimo y maximo permitido para una transferencia
                                 /*if (minMax(TotalPagoServicio).toUpperCase().contains("VALIDO")) {
                                     if (MaxPordia(opaOrigen, TotalPagoServicio)) {*/
-                                        mensage = "validado con exito";
-                                    /*} else {
+                                mensage = "validado con exito";
+                                /*} else {
                                         mensage = "MONTO TRASPASA EL PERMITIDO DIARIO";
                                     }
                                 } else {
@@ -906,7 +910,7 @@ public abstract class FacadeInstructions<T> {
     }
 
     public validateMonetaryInstructionDTO validacionesOrdenSPEI(OrderWsSPEI orden) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         try {
             String validationId = "";
             //Validamos que exista el solicitante
@@ -925,7 +929,7 @@ public abstract class FacadeInstructions<T> {
 
     //Valida el monto maximo permitido por dia
     public boolean MaxPordia(String opa, Double montoI) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         Calendar c1 = Calendar.getInstance();
         String dia = Integer.toString(c1.get(5));
         String mes = Integer.toString(c1.get(2) + 1);
@@ -986,7 +990,7 @@ public abstract class FacadeInstructions<T> {
     }
 
     public String validarTransferenciaSPEI(OrderWsSPEI orden) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         ogsDTO ogs_or = util.ogs(orden.getCIF());
         opaDTO opa_or = util.opa(orden.getClabeSolicitante());
         String mensaje = "";
@@ -1045,7 +1049,7 @@ public abstract class FacadeInstructions<T> {
 
     //Solo aplica para cnmx
     public boolean validarSaldosMinimoProducto(AuxiliaresPK auxPK, Double monto) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         /*try {
         Auxiliares a=em.find(Auxiliares.class, auxPK);
         Double saldoValidar=Double.parseDouble(a.getSaldo().toString())-monto;
@@ -1064,7 +1068,7 @@ public abstract class FacadeInstructions<T> {
 
     //validacion de saldo minimo y maximo
     public String limite_saldo_max_min(String num_socio, String num_opa, int cargo_abono, Double monto_transferencia) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         String mensaje = "";
         //Parseamos ogs y opa
         ogsDTO ogs = util.ogs(num_socio);
@@ -1103,7 +1107,7 @@ public abstract class FacadeInstructions<T> {
             }
 
         } catch (Exception e) {
-            System.out.println("Error producido en validar permitido:" + e.getMessage());
+            System.out.println("ERROR PRODUCIDO EN VALIDAR PERMITIDO: " + e.getMessage());
             em.close();
         } finally {
             em.close();
@@ -1114,7 +1118,7 @@ public abstract class FacadeInstructions<T> {
 
     //valida el monto para banca movil total de transferencias
     public String minMax(Double amount) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = AbstractFacade.conexion();
         String mensaje = "";
         try {
             TablasPK tbPk = new TablasPK("bankingly_banca_movil", "montomaximominimo");
@@ -1136,8 +1140,23 @@ public abstract class FacadeInstructions<T> {
         return mensaje;
     }
 
-    public void cerrar() {
-        emf.close();
+    public boolean actividad_horario() {
+        EntityManager em = AbstractFacade.conexion();//emf.createEntityManager()EntityManager em = emf.createEntityManager();EntityManager em = emf.createEntityManager();
+        boolean bandera_ = false;
+        try {
+            if (util.actividad(em)) {
+                bandera_ = true;
+            }
+        } catch (Exception e) {
+            System.out.println("Error al verificar el horario de actividad");
+        } finally {
+            em.close();
+        }
+
+        return bandera_;
     }
 
+    /*public void cerrar() {
+        emf.close();
+    }*/
 }

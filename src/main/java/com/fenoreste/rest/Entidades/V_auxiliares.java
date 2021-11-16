@@ -16,16 +16,7 @@ import javax.persistence.TemporalType;
 @Table(name = "v_auxiliares")
 public class V_auxiliares implements Serializable {
   private static final long serialVersionUID = 1L;
-  
-  @Column(name = "idorigen")
-  private Integer idorigen;
-  
-  @Column(name = "idgrupo")
-  private Integer idgrupo;
-  
-  @Column(name = "idsocio")
-  private Integer idsocio;
-  
+ 
   @EmbeddedId
   protected v_auxiliaresPK auxiliaresPK;
   
@@ -206,29 +197,6 @@ public class V_auxiliares implements Serializable {
     this.auxiliaresPK = new v_auxiliaresPK(Integer.valueOf(idorigenp), Integer.valueOf(idproducto), Integer.valueOf(idauxiliar));
   }
   
-  public int getIdorigen() {
-    return this.idorigen.intValue();
-  }
-  
-  public void setIdorigen(int idorigen) {
-    this.idorigen = Integer.valueOf(idorigen);
-  }
-  
-  public int getIdgrupo() {
-    return this.idgrupo.intValue();
-  }
-  
-  public void setIdgrupo(int idgrupo) {
-    this.idgrupo = Integer.valueOf(idgrupo);
-  }
-  
-  public int getIdsocio() {
-    return this.idsocio.intValue();
-  }
-  
-  public void setIdsocio(int idsocio) {
-    this.idsocio = Integer.valueOf(idsocio);
-  }
   
   public v_auxiliaresPK getAuxiliaresPK() {
     return this.auxiliaresPK;
@@ -676,7 +644,7 @@ public class V_auxiliares implements Serializable {
   }
   
   public String toString() {
-    return "V_auxiliares{idorigen=" + this.idorigen + ", idgrupo=" + this.idgrupo + ", idsocio=" + this.idsocio + ", auxiliaresPK=" + this.auxiliaresPK + ", fechaape=" + this.fechaape + ", elaboro=" + this.elaboro + ", autorizo=" + this.autorizo + ", estatus=" + this.estatus + ", tasaio=" + this.tasaio + ", tasaim=" + this.tasaim + ", tasaiod=" + this.tasaiod + ", montosolicitado=" + this.montosolicitado + ", montoautorizado=" + this.montoautorizado + ", montoprestado=" + this.montoprestado + ", idfinalidad=" + this.idfinalidad + ", plazo=" + this.plazo + ", periodoabonos=" + this.periodoabonos + ", saldoinicial=" + this.saldoinicial + ", saldo=" + this.saldo + ", io=" + this.io + ", idnc=" + this.idnc + ", ieco=" + this.ieco + ", im=" + this.im + ", iva=" + this.iva + ", fechaactivacion=" + this.fechaactivacion + ", fechaumi=" + this.fechaumi + ", idnotas=" + this.idnotas + ", tipoprestamo=" + this.tipoprestamo + ", cartera=" + this.cartera + ", contaidnc=" + this.contaidnc + ", contaieco=" + this.contaieco + ", reservaidnc=" + this.reservaidnc + ", reservacapital=" + this.reservacapital + ", tipoamortizacion=" + this.tipoamortizacion + ", saldodiacum=" + this.saldodiacum + ", fechacartera=" + this.fechacartera + ", fechauma=" + this.fechauma + ", ivaidnccalc=" + this.ivaidnccalc + ", ivaidncpag=" + this.ivaidncpag + ", tiporeferencia=" + this.tiporeferencia + ", calificacion=" + this.calificacion + ", pagodiafijo=" + this.pagodiafijo + ", iodif=" + this.iodif + ", garantia=" + this.garantia + ", saldodiacummi=" + this.saldodiacummi + ", comision=" + this.comision + ", fechasdiacum=" + this.fechasdiacum + ", prcComision=" + this.prcComision + ", sobreprecio=" + this.sobreprecio + ", comisionNp=" + this.comisionNp + ", pagosDiaUltimo=" + this.pagosDiaUltimo + ", tipoDv=" + this.tipoDv + ", fechaSolicitud=" + this.fechaSolicitud + ", fechaAutorizacion=" + this.fechaAutorizacion + ", idncm=" + this.idncm + ", iecom=" + this.iecom + ", reservaidncm=" + this.reservaidncm + '}';
+    return "V_auxiliares{ auxiliaresPK=" + this.auxiliaresPK + ", fechaape=" + this.fechaape + ", elaboro=" + this.elaboro + ", autorizo=" + this.autorizo + ", estatus=" + this.estatus + ", tasaio=" + this.tasaio + ", tasaim=" + this.tasaim + ", tasaiod=" + this.tasaiod + ", montosolicitado=" + this.montosolicitado + ", montoautorizado=" + this.montoautorizado + ", montoprestado=" + this.montoprestado + ", idfinalidad=" + this.idfinalidad + ", plazo=" + this.plazo + ", periodoabonos=" + this.periodoabonos + ", saldoinicial=" + this.saldoinicial + ", saldo=" + this.saldo + ", io=" + this.io + ", idnc=" + this.idnc + ", ieco=" + this.ieco + ", im=" + this.im + ", iva=" + this.iva + ", fechaactivacion=" + this.fechaactivacion + ", fechaumi=" + this.fechaumi + ", idnotas=" + this.idnotas + ", tipoprestamo=" + this.tipoprestamo + ", cartera=" + this.cartera + ", contaidnc=" + this.contaidnc + ", contaieco=" + this.contaieco + ", reservaidnc=" + this.reservaidnc + ", reservacapital=" + this.reservacapital + ", tipoamortizacion=" + this.tipoamortizacion + ", saldodiacum=" + this.saldodiacum + ", fechacartera=" + this.fechacartera + ", fechauma=" + this.fechauma + ", ivaidnccalc=" + this.ivaidnccalc + ", ivaidncpag=" + this.ivaidncpag + ", tiporeferencia=" + this.tiporeferencia + ", calificacion=" + this.calificacion + ", pagodiafijo=" + this.pagodiafijo + ", iodif=" + this.iodif + ", garantia=" + this.garantia + ", saldodiacummi=" + this.saldodiacummi + ", comision=" + this.comision + ", fechasdiacum=" + this.fechasdiacum + ", prcComision=" + this.prcComision + ", sobreprecio=" + this.sobreprecio + ", comisionNp=" + this.comisionNp + ", pagosDiaUltimo=" + this.pagosDiaUltimo + ", tipoDv=" + this.tipoDv + ", fechaSolicitud=" + this.fechaSolicitud + ", fechaAutorizacion=" + this.fechaAutorizacion + ", idncm=" + this.idncm + ", iecom=" + this.iecom + ", reservaidncm=" + this.reservaidncm + '}';
   }
 }
 

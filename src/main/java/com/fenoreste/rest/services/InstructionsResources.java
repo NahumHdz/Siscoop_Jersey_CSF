@@ -64,9 +64,18 @@ public class InstructionsResources {
 
         } catch (Exception e) {
             System.out.println("Error en tranformar json:" + e.getMessage());
-            return Response.status(Response.Status.BAD_GATEWAY).entity(e.getMessage()).build();
+            //return Response.status(Response.Status.BAD_GATEWAY).entity(e.getMessage()).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
+        JsonObject Error = new JsonObject();
         TransfersDAO dao = new TransfersDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             //customerId = jrecibido.getString("customerId");
             //page = jrecibido.getInt("page");
@@ -114,8 +123,6 @@ public class InstructionsResources {
             return Response.status(Response.Status.OK).entity(jprincipal).build();
         } catch (Exception e) {
             System.out.println("Error en metodo:" + e.getMessage());
-        } finally {
-            dao.cerrar();
         }
         return null;
     }
@@ -127,7 +134,7 @@ public class InstructionsResources {
     public Response validateMonetaryInstruction(String cadena, @HeaderParam("authorization") String authString) throws JSONException {
         validateMonetaryInstructionDTO dto = new validateMonetaryInstructionDTO();
         dto.setExecutionDate("");
-        String feees[]=new String[3];
+        String feees[] = new String[3];
         dto.setFees(feees);
         dto.setValidationId("");
         ArrayList lista = new ArrayList();
@@ -171,7 +178,7 @@ public class InstructionsResources {
                 identificadorTransferencia = 4;
             } //Transferencias SPEI 
             else if (request.getString("originatorTransactionType").toUpperCase().contains("DOMESTIC_PAYMENT")) {
-                
+
                 OrderWsSPEI orden = new OrderWsSPEI();
                 orden.setCIF(request.getString("customerId"));
                 orden.setClabeSolicitante(request.getString("debitAccountId"));
@@ -205,7 +212,7 @@ public class InstructionsResources {
                 identificadorTransferencia = 5;
 
             } else {//transferencias NORMALES     
-                
+
                 customerId = request.getString("customerId");
                 tipoTranferencia = request.getString("originatorTransactionType");
                 cuentaOrigen = request.getString("debitAccountId");
@@ -218,28 +225,28 @@ public class InstructionsResources {
                 JSONObject execution = montoOP.getJSONObject("execution");
                 fechaEjecucion = execution.getString("executionDate");
                 tipoEjecucion = execution.getString("executionType");
-                
+
                 //Validamos entre programadas y en tiempo actual 
-                if(!fechaEjecucion.equals(FechaTiempoReal)){
+                if (!fechaEjecucion.equals(FechaTiempoReal)) {
                     //Es una programada entre mis cuentas
-                    if(tipoTranferencia.toUpperCase().contains("TRANSFER_OWN")){
-                        identificadorTransferencia=6;
-                    }else if(tipoTranferencia.toUpperCase().contains("INTRABA")){
-                        identificadorTransferencia=7;
-                    }else if(tipoTranferencia.toUpperCase().contains("LOAN_PAY")){
-                        identificadorTransferencia=8;
-                    }                  
-                    
-                }else{
-                //Si es una transferencias entre mis cuentas propias
-                if (tipoTranferencia.toUpperCase().contains("TRANSFER_OWN")) {
-                    identificadorTransferencia = 1;
-                } else if (tipoTranferencia.toUpperCase().contains("INTRABANK")) {//Si es una trasnferencia a terceros dentro de la entidad
-                    identificadorTransferencia = 2;
-                } else if (tipoTranferencia.toUpperCase().contains("LOAN_PAY")) {//Es un pago a prestamo a cuentas propias
-                    identificadorTransferencia = 3;
+                    if (tipoTranferencia.toUpperCase().contains("TRANSFER_OWN")) {
+                        identificadorTransferencia = 6;
+                    } else if (tipoTranferencia.toUpperCase().contains("INTRABA")) {
+                        identificadorTransferencia = 7;
+                    } else if (tipoTranferencia.toUpperCase().contains("LOAN_PAY")) {
+                        identificadorTransferencia = 8;
+                    }
+
+                } else {
+                    //Si es una transferencias entre mis cuentas propias
+                    if (tipoTranferencia.toUpperCase().contains("TRANSFER_OWN")) {
+                        identificadorTransferencia = 1;
+                    } else if (tipoTranferencia.toUpperCase().contains("INTRABANK")) {//Si es una trasnferencia a terceros dentro de la entidad
+                        identificadorTransferencia = 2;
+                    } else if (tipoTranferencia.toUpperCase().contains("LOAN_PAY")) {//Es un pago a prestamo a cuentas propias
+                        identificadorTransferencia = 3;
+                    }
                 }
-            }
             }
         } catch (Exception e) {
             JsonObject json = new JsonObject();
@@ -247,7 +254,15 @@ public class InstructionsResources {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
 
+        JsonObject Error = new JsonObject();
         TransfersDAO dao = new TransfersDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
 
             //Es una transferencia a mis cuentas propias
@@ -265,45 +280,45 @@ public class InstructionsResources {
                         .add("fees", Json.createArrayBuilder().build())
                         .add("executionDate", dto.getExecutionDate())
                         .build();
-            }else if(identificadorTransferencia==3){
-                dto=dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto, comentario, propCuenta, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
-                System.out.println("dto:"+dto);
+            } else if (identificadorTransferencia == 3) {
+                dto = dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto, comentario, propCuenta, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
+                System.out.println("dto:" + dto);
                 jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
                         .add("fees", Json.createArrayBuilder().build())
                         .add("executionDate", dto.getExecutionDate())
                         .build();
-            }else if(identificadorTransferencia==4){
-                dto= dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto, "Pago de servicio:"+comentario, propCuenta, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
-                 jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
+            } else if (identificadorTransferencia == 4) {
+                dto = dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto, "Pago de servicio:" + comentario, propCuenta, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
+                jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
                         .add("fees", Json.createArrayBuilder().build())
                         .add("executionDate", dto.getExecutionDate())
                         .build();
-           }else if(identificadorTransferencia==5){
-               dto = dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto,comentario, cuentaDestino, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
-               jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
+            } else if (identificadorTransferencia == 5) {
+                dto = dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto, comentario, cuentaDestino, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
+                jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
                         .add("fees", Json.createArrayBuilder().build())
                         .add("executionDate", dto.getExecutionDate())
                         .build();
-           }else if(identificadorTransferencia==6){
-               dto = dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto,"Txt Programada"+comentario, cuentaDestino, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
-               jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
+            } else if (identificadorTransferencia == 6) {
+                dto = dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto, "Txt Programada" + comentario, cuentaDestino, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
+                jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
                         .add("fees", Json.createArrayBuilder().build())
                         .add("executionDate", dto.getExecutionDate())
                         .build();
-           }else if(identificadorTransferencia==7){
-               dto = dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto,"Txt Programada"+comentario, cuentaDestino, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
-               jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
+            } else if (identificadorTransferencia == 7) {
+                dto = dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto, "Txt Programada" + comentario, cuentaDestino, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
+                jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
                         .add("fees", Json.createArrayBuilder().build())
                         .add("executionDate", dto.getExecutionDate())
                         .build();
-           }else if(identificadorTransferencia==8){
-              dto = dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto,"Txt Programada"+comentario, cuentaDestino, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia); 
-              jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
+            } else if (identificadorTransferencia == 8) {
+                dto = dao.validateMonetaryInstruction(customerId, cuentaOrigen, cuentaDestino, monto, "Txt Programada" + comentario, cuentaDestino, fechaEjecucion, tipoEjecucion, tipoTranferencia, identificadorTransferencia);
+                jsonResponse = Json.createObjectBuilder().add("validationId", dto.getValidationId())
                         .add("fees", Json.createArrayBuilder().build())
                         .add("executionDate", dto.getExecutionDate())
                         .build();
-               
-           }
+
+            }
 
             /*
             //Preguntamos el tipo de validacion
@@ -344,8 +359,6 @@ public class InstructionsResources {
             }*/
         } catch (Exception e) {
             System.out.println("error:" + e.getMessage());
-        } finally {
-            dao.cerrar();
         }
         return Response.status(Response.Status.OK).entity(jsonResponse).build();
     }
@@ -368,19 +381,24 @@ public class InstructionsResources {
             System.out.println("Error:" + e.getMessage());
         }
         System.out.println("validationId:" + validationId);
+
+        JsonObject Error = new JsonObject();
         TransfersDAO dao = new TransfersDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
 
         String msj = "";
         String validationProgramadas = "45KLF09612FGHCVXX";//Se puso esa cadena porque para programadas no almaceno datos en la base responde dummy y esa cadena se usa
         try {
-            msj = dao.executeMonetaryInstruction(validationId);            
+            msj = dao.executeMonetaryInstruction(validationId);
             jsonb.put("status", msj);
             return Response.status(Response.Status.OK).entity(jsonb).build();
         } catch (Exception e) {
-            dao.cerrar();
             System.out.println("Error en response:" + e.getMessage());
-        } finally {
-            dao.cerrar();
         }
         return null;
     }
@@ -395,7 +413,16 @@ public class InstructionsResources {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
         JSONObject request = new JSONObject(cadena);
+
+        JsonObject Error = new JsonObject();
         TransfersDAO dao = new TransfersDAO();
+
+        if (!dao.actividad_horario()) {
+            Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
+            System.out.println("HORARIO ACTIVIDAD: " + Error);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
+        }
+
         try {
             String validationId = request.getString("monetaryInstructionId");
             transferencias_completadas_siscoop transferencia = dao.detailsMonetary(validationId);
@@ -466,8 +493,6 @@ public class InstructionsResources {
             return Response.status(Response.Status.OK).entity(jsonResponse).build();
         } catch (Exception e) {
             System.out.println("Error al obtener atributo json:" + e.getMessage());
-        } finally {
-            dao.cerrar();
         }
         return null;
     }

@@ -3,7 +3,9 @@ package com.fenoreste.rest.Entidades;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
+@Embeddable
 public class v_auxiliaresPK implements Serializable {
     
   @Column(name = "idorigenp", nullable = false)
