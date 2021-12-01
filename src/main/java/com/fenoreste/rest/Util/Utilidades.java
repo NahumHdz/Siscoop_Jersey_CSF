@@ -40,7 +40,7 @@ public class Utilidades {
         return opa;
     }
 
-    public boolean actividad(EntityManager em) {
+    /*public boolean actividad(EntityManager em) {
         boolean bandera = false;
 
         try {
@@ -52,5 +52,5 @@ public class Utilidades {
         }
         System.out.println("BANDERA HORARIO: " + bandera);
         return bandera;
-    }
+    }*/
 }

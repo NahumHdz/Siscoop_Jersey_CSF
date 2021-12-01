@@ -116,14 +116,14 @@ public abstract class FacadeCustomer<T> {
             String name = "", customerType = "";
             name = p.getNombre() + " " + p.getAppaterno() + " " + p.getApmaterno();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            String birthDate=sdf.format(p.getFechanacimiento());
+            String birthDate = sdf.format(p.getFechanacimiento());
             if (p.getRazonSocial() == null) {
                 customerType = "individual";
             } else {
                 customerType = "grupal";
             }
             client.setNationalId(p.getCurp());
-            client.setBirthDate(birthDate.replace("/","-"));
+            client.setBirthDate(birthDate.replace("/", "-"));
             client.setCustomerId(ogs);
             client.setName(name);
             client.setCustomerType("individual");
@@ -194,6 +194,7 @@ public abstract class FacadeCustomer<T> {
         Query query = null;
         String consulta = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tp USING(idproducto) WHERE "
                 + " idorigen = " + ogs.getIdorigen() + " AND idgrupo = " + ogs.getIdgrupo() + " AND idsocio = " + ogs.getIdsocio() + " AND estatus = 2";
+        System.out.println("CONSULTA: " + consulta);
         CustomerAccountDTO producto = new CustomerAccountDTO();
         try {
             query = em.createNativeQuery(consulta, Auxiliares.class);
@@ -228,15 +229,19 @@ public abstract class FacadeCustomer<T> {
                     String og = String.format("%06d", a.getIdorigen()) + String.format("%02d", a.getIdgrupo());
                     String s = String.format("%06d", a.getIdsocio());
 
-                    String op = String.format("%06d", a.getAuxiliaresPK().getIdorigenp()) + String.format("%05d", a.getAuxiliaresPK().getIdproducto());
+                    /*String op = String.format("%06d", a.getAuxiliaresPK().getIdorigenp()) + String.format("%05d", a.getAuxiliaresPK().getIdproducto());
                     String aa = String.format("%08d", a.getAuxiliaresPK().getIdauxiliar());
                     System.out.println("opa:" + op + "," + aa);
                     String cadenaa = aa.substring(4, 8);
-                    String cade = "******" + cadenaa;
+                    String cade = "******" + cadenaa;*/
+
+                    String opa = String.format("%06d", a.getAuxiliaresPK().getIdorigenp()) + String.format("%05d", a.getAuxiliaresPK().getIdproducto()) + String.format("%08d", a.getAuxiliaresPK().getIdauxiliar());
+                    System.out.println("OPA: " + opa);
+                    String cade = opa.substring(0, 2) + "***************" + opa.substring(17, 19);
 
                     producto = new CustomerAccountDTO(
-                            op + aa,
-                            op + aa,
+                            opa /*op + aa*/,
+                            opa /*op + aa*/,
                             cade,
                             accountType,
                             "MXN",
@@ -775,7 +780,7 @@ public abstract class FacadeCustomer<T> {
         return fechaDate;
     }
 
-    public boolean actividad_horario() {
+    /*public boolean actividad_horario() {
         EntityManager em = AbstractFacade.conexion();
         boolean bandera_ = false;
         try {
@@ -789,9 +794,9 @@ public abstract class FacadeCustomer<T> {
         }
 
         return bandera_;
-    }
+    }*/
 
-    /*public void cerrar() {
+ /*public void cerrar() {
         emf.close();
     }*/
 }

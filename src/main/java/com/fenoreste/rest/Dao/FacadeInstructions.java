@@ -1140,7 +1140,7 @@ public abstract class FacadeInstructions<T> {
         return mensaje;
     }
 
-    public boolean actividad_horario() {
+    /*public boolean actividad_horario() {
         EntityManager em = AbstractFacade.conexion();//emf.createEntityManager()EntityManager em = emf.createEntityManager();EntityManager em = emf.createEntityManager();
         boolean bandera_ = false;
         try {
@@ -1154,7 +1154,7 @@ public abstract class FacadeInstructions<T> {
         }
 
         return bandera_;
-    }
+    }*/
 
     /*public void cerrar() {
         emf.close();

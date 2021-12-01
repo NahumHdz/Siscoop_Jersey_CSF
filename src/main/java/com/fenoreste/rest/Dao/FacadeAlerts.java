@@ -454,7 +454,7 @@ public abstract class FacadeAlerts<T> {
         }
     }
 
-    public boolean actividad_horario() {
+    /*public boolean actividad_horario() {
         EntityManager em = AbstractFacade.conexion();
         boolean bandera_ = false;
         try {
@@ -468,5 +468,5 @@ public abstract class FacadeAlerts<T> {
         }
 
         return bandera_;
-    }
+    }*/
 }

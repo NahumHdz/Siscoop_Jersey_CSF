@@ -119,7 +119,7 @@ public abstract class FacadeProductos<T> {
 
     }
 
-    public boolean actividad_horario() {
+    /*public boolean actividad_horario() {
         EntityManager em = AbstractFacade.conexion();
         boolean bandera_ = false;
         try {
@@ -133,7 +133,7 @@ public abstract class FacadeProductos<T> {
         }
 
         return bandera_;
-    }
+    }*/
 
     /*public void cerrar() {
         emf.close();

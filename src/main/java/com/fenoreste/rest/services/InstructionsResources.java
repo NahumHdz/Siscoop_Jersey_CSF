@@ -70,11 +70,11 @@ public class InstructionsResources {
         JsonObject Error = new JsonObject();
         TransfersDAO dao = new TransfersDAO();
 
-        if (!dao.actividad_horario()) {
+        /*if (!dao.actividad_horario()) {
             Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
-        }
+        }*/
 
         try {
             //customerId = jrecibido.getString("customerId");
@@ -257,11 +257,11 @@ public class InstructionsResources {
         JsonObject Error = new JsonObject();
         TransfersDAO dao = new TransfersDAO();
 
-        if (!dao.actividad_horario()) {
+        /*if (!dao.actividad_horario()) {
             Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
-        }
+        }*/
 
         try {
 
@@ -385,11 +385,11 @@ public class InstructionsResources {
         JsonObject Error = new JsonObject();
         TransfersDAO dao = new TransfersDAO();
 
-        if (!dao.actividad_horario()) {
+        /*if (!dao.actividad_horario()) {
             Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
-        }
+        }*/
 
         String msj = "";
         String validationProgramadas = "45KLF09612FGHCVXX";//Se puso esa cadena porque para programadas no almaceno datos en la base responde dummy y esa cadena se usa
@@ -417,11 +417,11 @@ public class InstructionsResources {
         JsonObject Error = new JsonObject();
         TransfersDAO dao = new TransfersDAO();
 
-        if (!dao.actividad_horario()) {
+        /*if (!dao.actividad_horario()) {
             Error.put("ERROR", "VERIFIQUE SU HORARIO DE ACTIVIDAD FECHA, HORA O CONTACTE A SU PROVEEEDOR");
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
-        }
+        }*/
 
         try {
             String validationId = request.getString("monetaryInstructionId");
