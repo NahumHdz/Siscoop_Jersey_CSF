@@ -45,8 +45,8 @@ public class TimerBeepClock implements Runnable {
         SimpleDateFormat dateFormatLocal = new SimpleDateFormat("HH:mm:ss a");
         String hora = dateFormatLocal.format(new Date());
 
-        //Eliminamos todos los PDF a las 4:00AM
-        if (hora.replace(" ", "").equals("04:00:00AM")) {
+        //Eliminamos todos los PDF a las 7:00AM
+        if (hora.replace(" ", "").equals("07:00:00AM")) {
             eliminarPorExtension(ruta(), "pdf");
             eliminarPorExtension(ruta(), "html");
             eliminarPorExtension(ruta(), "txt");
@@ -54,7 +54,7 @@ public class TimerBeepClock implements Runnable {
         }
 
         //Actualizar Hora Servidor ---------------***************************************************---SOLO PARA PRUEBAS---***************************************************---------------------
-        /*if (hora.replace(" ", "").equals("00:01:00AM")) {
+        /*if (hora.replace(" ", "").equals("00:00:00AM")) {
             try {
                 actualizarFechaServidorBD();
             } catch (Exception e) {
@@ -63,7 +63,7 @@ public class TimerBeepClock implements Runnable {
         }*/
 
         //Ejecutar Alertas
-        if (hora.replace(" ", "").equals("22:00:00PM")) {
+        if (hora.replace(" ", "").equals("08:00:00AM")) {
             try {
                 ejecutarAlerta();
             } catch (Exception e) {
