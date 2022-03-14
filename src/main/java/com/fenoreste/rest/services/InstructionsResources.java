@@ -444,7 +444,7 @@ public class InstructionsResources {
                                         .add("value","Value")
                                         .add("valueType","string")
                                         .add("description","Description").build())*/
-                            .add("monetaryInstructionId", String.valueOf(transferencia.getId()))
+                            .add("monetaryInstructionId", String.valueOf(transferencia.getCustomerId()))
                             .add("customerId", transferencia.getCustomerId())
                             .add("originatorTransactionType", transferencia.getTipotransferencia())
                             .add("debitAccount", Json.createObjectBuilder()

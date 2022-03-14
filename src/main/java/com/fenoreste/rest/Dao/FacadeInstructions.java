@@ -72,7 +72,7 @@ public abstract class FacadeInstructions<T> {
                 tipos_cuenta_siscoop tps = em.find(tipos_cuenta_siscoop.class, idproducto);
                 dtoMonetary.setTypeNameId(tps.getProducttypename().trim().toUpperCase());
                 dtoMonetary.setOriginatorTransactionType(ListaTransferencias.get(i).getTipotransferencia());
-                dtoMonetary.setMonetaryId(ListaTransferencias.get(i).getId());
+                dtoMonetary.setMonetaryId(Integer.parseInt(ListaTransferencias.get(i).getCustomerId()));
                 listaMonetary.add(dtoMonetary);
             }
             System.out.println("ListaMonetary:" + listaMonetary);
@@ -357,7 +357,7 @@ public abstract class FacadeInstructions<T> {
                         System.out.println("Registros Limpiados con exito:" + registrosLimpiados);
 
                         em.getTransaction().begin();
-                        validaciones_transferencias_siscoop val = em.find(validaciones_transferencias_siscoop.class, validacion_guardada.getId());
+                        validaciones_transferencias_siscoop val = em.find(validaciones_transferencias_siscoop.class, validacion_guardada.getValidationId());
                         em.remove(val);
                         em.getTransaction().commit();
 

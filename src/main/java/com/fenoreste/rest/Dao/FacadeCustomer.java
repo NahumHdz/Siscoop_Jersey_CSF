@@ -389,14 +389,15 @@ public abstract class FacadeCustomer<T> {
         ogsDTO ogs = Util.ogs(customerId);
         double saldo_congelado = 0.0;
         double saldo_disponible = 0.0;
-        double saldo_disponible_actual = 0.0;
+        double saldo_total = 0.0;
+        double saldo_disponible_total = 0.0;
         try {
 
-            String consulta_productos = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tp USING(idproducto) INNER JOIN productos p USING (idproducto)"
-                    + " WHERE a.idorigen=" + ogs.getIdorigen()
-                    + " AND idgrupo=" + ogs.getIdgrupo()
-                    + " AND idsocio=" + ogs.getIdsocio()
-                    + " AND a.estatus=2 AND tipoproducto in (0,1)";
+            String consulta_productos = "SELECT * FROM auxiliares a INNER JOIN tipos_cuenta_siscoop tp USING (idproducto) INNER JOIN productos p USING (idproducto)"
+                    + " WHERE a.idorigen = " + ogs.getIdorigen()
+                    + " AND idgrupo = " + ogs.getIdgrupo()
+                    + " AND idsocio = " + ogs.getIdsocio()
+                    + " AND a.estatus = 2 AND tipoproducto in (0,1) ORDER BY idproducto";
             System.out.println("Consulta:" + consulta_productos);
             Query query = em.createNativeQuery(consulta_productos, Auxiliares.class);
 
@@ -408,14 +409,14 @@ public abstract class FacadeCustomer<T> {
                 Productos pr = em.find(Productos.class, a.getAuxiliaresPK().getIdproducto());
 
                 bandera = true;
-
-                //Si es una inversion
-                System.out.println("idproducto:" + a.getAuxiliaresPK().getIdproducto() + ",i:" + i + ",Saldo disponible:" + saldo_disponible + ",saldoCongelado:" + saldo_congelado);
+                
                 Query query_fecha_servidor = em.createNativeQuery("SELECT date(fechatrabajo) FROM origenes limit 1");
                 String fecha_servidor = String.valueOf(query_fecha_servidor.getSingleResult());
                 Date fecha_obtenida_servidor_db = stringToDate(fecha_servidor.replace("-", "/"));//fecha obtenida_servidor
+                
+                //Si es una inversion
                 if (pr.getTipoproducto() == 1) {
-                    saldo_disponible_actual = saldo_disponible_actual + a.getSaldo().doubleValue();
+                    saldo_total = saldo_total + a.getSaldo().doubleValue();
                     //Se suma fechaactivacion mas plazos para determinar si el producto ya se puede cobrar o aun no
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
                     String fecha_auxiliar = dateFormat.format(a.getFechaactivacion());
@@ -423,7 +424,7 @@ public abstract class FacadeCustomer<T> {
                             + a.getAuxiliaresPK().getIdorigenp()
                             + " AND a.idproducto=" + a.getAuxiliaresPK().getIdproducto()
                             + " AND a.idauxiliar=" + a.getAuxiliaresPK().getIdauxiliar();
-                    System.out.println("Calcular disponibilidad:" + calcular_disponibilidad_saldo);
+                    System.out.println("Calcular Disponibilidad: " + calcular_disponibilidad_saldo);
                     Query fecha_disponibilidad_inversion = em.createNativeQuery(calcular_disponibilidad_saldo);
                     String fecha = String.valueOf(fecha_disponibilidad_inversion.getSingleResult()).replace("-", "/");
 
@@ -431,8 +432,8 @@ public abstract class FacadeCustomer<T> {
 
                     //si la fecha obtenida es igual al dia actual(hoy) o esta antes: El saldo de la inversion se puede retirar siempre y cuando no este amparando credito
                     //saldoLedgerDPF = saldoLedgerDPF + Double.parseDouble(a.getSaldo().toString());
-                    System.out.println("fechaVencimientoFolio:" + fecha_vencimiento_folio);
-                    System.out.println("FechaTrabajo:" + fecha_obtenida_servidor_db.toString());
+                    System.out.println("Fecha Vencimiento Folio: " + fecha_vencimiento_folio);
+                    System.out.println("Fecha Trabajo: " + fecha_obtenida_servidor_db.toString());
 
                     if (fecha_vencimiento_folio.equals(fecha_obtenida_servidor_db) || fecha_vencimiento_folio.before(fecha_obtenida_servidor_db)) {
                         //Si ya esta disponible pero esta en garantia
@@ -449,7 +450,7 @@ public abstract class FacadeCustomer<T> {
                     }
 
                 } else if (pr.getTipoproducto() == 0) {
-                    saldo_disponible_actual = saldo_disponible_actual + a.getSaldo().doubleValue();
+                    saldo_total = saldo_total + a.getSaldo().doubleValue();
                     if (pr.getNombre().toUpperCase().contains("NAVI")) {
                         String fecha = dateToString(fecha_obtenida_servidor_db);
                         if (fecha.substring(5, 7).contains("12")) {
@@ -464,31 +465,31 @@ public abstract class FacadeCustomer<T> {
                             saldo_congelado = saldo_congelado + a.getSaldo().doubleValue();
                         }
                     } else {
-                        if (Double.parseDouble(a.getGarantia().toString()) > 0) {
+                        /*if (Double.parseDouble(a.getGarantia().toString()) > 0) {
                             saldo_congelado = saldo_congelado + Double.parseDouble(a.getGarantia().toString());
-                            saldo_disponible = saldo_disponible + (Double.parseDouble(a.getSaldo().toString()) - Double.parseDouble(a.getGarantia().toString()));
-
+                            saldo_disponible = saldo_disponible + (Double.parseDouble(a.getSaldo().toString()) - Double.parseDouble(a.getGarantia().toString()));*/
+                        if (pr.getNombre().toUpperCase().contains("GARANTIA")) {
+                            saldo_congelado = saldo_congelado + Double.parseDouble(a.getSaldo().toString());
+                            saldo_disponible = saldo_disponible - (Double.parseDouble(a.getSaldo().toString()));
                         } else {
-
                             saldo_disponible = saldo_disponible + Double.parseDouble(a.getSaldo().toString());
                         }
                     }
                 }
-                System.out.println("i:" + i + " ,saldo:" + a.getSaldo() + ",disponible:" + saldo_disponible + ", congelado:" + saldo_congelado);
+                System.out.println("Lista: " + i +", Producto: " + a.getAuxiliaresPK().getIdproducto() + ", Saldo Total Acumulado: " + saldo_total + ", Saldo Congelado:" + saldo_congelado);
             }
-
-            System.out.println("El saldo disponible=" + saldo_disponible);
-            System.out.println("El saldo congelado=" + saldo_congelado);
+            saldo_disponible_total = saldo_total - saldo_congelado;
+            System.out.println("El Saldo Total = " + saldo_total + " El Saldo Congelado = " + saldo_congelado + " El Saldo Disponible " + saldo_disponible_total);
         } catch (Exception e) {
             e.getStackTrace();
-            System.out.println("Error:" + e.getMessage());
+            System.out.println("Error: " + e.getMessage());
             em.close();
         } finally {
             em.close();
         }
         Double saldos[] = new Double[2];
-        saldos[0] = saldo_disponible;
-        saldos[1] = saldo_disponible_actual;
+        saldos[0] = saldo_disponible_total;
+        saldos[1] = saldo_total;
         return saldos;
     }
     

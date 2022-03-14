@@ -394,9 +394,20 @@ public class CustomerResources {
             if (!balanceLedger.equals("") && !balanceAvalaible.equals("")) {
                 arr = dao.position(customerId);
             }
-            javax.json.JsonObject clientes1 = Json.createObjectBuilder().add("balanceType", "ledger").add("amount", (JsonValue) Json.createObjectBuilder().add("amount", arr[1].doubleValue()).add("currencyCode", "MXN").build()).build();
-            javax.json.JsonObject clientes2 = Json.createObjectBuilder().add("balanceType", "available").add("amount", (JsonValue) Json.createObjectBuilder().add("amount", arr[0].doubleValue()).add("currencyCode", "MXN").build()).build();
-            json1 = Json.createObjectBuilder().add("positionPerCurrency", jsona.add(Json.createObjectBuilder().add("currencyCode", "MXN").add("balances", Json.createArrayBuilder().add((JsonValue) clientes1).add((JsonValue) clientes2)))).build();
+            javax.json.JsonObject clientes1 = Json.createObjectBuilder().add("balanceType", "ledger")
+                                                                                                         .add("amount", (JsonValue) Json.createObjectBuilder()
+                                                                                                                 .add("amount", arr[1].doubleValue())
+                                                                                                                 .add("currencyCode", "MXN").build()).build();
+            javax.json.JsonObject clientes2 = Json.createObjectBuilder().add("balanceType", "available")
+                                                                                                         .add("amount", (JsonValue) Json.createObjectBuilder()
+                                                                                                                 .add("amount", arr[0].doubleValue())
+                                                                                                                 .add("currencyCode", "MXN").build()).build();
+            json1 = Json.createObjectBuilder().add("positionPerCurrency", jsona
+                                                                  .add(Json.createObjectBuilder()
+                                                                          .add("currencyCode", "MXN")
+                                                                          .add("balances", Json.createArrayBuilder()
+                                                                                  .add((JsonValue) clientes1)
+                                                                                  .add((JsonValue) clientes2)))).build();
             String status = "";
             datosOk.put("status", status);
             return Response.status(Response.Status.OK).entity(json1).build();

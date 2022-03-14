@@ -2,23 +2,17 @@ package com.fenoreste.rest.Entidades;
 
 import java.io.Serializable;
 import java.util.Date;
+import javax.persistence.Cacheable;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "v_transferenciassiscoop")
+@Cacheable(false)
 public class validaciones_transferencias_siscoop implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sec_validaciones_tsiscoop")
-    @SequenceGenerator(name = "sec_validaciones_tsiscoop", sequenceName = "sec_validaciones_tsiscoop")
-    private Integer id;
 
     private String customerId;
 
@@ -40,13 +34,13 @@ public class validaciones_transferencias_siscoop implements Serializable {
 
     private boolean estatus;
 
+    @Id
     private String validationId;
 
     public validaciones_transferencias_siscoop() {
     }
 
-    public validaciones_transferencias_siscoop(Integer id, String customerId, String tipotransferencia, String cuentaorigen, String cuentadestino, Double monto, String comentario1, String comentario2, Date fechaejecucion, String tipoejecucion, boolean estatus, String validationId) {
-        this.id = id;
+    public validaciones_transferencias_siscoop(String customerId, String tipotransferencia, String cuentaorigen, String cuentadestino, Double monto, String comentario1, String comentario2, Date fechaejecucion, String tipoejecucion, boolean estatus, String validationId) {
         this.customerId = customerId;
         this.tipotransferencia = tipotransferencia;
         this.cuentaorigen = cuentaorigen;
@@ -60,16 +54,8 @@ public class validaciones_transferencias_siscoop implements Serializable {
         this.validationId = validationId;
     }
 
-    public Integer getId() {
-        return this.id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
     public String getCustomerId() {
-        return this.customerId;
+        return customerId;
     }
 
     public void setCustomerId(String customerId) {
@@ -77,7 +63,7 @@ public class validaciones_transferencias_siscoop implements Serializable {
     }
 
     public String getTipotransferencia() {
-        return this.tipotransferencia;
+        return tipotransferencia;
     }
 
     public void setTipotransferencia(String tipotransferencia) {
@@ -85,7 +71,7 @@ public class validaciones_transferencias_siscoop implements Serializable {
     }
 
     public String getCuentaorigen() {
-        return this.cuentaorigen;
+        return cuentaorigen;
     }
 
     public void setCuentaorigen(String cuentaorigen) {
@@ -93,7 +79,7 @@ public class validaciones_transferencias_siscoop implements Serializable {
     }
 
     public String getCuentadestino() {
-        return this.cuentadestino;
+        return cuentadestino;
     }
 
     public void setCuentadestino(String cuentadestino) {
@@ -101,7 +87,7 @@ public class validaciones_transferencias_siscoop implements Serializable {
     }
 
     public Double getMonto() {
-        return this.monto;
+        return monto;
     }
 
     public void setMonto(Double monto) {
@@ -109,7 +95,7 @@ public class validaciones_transferencias_siscoop implements Serializable {
     }
 
     public String getComentario1() {
-        return this.comentario1;
+        return comentario1;
     }
 
     public void setComentario1(String comentario1) {
@@ -117,7 +103,7 @@ public class validaciones_transferencias_siscoop implements Serializable {
     }
 
     public String getComentario2() {
-        return this.comentario2;
+        return comentario2;
     }
 
     public void setComentario2(String comentario2) {
@@ -125,7 +111,7 @@ public class validaciones_transferencias_siscoop implements Serializable {
     }
 
     public Date getFechaejecucion() {
-        return this.fechaejecucion;
+        return fechaejecucion;
     }
 
     public void setFechaejecucion(Date fechaejecucion) {
@@ -133,7 +119,7 @@ public class validaciones_transferencias_siscoop implements Serializable {
     }
 
     public String getTipoejecucion() {
-        return this.tipoejecucion;
+        return tipoejecucion;
     }
 
     public void setTipoejecucion(String tipoejecucion) {
@@ -141,7 +127,7 @@ public class validaciones_transferencias_siscoop implements Serializable {
     }
 
     public boolean isEstatus() {
-        return this.estatus;
+        return estatus;
     }
 
     public void setEstatus(boolean estatus) {
@@ -149,15 +135,16 @@ public class validaciones_transferencias_siscoop implements Serializable {
     }
 
     public String getValidationId() {
-        return this.validationId;
+        return validationId;
     }
 
     public void setValidationId(String validationId) {
         this.validationId = validationId;
     }
 
+    @Override
     public String toString() {
-        return "validaciones_transferencias_siscoop{id=" + this.id + ", customerId=" + this.customerId + ", tipotransferencia=" + this.tipotransferencia + ", cuentaorigen=" + this.cuentaorigen + ", cuentadestino=" + this.cuentadestino + ", monto=" + this.monto + ", comentario1=" + this.comentario1 + ", comentario2=" + this.comentario2 + ", fechaejecucion=" + this.fechaejecucion + ", tipoejecucion=" + this.tipoejecucion + ", estatus=" + this.estatus + ", validationId=" + this.validationId + '}';
+        return "validaciones_transferencias_siscoop{" + "customerId=" + customerId + ", tipotransferencia=" + tipotransferencia + ", cuentaorigen=" + cuentaorigen + ", cuentadestino=" + cuentadestino + ", monto=" + monto + ", comentario1=" + comentario1 + ", comentario2=" + comentario2 + ", fechaejecucion=" + fechaejecucion + ", tipoejecucion=" + tipoejecucion + ", estatus=" + estatus + ", validationId=" + validationId + '}';
     }
 
 }

@@ -54,7 +54,7 @@ public class TimerBeepClock implements Runnable {
         }
 
         //Actualizar Hora Servidor ---------------***************************************************---SOLO PARA PRUEBAS---***************************************************---------------------
-        /*if (hora.replace(" ", "").equals("00:00:00AM")) {
+        /*if (hora.replace(" ", "").equals("00:01:00AM")) {
             try {
                 actualizarFechaServidorBD();
             } catch (Exception e) {

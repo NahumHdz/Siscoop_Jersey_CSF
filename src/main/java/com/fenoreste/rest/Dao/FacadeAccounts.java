@@ -700,8 +700,16 @@ public abstract class FacadeAccounts<T> {
 
                 if (linea.contains("/usr/local/saicoop/img_estado_cuenta_ahorros/")) {
                     String cade = ruta();
-                    System.out.println("Cade:" + cade.replace("\\", "/"));
+                    System.out.println("Cadena:" + cade.replace("\\", "/"));
                     linea = linea.replace("/usr/local/saicoop/img_estado_cuenta_ahorros/", cade.replace("\\", "/"));
+                } else if (linea.contains("/usr/local/saicoop/img_estado_cuenta_dpfs_ind/")) {
+                    String cade = ruta();
+                    System.out.println("Cadena:" + cade.replace("\\", "/"));
+                    linea = linea.replace("/usr/local/saicoop/img_estado_cuenta_dpfs_ind/", cade.replace("\\", "/"));
+                } else if (linea.contains("/usr/local/saicoop/img_estado_cuenta_prestamos/")) {
+                    String cade = ruta();
+                    System.out.println("Cadena:" + cade.replace("\\", "/"));
+                    linea = linea.replace("/usr/local/saicoop/img_estado_cuenta_prestamos/", cade.replace("\\", "/"));
                 }
                 if (linea.contains(" & ")) {
                     System.out.println("si tele");
