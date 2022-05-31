@@ -62,8 +62,8 @@ public class AccountsResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
-        try {
 
+        try {
             listaHolders = dao.accountHolders(accountId);
             jsonb.put("holders", listaHolders);
             return Response.status(Response.Status.OK).entity(jsonb).build();
@@ -94,6 +94,7 @@ public class AccountsResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         System.out.println("Cadena:" + cadena);
         try {
             JSONObject jsonRecibido = new JSONObject(cadena);
@@ -108,10 +109,11 @@ public class AccountsResources {
                 javax.json.JsonObject create = null;
                 create = Json.createObjectBuilder().add("accountId", accountId)
                         .add("accountType", acDao.accountType(p).toUpperCase())
-                        .add("holders", Json.createArrayBuilder().add((JsonValue) Json.createObjectBuilder()
-                                .add("customerId", holder.getCustomerId() /*"01010110021543"*/)
-                                .add("name", holder.getName())
-                                .add("relationCode", holder.getRelationCode()).build()))
+                        .add("holders", Json.createArrayBuilder()
+                                .add((JsonValue) Json.createObjectBuilder()
+                                        .add("customerId", holder.getCustomerId() /*"01010110021543"*/)
+                                        .add("name", holder.getName())
+                                        .add("relationCode", holder.getRelationCode()).build()))
                         .add("displayAccountNumber", accountId.substring(0, 2) + "***************" + accountId.substring(17, 19)).build();
                 /*.add("displayAccountNumber", "*******510").build();*/
                 return Response.status(Response.Status.OK).entity(create).build();
@@ -147,6 +149,7 @@ public class AccountsResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         try {
             JSONObject jsonRecibido = new JSONObject(cadena);
             JSONArray listaFil = jsonRecibido.getJSONArray("filters");
@@ -198,6 +201,7 @@ public class AccountsResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         try {
             accountId = jsonre.getString("accountId");
             List<HoldsDTO> lista = dao.holds(accountId);
@@ -254,6 +258,7 @@ public class AccountsResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         try {
             JSONArray listaFil = jsonRecibido.getJSONArray("filters");
             System.out.println("ListaFil:" + listaFil);
@@ -300,7 +305,7 @@ public class AccountsResources {
                 /*fechaDate = formato.parse(String.valueOf(ax.getAuxiliaresDPK().getFecha()).substring(0, 10));
                 fe = sdf.format(fechaDate);*/
                 fe = sdf.format(ax.getAuxiliaresDPK().getFecha());
-                System.out.println("Fe:" + fe + " " + ax.getCargoabono() + " " + ax.getMonto());
+                System.out.println("REGISTROS " + " Fecha: " + fe + " CargoAbono: " + ax.getCargoabono() + " Monto: " + ax.getMonto() + " Saldoec " + ax.getSaldoec());
 
                 ZonedDateTime zonedDateTime = ZonedDateTime.parse(fe.replace("/", "-") + "T00:00:00.000-06:00");
                 String feR = String.valueOf(zonedDateTime);
@@ -339,7 +344,6 @@ public class AccountsResources {
                                                                                                           .add("valueType", "string")
                                                                                                           .add("isSensitive", false).build()).build();
                 listaJson.add(jsi);
-
             }
 
             javax.json.JsonObject Found = Json.createObjectBuilder().add("totalRecords", to_reg).add("queryId", "").add("transactions", listaJson).build();
@@ -370,6 +374,7 @@ public class AccountsResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         try {
             accountId = jsonRecibido.getString("accountId");
             DetailsAccountDTO dto = dao.detailsAccount(accountId);
@@ -486,7 +491,6 @@ public class AccountsResources {
             System.out.println("Error al crear json:" + ex.getMessage());
         }
         return null;
-
     }
 
     @POST
@@ -511,7 +515,6 @@ public class AccountsResources {
             System.out.println("Error al crear json:" + ex.getMessage());
         }
         return null;
-
     }
 
     @POST

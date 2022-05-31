@@ -220,7 +220,7 @@ public abstract class FacadeAccounts<T> {
                                 fbloqueo = sdf.format(aa.getFechaape());
                             }
                             HoldsDTO dto = new HoldsDTO(accountId,
-                                    Double.parseDouble(a.getGarantia().toString()),
+                                    Double.parseDouble(aa.getGarantia().toString()),/*a.getGarantia().toString()),*/
                                     fbloqueo,
                                     pr.getNombre());
                             System.out.println("DTO:" + dto);
@@ -281,9 +281,9 @@ public abstract class FacadeAccounts<T> {
                         + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
                         + " AND " + complemento_transaction_type
                         + " ORDER BY fecha DESC LIMIT " + count;
-                //Si solo esta marcado fecha,monto,transactionType
-            } else if (fechas.size() > 0 && montos.size() > 0 && !transactionType.equals("") && count == 0) {
-
+            }
+            //Si solo esta marcado fecha,monto,transactionType
+            else if (fechas.size() > 0 && montos.size() > 0 && !transactionType.equals("") && count == 0) {
                 if (transactionType.equals("A")) {
                     complemento_transaction_type = " cargoabono in(0,1)";
                 } else if (transactionType.equals("C")) {
@@ -298,7 +298,9 @@ public abstract class FacadeAccounts<T> {
                         + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
                         + " AND " + complemento_transaction_type
                         + " ORDER BY fecha DESC";
-            } else if (fechas.size() > 0 && montos.size() > 0 && transactionType.equals("") && count == 0) {//Si solo esta marcado fechas y montos
+            }
+            //Si solo esta marcado fechas y montos
+            else if (fechas.size() > 0 && montos.size() > 0 && transactionType.equals("") && count == 0) {
                 System.out.println("Fechas y montos");
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
@@ -306,14 +308,18 @@ public abstract class FacadeAccounts<T> {
                         + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
                         + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
                         + " ORDER BY fecha DESC";
-            } else if (fechas.size() > 0 && montos.size() == 0 && transactionType.equals("") && count == 0) {//Si solo fechas
+            }
+            //Si solo fechas
+            else if (fechas.size() > 0 && montos.size() == 0 && transactionType.equals("") && count == 0) {
                 System.out.println("entroooooooooooooo aqui");
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
                         + " ORDER BY fecha DESC";
-            } else if (fechas.size() > 0 && montos.size() == 0 && !transactionType.equals("") && count > 0) {//Si solo vienen fechas,tipo transaccion y contador
+            }
+            //Si solo vienen fechas,tipo transaccion y contador
+            else if (fechas.size() > 0 && montos.size() == 0 && !transactionType.equals("") && count > 0) {
                 System.out.println("Fechas,tipo transaccion y count");
                 if (transactionType.equals("A")) {
                     complemento_transaction_type = " cargoabono in(0,1)";
@@ -327,7 +333,9 @@ public abstract class FacadeAccounts<T> {
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND " + complemento_transaction_type
                         + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "' ORDER BY fecha DESC LIMIT " + count;
-            } else if (fechas.size() > 0 && montos.size() == 0 && !transactionType.equals("") && count == 0) {//Si solo viene fecha,tipos de transacccion
+            }
+            //Si solo viene fecha,tipos de transacccion
+            else if (fechas.size() > 0 && montos.size() == 0 && !transactionType.equals("") && count == 0) {
                 if (transactionType.equals("A")) {
                     complemento_transaction_type = " cargoabono in(0,1)";
                 } else if (transactionType.equals("C")) {
@@ -341,15 +349,18 @@ public abstract class FacadeAccounts<T> {
                         + " AND " + complemento_transaction_type
                         + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "'"
                         + " ORDER BY fecha DESC";
-
-            } else if (fechas.size() > 0 && montos.size() == 0 && transactionType.equals("") && count > 0) {//Solo fecha y contador
+            }
+            //Solo fecha y contador
+            else if (fechas.size() > 0 && montos.size() == 0 && transactionType.equals("") && count > 0) {
                 System.out.println("aquiiiiiiiiiiiiiiiiiiiiiiiii");
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND " + complemento_transaction_type
                         + " AND date(fecha) between '" + fechas.get(0).trim() + "' AND '" + fechas.get(1).trim() + "' ORDER BY fecha DESC LIMIT " + count;
-            } else if (fechas.size() == 0 && montos.size() > 0 && !transactionType.equals("") && count > 0) {//Si solo montos,tipo de transaccion y contador de operacions
+            }
+            //Si solo montos,tipo de transaccion y contador de operacions
+            else if (fechas.size() == 0 && montos.size() > 0 && !transactionType.equals("") && count > 0) {
                 System.out.println("aquiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
                 if (transactionType.equals("A")) {
                     complemento_transaction_type = " cargoabono in(0,1)";
@@ -363,27 +374,33 @@ public abstract class FacadeAccounts<T> {
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND " + complemento_transaction_type
                         + " AND monto between  " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1)) + " ORDER BY fecha DESC LIMIT " + count;
-
-            } else if (fechas.size() == 0 && montos.size() > 0 && transactionType.equals("") && count > 0) {//Si solo montos y tipo de transaccion
+            }
+            //Si solo montos y tipo de transaccion
+            else if (fechas.size() == 0 && montos.size() > 0 && transactionType.equals("") && count > 0) {
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND " + complemento_transaction_type
                         + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
                         + " ORDER BY fecha DESC";
-            } else if (fechas.size() == 0 && montos.size() > 0 && transactionType.equals("") && count > 0) { //Si solo montos y contador de operaciones
+            }
+            //Si solo montos y contador de operaciones
+            else if (fechas.size() == 0 && montos.size() > 0 && transactionType.equals("") && count > 0) {
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1)) + " ORDER BY fecha DESC LIMIT " + count;
-
-            } else if (fechas.size() == 0 && montos.size() == 0 && transactionType.equals("") && count == 0) {//solo monto
+            }
+            //solo monto
+            else if (fechas.size() == 0 && montos.size() == 0 && transactionType.equals("") && count == 0) {
                 sulta = " idorigenp = " + opa.getIdorigenp()
                         + " AND idproducto = " + opa.getIdproducto()
                         + " AND idauxiliar = " + opa.getIdauxiliar()
                         + " AND monto between " + Double.parseDouble(montos.get(0)) + " AND " + Double.parseDouble(montos.get(1))
                         + " ORDER BY fecha DESC";
-            } else if (fechas.size() == 0 && montos.size() == 0 && !transactionType.equals("") && count > 0) {//Solo tipo de transaccion y contador
+            }
+            //Solo tipo de transaccion y contador
+            else if (fechas.size() == 0 && montos.size() == 0 && !transactionType.equals("") && count > 0) {
                 if (transactionType.equals("A")) {
                     complemento_transaction_type = " cargoabono in(0,1)";
                 } else if (transactionType.equals("C")) {

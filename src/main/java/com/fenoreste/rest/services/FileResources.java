@@ -77,7 +77,6 @@ public class FileResources {
         crearHTML();
         crearPDF(ruta(), "estado.html");
         return null;
-
     }
 
     public void crearHTML() throws FileNotFoundException {
@@ -139,7 +138,6 @@ public class FileResources {
             System.out.println("Error al crear PDF:" + e.getMessage());
             return false;
         }
-
     }
 
     @GET

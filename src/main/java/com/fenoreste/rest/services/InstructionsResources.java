@@ -317,7 +317,6 @@ public class InstructionsResources {
                         .add("fees", Json.createArrayBuilder().build())
                         .add("executionDate", dto.getExecutionDate())
                         .build();
-
             }
 
             /*
@@ -531,7 +530,6 @@ public class InstructionsResources {
             System.out.println("Error al crear json:" + ex.getMessage());
         }
         return null;
-
     }
 
     @POST
@@ -558,7 +556,6 @@ public class InstructionsResources {
             System.out.println("Error al crear json:" + ex.getMessage());
         }
         return null;
-
     }
 
     @POST
@@ -585,7 +582,6 @@ public class InstructionsResources {
             System.out.println("Error al crear json:" + ex.getMessage());
         }
         return null;
-
     }
 
 }

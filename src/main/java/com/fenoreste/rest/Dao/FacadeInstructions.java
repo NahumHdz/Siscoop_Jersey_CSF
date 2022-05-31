@@ -137,7 +137,6 @@ public abstract class FacadeInstructions<T> {
                 validacionesTransferencias.setCuentaorigen(cuentaorigen);
                 validacionesTransferencias.setCuentadestino(cuentadestino);
                 validacionesTransferencias.setComentario1(comentario);
-
                 validacionesTransferencias.setComentario2(comentario);
 
                 validateMonetary.setValidationId(validacionesTransferencias.getValidationId());
@@ -201,6 +200,8 @@ public abstract class FacadeInstructions<T> {
                 ejecutar_transferencia.setTipoejecucion(validacion_guardada.getTipoejecucion());
                 ejecutar_transferencia.setEstatus(true);
                 ejecutar_transferencia.setRunningBalance(saldo);
+                ejecutar_transferencia.setValidationid(validacion_guardada.getValidationId());
+                
                 boolean banderaEstatusTransferencia = false;
                 opaDTO opaD = util.opa(ejecutar_transferencia.getCuentadestino());
                 //Obtengo los productos origen y destino
@@ -296,8 +297,40 @@ public abstract class FacadeInstructions<T> {
 
                     //Ejecuto la distribucion del monto(Funciona final)
                     String procesar = "SELECT sai_bankingly_aplica_transaccion('" + fechaTr_.substring(0, 10) + "'," + procesaOrigen.getIdusuario() + ",'" + procesaOrigen.getSesion() + "','" + procesaOrigen.getReferencia() + "')";
+                    System.out.println("Aplica Transaccion: " + procesar);
                     Query procesa_pago = em.createNativeQuery(procesar);
                     int respuestaProcesada = Integer.parseInt(String.valueOf(procesa_pago.getSingleResult()));
+                    
+                    try {
+                        int transaccionOrigen=0;
+                        int transaccionDestino= 0;
+                        
+                        for(int y =0;y<2;y++){
+                           Query query = null;                            
+                            System.out.println("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii:"+y);
+                            if(y==0){
+                                System.out.println("aqui con y:"+y);
+                                String consulta_mov_origen = "SELECT transaccion FROM auxiliares_d WHERE idorigenp="+procesaOrigen.getAuxiliaresPK().getIdorigenp()+
+                                                                "  AND idproducto="+procesaOrigen.getAuxiliaresPK().getIdproducto()+
+                                                                "  AND idauxiliar="+procesaOrigen.getAuxiliaresPK().getIdauxiliar()+
+                                                                " ORDER BY fecha DESC LIMIT 1";
+                                query = em.createNativeQuery(consulta_mov_origen);
+                                transaccionOrigen = Integer.parseInt(query.getSingleResult().toString());
+                                ejecutar_transferencia.setTransaccionorigen(transaccionOrigen);
+                            }else{
+                                System.out.println("aqui con y else ::"+y);
+                                String consulta_mov_origen = "SELECT transaccion FROM auxiliares_d WHERE idorigenp="+procesaDestino.getAuxiliaresPK().getIdorigenp()+
+                                                                "  AND idproducto="+procesaDestino.getAuxiliaresPK().getIdproducto()+
+                                                                "  AND idauxiliar="+procesaDestino.getAuxiliaresPK().getIdauxiliar()+
+                                                                " ORDER BY fecha DESC LIMIT 1";
+                                query = em.createNativeQuery(consulta_mov_origen);
+                                transaccionDestino = Integer.parseInt(query.getSingleResult().toString());
+                                ejecutar_transferencia.setTransacciondestino(transaccionDestino);
+                            }
+                        } 
+                    } catch (Exception e) {
+                        System.out.println("Error al obtener transaccion:"+e.getMessage());
+                    }
 
                     System.out.println("RespuestaProcesada:" + respuestaProcesada);
 

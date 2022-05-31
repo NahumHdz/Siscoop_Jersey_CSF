@@ -409,7 +409,7 @@ public abstract class FacadeCustomer<T> {
                 Productos pr = em.find(Productos.class, a.getAuxiliaresPK().getIdproducto());
 
                 bandera = true;
-                
+
                 Query query_fecha_servidor = em.createNativeQuery("SELECT date(fechatrabajo) FROM origenes limit 1");
                 String fecha_servidor = String.valueOf(query_fecha_servidor.getSingleResult());
                 Date fecha_obtenida_servidor_db = stringToDate(fecha_servidor.replace("-", "/"));//fecha obtenida_servidor
@@ -492,7 +492,7 @@ public abstract class FacadeCustomer<T> {
         saldos[1] = saldo_total;
         return saldos;
     }
-    
+
     public List<String[]> positionHistory2(String customerId, String fecha1, String fecha2) {
         EntityManager em = AbstractFacade.conexion();
         ogsDTO ogs = Util.ogs(customerId);

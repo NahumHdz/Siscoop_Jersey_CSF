@@ -51,6 +51,7 @@ public class CustomerResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         if (cadena.contains("firstName")) {
             for (int i = 0; i < mainObject.length(); i++) {
                 JSONArray fi = mainObject.getJSONArray("filters");
@@ -109,6 +110,7 @@ public class CustomerResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         try {
             JSONObject jsonE = new JSONObject(cadena);
             String customerId = jsonE.getString("customerId");
@@ -145,6 +147,7 @@ public class CustomerResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         try {
             List<CustomerContactDetailsDTO> listaContacto = datos.ContactDetails(ogs);
             JsonArray json = new JsonArray();
@@ -197,6 +200,7 @@ public class CustomerResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error_H);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error_H).build();
         }*/
+
         try {
             JSONObject mainObject = new JSONObject(cadena);
             String cif = mainObject.getString("customerId");
@@ -213,9 +217,10 @@ public class CustomerResources {
                                              .add("productCode", cuenta.getProductCode())
                                              .add("status", cuenta.getStatus())
                                              .add("restrictions", (JsonValue) Json.createArrayBuilder().build())
-                                             .add("customerRelations", (JsonValue) Json.createArrayBuilder().add((JsonValue) Json.createObjectBuilder()
-                                                     .add("relationCode", "SOW")
-                                                     .add("relationType", "self").build()).build())
+                                             .add("customerRelations", (JsonValue) Json.createArrayBuilder()
+                                                     .add((JsonValue) Json.createObjectBuilder()
+                                                             .add("relationCode", "SOW")
+                                                             .add("relationType", "self").build()).build())
                                              .add("hasBalances", true).build();
                     arrayCuentas.add((JsonValue) datosOK);
                 }
@@ -251,6 +256,7 @@ public class CustomerResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         boolean bandera = dao.findCustomer(customerId);
         List<String> lista = new ArrayList();
         lista.add("Single-user Template");
@@ -304,6 +310,7 @@ public class CustomerResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         try {
             String cadenas = dao.validateSetContactDetails(customerId, cel, email);
             if (cadenas.equals("")) {
@@ -346,6 +353,7 @@ public class CustomerResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         try {
             String status = dao.executeSetContactDetails(validationId);
             datosOk.put("status", status);
@@ -390,6 +398,7 @@ public class CustomerResources {
             System.out.println("HORARIO ACTIVIDAD: " + Error);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Error).build();
         }*/
+
         try {
             if (!balanceLedger.equals("") && !balanceAvalaible.equals("")) {
                 arr = dao.position(customerId);
